@@ -25,7 +25,7 @@ interface Message {
 }
 
 interface ContactInfo {
-  icon: JSX.Element;
+  icon: React.ReactNode;
   title: string;
   details: string;
   description: string;
