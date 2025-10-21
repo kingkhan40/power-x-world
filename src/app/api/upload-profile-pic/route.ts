@@ -1,4 +1,4 @@
-// app/api/upload-profile-pic/route.ts
+// src/app/api/upload-profile-pic/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import  User  from "@/models/User";
@@ -13,9 +13,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "No file uploaded" }, { status: 400 });
     }
 
-    // Simulate file upload (replace with Cloudinary or local storage logic)
-    // For demo, assume we get a URL (e.g., from Cloudinary)
-    const profilePictureUrl = `https://example.com/uploads/${file.name}`; // Replace with actual upload logic
+    // Placeholder: Replace with Cloudinary or local storage logic
+    const profilePictureUrl = `https://example.com/uploads/${file.name}`;
 
     const user = await User.findOneAndUpdate(
       { email: "john.doe@example.com" },

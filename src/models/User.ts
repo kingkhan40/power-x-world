@@ -26,10 +26,10 @@ export interface IUserSettings {
  * 👤 User Interface
  * ----------------------------------------- */
 export interface IUser extends Document {
-  name?: string;
+  name: string;
   email: string;
-  password?: string;
-  referralCode?: string;
+  password: string;
+  referralCode: string;
   referredBy?: string | null;
   team?: string;
   wallet?: number;
@@ -77,7 +77,7 @@ const UserSchema = new Schema<IUser>(
     // 💼 Wallet
     walletAddress: { type: String, default: "" },
 
-    // ⚙️ Settings (merged from original model)
+    // ⚙️ Settings
     settings: {
       notifications: {
         push: { type: Boolean, default: true },
@@ -87,17 +87,12 @@ const UserSchema = new Schema<IUser>(
       twoFactorAuth: { type: Boolean, default: true },
       profilePicture: { type: String, default: "" },
     },
-
-    // 🕒 Timestamps
-    createdAt: { type: Date, default: Date.now },
   },
-  { timestamps: true }
+  { timestamps: true } // includes createdAt + updatedAt
 );
 
 /* -----------------------------------------
  * 🧠 Export Model (Hot Reload Safe)
  * ----------------------------------------- */
-const User =
-  mongoose.models.User || mongoose.model<IUser>("User", UserSchema);
-
+const User = mongoose.models.User || mongoose.model<IUser>("User", UserSchema);
 export default User;

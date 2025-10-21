@@ -1,48 +1,35 @@
-// src/app/api/settings/route.ts
-import { NextRequest, NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
-import User from "@/models/User";
-export async function GET(req: NextRequest) {
+import { NextResponse } from "next/server";
+
+// Example static data (replace with MongoDB later)
+export async function GET() {
   try {
-    await connectDB();
-    const user = await User.findOne({ email: "john.doe@example.com" });
-    if (!user) {
-      return NextResponse.json({ success: false, error: "User not found" }, { status: 404 });
-    }
-    return NextResponse.json({ success: true, settings: user.settings, name: user.name, email: user.email });
+    const data = {
+      success: true,
+      name: "Admin User",
+      email: "admin@example.com",
+      settings: {
+        notifications: { push: true, email: false, sms: true },
+        twoFactorAuth: true,
+        profilePicture: "",
+      },
+    };
+    return NextResponse.json(data);
   } catch (error) {
-    console.error("Error fetching settings:", error);
+    console.error("Settings GET error:", error);
     return NextResponse.json({ success: false, error: "Failed to fetch settings" }, { status: 500 });
   }
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
-    await connectDB();
-    const { notifications, twoFactorAuth, profilePicture } = await req.json();
-
-    if (!notifications && twoFactorAuth === undefined && !profilePicture) {
-      return NextResponse.json({ success: false, error: "No valid settings provided" }, { status: 400 });
-    }
-
-    const updateData: any = {};
-    if (notifications) updateData["settings.notifications"] = notifications;
-    if (twoFactorAuth !== undefined) updateData["settings.twoFactorAuth"] = twoFactorAuth;
-    if (profilePicture) updateData["settings.profilePicture"] = profilePicture;
-
-    const user = await User.findOneAndUpdate(
-      { email: "john.doe@example.com" },
-      { $set: updateData },
-      { new: true, runValidators: true }
-    );
-
-    if (!user) {
-      return NextResponse.json({ success: false, error: "User not found" }, { status: 404 });
-    }
-
-    return NextResponse.json({ success: true, settings: user.settings });
+    const body = await req.json();
+    // Save to MongoDB here if needed
+    return NextResponse.json({
+      success: true,
+      settings: body,
+    });
   } catch (error) {
-    console.error("Error updating settings:", error);
+    console.error("Settings POST error:", error);
     return NextResponse.json({ success: false, error: "Failed to update settings" }, { status: 500 });
   }
 }

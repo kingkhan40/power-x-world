@@ -1,83 +1,63 @@
-// context/AdminContext.tsx
+// src/context/AdminContext.tsx
 "use client";
 
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-} from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 /* -----------------------------
  * 🔧 Type Definitions
  * ----------------------------- */
 
-interface NotificationSettings {
+type NotificationSettings = {
   push: boolean;
   email: boolean;
   sms: boolean;
-}
+};
 
-interface UserStats {
+type UserStats = {
   totalUsers: number;
   activeUsers: number;
   newUsers: number;
   totalRevenue: number;
   growthRate: number;
-}
+};
 
-interface AdminSettings {
+type AdminSettings = {
   notifications: NotificationSettings;
   twoFactorAuth: boolean;
   profilePicture?: string;
-}
+};
 
-interface AdminProfile {
+type AdminProfile = {
   name?: string;
   email: string;
-}
+};
 
-interface AdminContextType {
-  // Sidebar
-  sidebarOpen: boolean;
-  setSidebarOpen: (open: boolean) => void;
-
-  // Stats
+type AdminContextType = {
+  // Data
   userStats: UserStats;
-  updateUserStats: (stats: Partial<UserStats>) => void;
-
-  // Settings
   settings: AdminSettings;
-  updateSettings: (newSettings: Partial<AdminSettings>) => Promise<void>;
-
-  // Profile
   profile: AdminProfile;
-  updateProfile: (profile: Partial<AdminProfile>) => Promise<void>;
 
-  // Password
+  // Actions
+  updateSettings: (newSettings: Partial<AdminSettings>) => Promise<void>;
+  updateProfile: (newProfile: Partial<AdminProfile>) => Promise<void>;
   changePassword: (
     currentPassword: string,
     newPassword: string
   ) => Promise<{ success: boolean; error?: string }>;
-}
+};
 
 /* -----------------------------
- * 🧩 Context Creation
+ * 🧠 Context Initialization
  * ----------------------------- */
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
 /* -----------------------------
- * 🧠 Provider Component
+ * 🧩 Provider Component
  * ----------------------------- */
 
-export function AdminProvider({ children }: { children: ReactNode }) {
-  /** -------------------------------
-   * 📁 STATE
-   * ------------------------------- */
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
+export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [userStats, setUserStats] = useState<UserStats>({
     totalUsers: 0,
     activeUsers: 0,
@@ -89,78 +69,56 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<AdminSettings>({
     notifications: { push: true, email: false, sms: true },
     twoFactorAuth: true,
+    profilePicture: "",
   });
 
   const [profile, setProfile] = useState<AdminProfile>({
     email: "admin@example.com",
   });
 
-  /** -------------------------------
-   * 📊 USER STATS: SSE + Polling
-   * ------------------------------- */
-
-  const updateUserStats = (newStats: Partial<UserStats>) => {
-    setUserStats((prev) => ({ ...prev, ...newStats }));
-  };
-
+  /* -----------------------------
+   * 📊 Fetch User Stats
+   * ----------------------------- */
   const fetchTotalUsers = async () => {
     try {
       const res = await fetch("/api/total-users");
+      if (!res.ok) throw new Error(`Status ${res.status}`);
       const data = await res.json();
-      if (data.success) {
+
+      if (data.success && typeof data.total === "number") {
         setUserStats((prev) => ({ ...prev, totalUsers: data.total }));
+      } else {
+        console.error("Fetch total users error:", data.error);
       }
-    } catch (error) {
-      console.error("Fetch total users error:", error);
+    } catch (err) {
+      console.error("Fetch total users error:", err);
     }
   };
 
-  useEffect(() => {
-    const eventSource = new EventSource("/api/total-users/sse");
-
-    eventSource.onmessage = (e) => {
-      try {
-        const data = JSON.parse(e.data);
-        if (data.total !== undefined) {
-          setUserStats((prev) => ({ ...prev, totalUsers: data.total }));
-        }
-      } catch (err) {
-        console.error("Failed to parse SSE message:", err);
-      }
-    };
-
-    eventSource.onerror = (err) => {
-      console.error("SSE connection error:", err);
-      eventSource.close();
-    };
-
-    return () => eventSource.close();
-  }, []);
-
-  // Fallback polling
-  useEffect(() => {
-    fetchTotalUsers();
-    const interval = setInterval(fetchTotalUsers, 10000);
-    return () => clearInterval(interval);
-  }, []);
-
-  /** -------------------------------
-   * ⚙️ SETTINGS: Fetch + SSE + Update
-   * ------------------------------- */
-
-  const fetchSettings = async () => {
+  /* -----------------------------
+   * ⚙️ Fetch Profile & Settings
+   * ----------------------------- */
+  const fetchProfileAndSettings = async () => {
     try {
       const res = await fetch("/api/settings");
+      if (!res.ok) throw new Error(`Status ${res.status}`);
       const data = await res.json();
+
       if (data.success) {
-        setSettings(data.settings);
-        setProfile({ name: data.name, email: data.email });
+        if (data.settings) setSettings(data.settings);
+        if (data.name || data.email)
+          setProfile({ name: data.name, email: data.email });
+      } else {
+        console.error("Fetch settings error:", data.error);
       }
-    } catch (error) {
-      console.error("Fetch settings error:", error);
+    } catch (err) {
+      console.error("Fetch profile/settings error:", err);
     }
   };
 
+  /* -----------------------------
+   * ✏️ Update Methods
+   * ----------------------------- */
   const updateSettings = async (newSettings: Partial<AdminSettings>) => {
     try {
       const res = await fetch("/api/settings", {
@@ -169,43 +127,12 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify(newSettings),
       });
       const data = await res.json();
-      if (data.success) {
-        setSettings(data.settings);
-      }
-    } catch (error) {
-      console.error("Update settings error:", error);
+      if (data.success) setSettings(data.settings);
+      else console.error("Update settings error:", data.error);
+    } catch (err) {
+      console.error("Update settings error:", err);
     }
   };
-
-  useEffect(() => {
-    const eventSource = new EventSource("/api/settings/sse");
-
-    eventSource.onmessage = (e) => {
-      try {
-        const data = JSON.parse(e.data);
-        setSettings(data);
-      } catch (err) {
-        console.error("Failed to parse settings SSE message:", err);
-      }
-    };
-
-    eventSource.onerror = (err) => {
-      console.error("Settings SSE connection error:", err);
-      eventSource.close();
-    };
-
-    fetchSettings();
-    const interval = setInterval(fetchSettings, 10000);
-
-    return () => {
-      eventSource.close();
-      clearInterval(interval);
-    };
-  }, []);
-
-  /** -------------------------------
-   * 👤 PROFILE + PASSWORD MANAGEMENT
-   * ------------------------------- */
 
   const updateProfile = async (newProfile: Partial<AdminProfile>) => {
     try {
@@ -215,11 +142,10 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify(newProfile),
       });
       const data = await res.json();
-      if (data.success) {
-        setProfile({ name: data.name, email: data.email });
-      }
-    } catch (error) {
-      console.error("Update profile error:", error);
+      if (data.success) setProfile({ name: data.name, email: data.email });
+      else console.error("Update profile error:", data.error);
+    } catch (err) {
+      console.error("Update profile error:", err);
     }
   };
 
@@ -233,42 +159,50 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ currentPassword, newPassword }),
       });
-      const data = await res.json();
-      return data;
-    } catch (error) {
-      console.error("Change password error:", error);
+      return await res.json();
+    } catch (err) {
+      console.error("Change password error:", err);
       return { success: false, error: "Failed to change password" };
     }
   };
 
-  /** -------------------------------
-   * ✅ PROVIDER VALUE
-   * ------------------------------- */
+  /* -----------------------------
+   * 🔁 Auto-refresh (polling)
+   * ----------------------------- */
+  useEffect(() => {
+    fetchTotalUsers();
+    fetchProfileAndSettings();
+
+    const interval = setInterval(() => {
+      fetchTotalUsers();
+      fetchProfileAndSettings();
+    }, 10000); // 10s
+
+    return () => clearInterval(interval);
+  }, []);
+
+  /* -----------------------------
+   * ✅ Context Value
+   * ----------------------------- */
   const value: AdminContextType = {
-    sidebarOpen,
-    setSidebarOpen,
     userStats,
-    updateUserStats,
     settings,
-    updateSettings,
     profile,
+    updateSettings,
     updateProfile,
     changePassword,
   };
 
-  return (
-    <AdminContext.Provider value={value}>{children}</AdminContext.Provider>
-  );
+  return <AdminContext.Provider value={value}>{children}</AdminContext.Provider>;
 }
 
 /* -----------------------------
  * 🪄 Custom Hook
  * ----------------------------- */
-
-export function useAdmin() {
+export const useAdmin = () => {
   const context = useContext(AdminContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useAdmin must be used within an AdminProvider");
   }
   return context;
-}
+};

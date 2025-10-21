@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Outfit } from "next/font/google";
-import { AppProvider } from "@/context/AppContext";
 import ClientLayout from "@/components/ClientLayout";
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
 
@@ -26,9 +25,7 @@ export default function RootLayout({
     <html lang="en" className={outfit.variable}>
       <body className="min-h-screen bg-background font-sans antialiased">
         <SessionProviderWrapper>
-          <AppProvider>
-            <ClientLayout>{children}</ClientLayout>
-          </AppProvider>
+          <ClientLayout>{children}</ClientLayout>
         </SessionProviderWrapper>
       </body>
     </html>

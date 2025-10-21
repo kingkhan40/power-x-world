@@ -1,4 +1,4 @@
-// app/api/change-password/route.ts
+// src/app/api/change-password/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import  User  from "@/models/User";
@@ -18,12 +18,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "User not found" }, { status: 404 });
     }
 
-    // Verify current password
     if (user.password && !(await bcrypt.compare(currentPassword, user.password))) {
       return NextResponse.json({ success: false, error: "Incorrect current password" }, { status: 400 });
     }
 
-    // Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
     await user.save();

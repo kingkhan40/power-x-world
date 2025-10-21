@@ -3,7 +3,6 @@ import React, { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { FaBell, FaShieldAlt, FaKey, FaEdit } from "react-icons/fa";
 import { useAdmin } from "../context/AdminContext";
-
 const SettingsPage = () => {
   const { settings, profile, updateSettings, updateProfile, changePassword } = useAdmin();
   const fileInputRef = useRef<HTMLInputElement>(null);
