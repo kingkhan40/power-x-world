@@ -1,158 +1,73 @@
 "use client";
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import {
-  Search,
-  Users,
-  UserPlus,
-  UserCheck,
-  UserX,
-  LucideIcon,
-} from "lucide-react";
+import { Search } from "lucide-react";
 
 // Types definition
 interface User {
-  id: number;
+  _id: string;
   name: string;
   email: string;
   role: string;
   status: "Active" | "Inactive";
 }
 
-interface StatItem {
-  name: string;
-  icon: LucideIcon;
-  value: string;
-  color: string;
-}
-
-const userData: User[] = [
-  {
-    id: 1,
-    name: "John Doe",
-    email: "john@example.com",
-    role: "Customer",
-    status: "Active",
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    email: "jane@example.com",
-    role: "Admin",
-    status: "Active",
-  },
-  {
-    id: 3,
-    name: "Bob Johnson",
-    email: "bob@example.com",
-    role: "Customer",
-    status: "Inactive",
-  },
-  {
-    id: 4,
-    name: "Alice Brown",
-    email: "alice@example.com",
-    role: "Customer",
-    status: "Active",
-  },
-  {
-    id: 5,
-    name: "Charlie Wilson",
-    email: "charlie@example.com",
-    role: "Moderator",
-    status: "Active",
-  },
-];
-
-const userStats: StatItem[] = [
-  {
-    name: "Total Users",
-    icon: Users,
-    value: "152,845",
-    color: "#6366F1",
-  },
-  {
-    name: "New Users Today",
-    icon: UserPlus,
-    value: "243",
-    color: "#10B981",
-  },
-  {
-    name: "Active Users",
-    icon: UserCheck,
-    value: "98,520",
-    color: "#F59E0B",
-  },
-  {
-    name: "Churn Rate",
-    icon: UserX,
-    value: "2.4%",
-    color: "#EF4444",
-  },
-];
-
 const Page = () => {
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [filteredUsers, setFilteredUsers] = useState<User[]>(userData);
+  const [users, setUsers] = useState<User[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
+  // Fetch users from MongoDB via API route
+  const fetchUsers = async () => {
+    try {
+      const res = await fetch("/api/users"); // You need to create this API
+      const data = await res.json();
+      setUsers(data.users);
+      setFilteredUsers(data.users);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  // Search handler (real-time)
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const term = e.target.value.toLowerCase();
     setSearchTerm(term);
-    const filtered = userData.filter(
-      (user) =>
-        user.name.toLowerCase().includes(term) ||
-        user.email.toLowerCase().includes(term)
+    setFilteredUsers(
+      users.filter(
+        (user) =>
+          user.name.toLowerCase().includes(term) ||
+          user.email.toLowerCase().includes(term)
+      )
     );
-    setFilteredUsers(filtered);
+  };
+
+  // Toggle user status
+  const toggleStatus = async (id: string, status: "Active" | "Inactive") => {
+    try {
+      await fetch(`/api/users/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+        headers: { "Content-Type": "application/json" },
+      });
+      fetchUsers(); // refresh table
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
-    <div className="min-h-screen p-1">
-      {/* Stats Cards Grid */}
-      <motion.div
-        className="grid gap-5 grid-cols-2 lg:grid-cols-4 my-4"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1 }}
-      >
-        {userStats.map((stat, index) => {
-          const IconComponent = stat.icon;
-          return (
-            <motion.div
-              key={stat.name}
-              className="bg-gray-800 bg-opacity-50 backdrop-blur-md overflow-hidden shadow-lg rounded-xl border border-gray-700"
-              whileHover={{
-                y: -5,
-                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
-              }}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-            >
-              <div className="px-3 py-5 flex flex-col  sm:p-6">
-                <span className="flex items-center text-sm font-medium text-gray-400">
-                  <IconComponent
-                    size={20}
-                    className="mr-2"
-                    style={{ color: stat.color }}
-                  />
-                  {stat.name}
-                </span>
-                <p className="mt-1 text-2xl font-semibold text-gray-100">
-                  {stat.value}
-                </p>
-              </div>
-            </motion.div>
-          );
-        })}
-      </motion.div>
-
+    <div className="min-h-screen p-2">
       {/* Users Table */}
       <motion.div
         className="bg-gray-800 bg-opacity-70 backdrop-blur-md shadow-lg rounded-xl p-2 border border-gray-700 max-w-6xl mx-auto"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
       >
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
           <h2 className="text-2xl font-bold text-gray-100">Users Management</h2>
@@ -164,10 +79,7 @@ const Page = () => {
               value={searchTerm}
               onChange={handleSearch}
             />
-            <Search
-              className="absolute left-3 top-2.5 text-gray-400"
-              size={18}
-            />
+            <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
           </div>
         </div>
 
@@ -196,7 +108,7 @@ const Page = () => {
             <tbody className="bg-gray-800 bg-opacity-50 divide-y divide-gray-700">
               {filteredUsers.map((user) => (
                 <motion.tr
-                  key={user.id}
+                  key={user._id}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.3 }}
@@ -210,12 +122,8 @@ const Page = () => {
                         </div>
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-100">
-                          {user.name}
-                        </div>
-                        <div className="text-xs text-gray-400">
-                          ID: {user.id}
-                        </div>
+                        <div className="text-sm font-medium text-gray-100">{user.name}</div>
+                        <div className="text-xs text-gray-400">ID: {user._id}</div>
                       </div>
                     </div>
                   </td>
@@ -252,11 +160,17 @@ const Page = () => {
 
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <div className="flex space-x-2">
-                      <button className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-900 px-3 py-1 rounded-lg transition-colors duration-200">
-                        Edit
+                      <button
+                        onClick={() => toggleStatus(user._id, "Inactive")}
+                        className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-900 px-3 py-1 rounded-lg transition-colors duration-200"
+                      >
+                        Inactive
                       </button>
-                      <button className="text-red-400 hover:text-red-300 hover:bg-red-900 px-3 py-1 rounded-lg transition-colors duration-200">
-                        Delete
+                      <button
+                        onClick={() => toggleStatus(user._id, "Active")}
+                        className="text-red-400 hover:text-red-300 hover:bg-red-900 px-3 py-1 rounded-lg transition-colors duration-200"
+                      >
+                        Active
                       </button>
                     </div>
                   </td>
@@ -266,7 +180,6 @@ const Page = () => {
           </table>
         </div>
 
-        {/* Empty State */}
         {filteredUsers.length === 0 && (
           <motion.div
             className="text-center py-12"
@@ -275,20 +188,12 @@ const Page = () => {
             transition={{ duration: 0.5 }}
           >
             <div className="text-gray-400 text-lg">No users found</div>
-            <div className="text-gray-500 text-sm mt-2">
-              Try adjusting your search terms
-            </div>
+            <div className="text-gray-500 text-sm mt-2">Try adjusting your search terms</div>
           </motion.div>
         )}
 
-        {/* Summary */}
         <div className="mt-6 flex justify-between items-center text-sm text-gray-400">
-          <div>
-            Showing {filteredUsers.length} of {userData.length} users
-          </div>
-          <div className="text-xs bg-gray-700 px-3 py-1 rounded-full">
-            Total Users: {userData.length}
-          </div>
+          <div>Showing {filteredUsers.length} of {users.length} users</div>
         </div>
       </motion.div>
     </div>
