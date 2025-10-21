@@ -1,0 +1,115 @@
+/* app/globals.css */
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@layer base {
+  * {
+    font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont,
+      "Helvetica Neue", helvetica, segoe-ui, arial, roboto, "PingFang SC",
+      "miui", "Hiragino Sans GB", "Microsoft Yahei", sans-serif;
+  }
+
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+  
+    
+    /* Simple 4-color gradient */
+    background: linear-gradient(
+        135deg,
+        #0a192f,  /* Dark Blue */
+        #162135,  /* Dark Gray */
+        #052014,  /* Dark Green */
+        #000000   /* Black */
+    );
+    
+   
+    color: #ffffff;
+}
+
+  ::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@layer components {
+  .font-jakarta {
+    font-family: "Plus Jakarta Sans", sans-serif;
+  }
+
+  .font-outfit {
+    font-family: "Outfit", sans-serif;
+  }
+
+  .font-poppins {
+    font-family: "Poppins", sans-serif;
+  }
+
+  .font-apple {
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  .font-helvetica {
+    font-family: "Helvetica Neue", helvetica, sans-serif;
+  }
+
+  .font-segoe {
+    font-family: "Segoe UI", sans-serif;
+  }
+
+  .font-roboto {
+    font-family: Roboto, sans-serif;
+  }
+}
+
+@keyframes slide-up {
+  0% {
+    transform: translateY(100%);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 1s ease-out forwards;
+}
+
+@keyframes slide-out {
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(100%);
+  }
+}
+
+.animate-slide-out {
+  animation: slide-out 1s ease forwards;
+}
+
+.mySwiper .swiper-pagination-bullet {
+  width: 12px;
+  height: 12px;
+  background-color: #ccc;
+  opacity: 0.6;
+  margin: 0 6px;
+  transition: all 0.3s ease;
+  border-radius: 6px;
+}
+
+.mySwiper .swiper-pagination-bullet-active {
+  width: 30px;
+  background-color: #3b82f6;
+  opacity: 1;
+}
