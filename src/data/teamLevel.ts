@@ -1,0 +1,297 @@
+export interface TeamLevel {
+  id: number;
+  level: number;
+  business: string;
+  commissions: string; // Changed from number to string to match your data
+  inviteCommission: string;
+  teamCommission: string;
+  locked: boolean;
+  inviteName: string;
+  inviteDataTime: string;
+  investAmount: string;
+  status: boolean;
+  description: string;
+}
+
+export const teamLevels: TeamLevel[] = [
+  {
+    id: 1,
+    level: 1,
+    business: "5,000",
+    commissions: "500",
+    inviteCommission: "12.00%",
+    teamCommission: "10.00%",
+    locked: false,
+    inviteName: "MR Dev",
+    inviteDataTime: new Date().toLocaleString(),
+    investAmount: "100",
+    status: true,
+    description: "First level with higher commission rates"
+  },
+  {
+    id: 2,
+    level: 2,
+    business: "15,000",
+    commissions: "1,200",
+    inviteCommission: "5.00%",
+    teamCommission: "3.00%",
+    locked: false,
+    inviteName: "John Smith",
+    inviteDataTime: new Date().toLocaleString(),
+    investAmount: "200",
+    status: true,
+    description: "Second level with competitive rates"
+  },
+  {
+    id: 3,
+    level: 3,
+    business: "30,000",
+    commissions: "2,400",
+    inviteCommission: "2.00%",
+    teamCommission: "2.00%",
+    locked: true,
+    inviteName: "Sarah Johnson",
+    inviteDataTime: new Date().toLocaleString(),
+    investAmount: "300",
+    status: false,
+    description: "Third level with standard rates"
+  },
+  {
+    id: 4,
+    level: 4,
+    business: "50,000",
+    commissions: "3,500",
+    inviteCommission: "2.00%",
+    teamCommission: "1.00%",
+    locked: true,
+    inviteName: "Mike Brown",
+    inviteDataTime: new Date().toLocaleString(),
+    investAmount: "400",
+    status: false,
+    description: "Fourth level with growing team"
+  },
+  {
+    id: 5,
+    level: 5,
+    business: "100,000",
+    commissions: "6,000",
+    inviteCommission: "N/A",
+    teamCommission: "0.40%",
+    locked: true,
+    inviteName: "Emily Davis",
+    inviteDataTime: new Date().toLocaleString(),
+    investAmount: "500",
+    status: false,
+    description: "Fifth level with stable commissions"
+  },
+  {
+    id: 6,
+    level: 6,
+    business: "200,000",
+    commissions: "10,000",
+    inviteCommission: "N/A",
+    teamCommission: "0.90%",
+    locked: true,
+    inviteName: "Robert Wilson",
+    inviteDataTime: new Date().toLocaleString(),
+    investAmount: "600",
+    status: false,
+    description: "Sixth level with team focus"
+  },
+  {
+    id: 7,
+    level: 7,
+    business: "500,000",
+    commissions: "25,000",
+    inviteCommission: "N/A",
+    teamCommission: "1.50%",
+    locked: true,
+    inviteName: "Lisa Anderson",
+    inviteDataTime: new Date().toLocaleString(),
+    investAmount: "700",
+    status: false,
+    description: "Seventh level expanding network"
+  },
+  {
+    id: 8,
+    level: 8,
+    business: "1,000,000",
+    commissions: "50,000",
+    inviteCommission: "N/A",
+    teamCommission: "1.20%",
+    locked: true,
+    inviteName: "David Miller",
+    inviteDataTime: new Date().toLocaleString(),
+    investAmount: "800",
+    status: false,
+    description: "Eighth level deep network"
+  },
+  {
+    id: 9,
+    level: 9,
+    business: "2,000,000",
+    commissions: "100,000",
+    inviteCommission: "N/A",
+    teamCommission: "0.30%",
+    locked: true,
+    inviteName: "Jennifer Taylor",
+    inviteDataTime: new Date().toLocaleString(),
+    investAmount: "900",
+    status: false,
+    description: "Ninth level extensive reach"
+  },
+  {
+    id: 10,
+    level: 10,
+    business: "5,000,000",
+    commissions: "250,000",
+    inviteCommission: "N/A",
+    teamCommission: "4.00%",
+    locked: true,
+    inviteName: "Christopher Lee",
+    inviteDataTime: new Date().toLocaleString(),
+    investAmount: "1000",
+    status: false,
+    description: "Tenth level milestone achievement"
+  },
+  {
+    id: 11,
+    level: 11,
+    business: "10,000,000",
+    commissions: "500,000",
+    inviteCommission: "N/A",
+    teamCommission: "3.00%",
+    locked: true,
+    inviteName: "Amanda White",
+    inviteDataTime: new Date().toLocaleString(),
+    investAmount: "1500",
+    status: false,
+    description: "Eleventh level premium network"
+  },
+  {
+    id: 12,
+    level: 12,
+    business: "20,000,000",
+    commissions: "1,000,000",
+    inviteCommission: "N/A",
+    teamCommission: "2.00%",
+    locked: true,
+    inviteName: "Daniel Harris",
+    inviteDataTime: new Date().toLocaleString(),
+    investAmount: "2000",
+    status: false,
+    description: "Twelfth level elite status"
+  },
+  {
+    id: 13,
+    level: 13,
+    business: "50,000,000",
+    commissions: "2,500,000",
+    inviteCommission: "N/A",
+    teamCommission: "1.50%",
+    locked: true,
+    inviteName: "Michelle Clark",
+    inviteDataTime: new Date().toLocaleString(),
+    investAmount: "3000",
+    status: false,
+    description: "Thirteenth level master network"
+  },
+  {
+    id: 14,
+    level: 14,
+    business: "100,000,000",
+    commissions: "5,000,000",
+    inviteCommission: "N/A",
+    teamCommission: "1.00%",
+    locked: true,
+    inviteName: "Kevin Lewis",
+    inviteDataTime: new Date().toLocaleString(),
+    investAmount: "4000",
+    status: false,
+    description: "Fourteenth level executive tier"
+  },
+  {
+    id: 15,
+    level: 15,
+    business: "200,000,000",
+    commissions: "10,000,000",
+    inviteCommission: "N/A",
+    teamCommission: "0.60%",
+    locked: true,
+    inviteName: "Rachel Walker",
+    inviteDataTime: new Date().toLocaleString(),
+    investAmount: "5000",
+    status: false,
+    description: "Fifteenth level diamond status"
+  },
+  {
+    id: 16,
+    level: 16,
+    business: "500,000,000",
+    commissions: "25,000,000",
+    inviteCommission: "N/A",
+    teamCommission: "0.50%",
+    locked: true,
+    inviteName: "Jason Hall",
+    inviteDataTime: new Date().toLocaleString(),
+    investAmount: "7500",
+    status: false,
+    description: "Sixteenth level platinum network"
+  },
+  {
+    id: 17,
+    level: 17,
+    business: "1,000,000,000",
+    commissions: "50,000,000",
+    inviteCommission: "N/A",
+    teamCommission: "0.30%",
+    locked: true,
+    inviteName: "Stephanie Young",
+    inviteDataTime: new Date().toLocaleString(),
+    investAmount: "10000",
+    status: false,
+    description: "Seventeenth level billionaire club"
+  },
+  {
+    id: 18,
+    level: 18,
+    business: "2,000,000,000",
+    commissions: "100,000,000",
+    inviteCommission: "N/A",
+    teamCommission: "0.20%",
+    locked: true,
+    inviteName: "Brian King",
+    inviteDataTime: new Date().toLocaleString(),
+    investAmount: "15000",
+    status: false,
+    description: "Eighteenth level visionary status"
+  },
+  {
+    id: 19,
+    level: 19,
+    business: "5,000,000,000",
+    commissions: "250,000,000",
+    inviteCommission: "N/A",
+    teamCommission: "0.20%",
+    locked: true,
+    inviteName: "Nicole Scott",
+    inviteDataTime: new Date().toLocaleString(),
+    investAmount: "20000",
+    status: false,
+    description: "Nineteenth level legend status"
+  },
+  {
+    id: 20,
+    level: 20,
+    business: "10,000,000,000",
+    commissions: "500,000,000",
+    inviteCommission: "N/A",
+    teamCommission: "0.40%",
+    locked: true,
+    inviteName: "Eric Green",
+    inviteDataTime: new Date().toLocaleString(),
+    investAmount: "25000",
+    status: false,
+    description: "Twentieth level ultimate achievement"
+  }
+];
