@@ -1,10 +1,10 @@
-// src/models/Admin.ts
-import mongoose, { Schema, models } from "mongoose";
+import mongoose from "mongoose";
 
-const adminSchema = new Schema({
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true }, // bcrypt hash
+const AdminSchema = new mongoose.Schema({
+  adminId: { type: String, default: "admin", unique: true },
+  name: { type: String, default: "" },
+  email: { type: String, default: "" },
 });
 
-const Admin = models.Admin || mongoose.model("Admin", adminSchema);
-export default Admin;
+export const Admin =
+  mongoose.models.Admin || mongoose.model("Admin", AdminSchema);
