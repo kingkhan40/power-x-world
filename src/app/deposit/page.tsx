@@ -343,10 +343,9 @@ function DepositInner() {
                       <div className="bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/30 rounded-2xl p-4 mb-6 backdrop-blur-sm">
                         <div className="flex items-center gap-3 text-center">
                           <div className="text-orange-200 text-sm leading-relaxed">
-                            <span className="font-bold">🚨 CRITICAL: </span>
-                            Only send <strong>USDT (BEP-20)</strong> to this
-                            address. Other cryptocurrencies will be permanently
-                            lost!
+                            <span className="font-bold">🚨<strong> CRITICAL NOTICE:</strong> </span>
+                            Please ensure you only send <strong>USDT (BEP-20)</strong> to this
+                            address. Sending other cryptocurrencies may cause irreversible loss.
                           </div>
                         </div>
                       </div>
