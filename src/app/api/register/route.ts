@@ -12,41 +12,49 @@ function generateRefCode(name: string): string {
 
 export async function POST(req: Request): Promise<NextResponse> {
   try {
+    // ✅ Connect to MongoDB
     await connectDB();
 
-    const { name, email, password, referralCode } =
-      await req.json();
+    const { name, email, password, referralCode } = await req.json();
 
-    // Check if user exists
+    // ✅ Check if user already exists
     const existingUser = await User.findOne({ email });
-    if (existingUser)
-      return NextResponse.json({ success: false, message: "User already exists" }, { status: 400 });
+    if (existingUser) {
+      return NextResponse.json(
+        { success: false, message: "User already exists" },
+        { status: 400 }
+      );
+    }
 
-    // Hash password
+    // ✅ Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Generate user's referral code
+    // ✅ Generate user's own referral code
     const userReferralCode = generateRefCode(name);
 
-    // Default
+    // ✅ Default values
     let referredBy: string | null = null;
+    let team = "admin"; // default team
+    let referrer: any = null; // ✅ declare here to avoid ReferenceError
 
-    // If referred via link
+    // ✅ If referred via referral link
     if (referralCode) {
-      const referrer = await User.findOne({ referralCode });
+      referrer = await User.findOne({ referralCode });
+
       if (referrer) {
-        referredBy = referrer._id.toString(); // ✅ store _id
+        referredBy = referrer._id.toString(); // store ObjectId as string
+        team = referrer.name; // assign new user to referrer's team
       }
     }
 
-    // Create new user
+    // ✅ Create new user
     const newUser = await User.create({
       name,
       email,
       password: hashedPassword,
       referralCode: userReferralCode,
       referredBy,
-      team: "admin",
+      team,
       teamMembers: [],
       totalTeam: 0,
       activeUsers: 0,
@@ -54,15 +62,15 @@ export async function POST(req: Request): Promise<NextResponse> {
       level: 1,
     });
 
-    // Update referrer's team if valid
-    if (referredBy) {
-      await User.findByIdAndUpdate(referredBy, {
-        $push: { teamMembers: newUser._id },
+    // ✅ Update referrer's teamMembers and totalTeam if applicable
+    if (referrer) {
+      await User.findByIdAndUpdate(referrer._id, {
+        $push: { teamMembers: newUser._id }, // push ObjectId
         $inc: { totalTeam: 1 },
       });
     }
 
-    // Generate JWT
+    // ✅ Generate JWT
     const jwtSecret = process.env.JWT_SECRET;
     if (!jwtSecret) throw new Error("JWT_SECRET is missing");
 
@@ -75,10 +83,11 @@ export async function POST(req: Request): Promise<NextResponse> {
       user: newUser,
       referralLink: `${process.env.NEXT_PUBLIC_BASE_URL}/register?ref=${userReferralCode}`,
     });
-
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error("Registration Error:", error);
-    const message = error instanceof Error ? error.message : "Unknown server error";
-    return NextResponse.json({ success: false, message: "Server Error", error: message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, message: error.message || "Server error" },
+      { status: 500 }
+    );
   }
 }
