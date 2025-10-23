@@ -1,4 +1,8 @@
-const BalanceCard = () => {
+interface BalanceCardProps {
+  balance?: number;
+}
+
+export default function BalanceCard({ balance = 0 }: BalanceCardProps) {
   return (
     <div className="max-w-7xl mx-auto">
       <div className="grid grid-cols-1 gap-3">
@@ -46,14 +50,17 @@ const BalanceCard = () => {
 
           {/* Content */}
           <div className="relative z-0">
-            <div className="flex items-center justify-between gap-2 p-1 rounded-lg  w-full">
-              <div className="flex flex-col bg-gradient-to-r from-pink-950 to-blue-950 rounded-xl items-center  w-full p-2">
-                <span className="text-2xl font-bold text-white">0.00 $</span>
+            <div className="flex items-center justify-between gap-2 p-1 rounded-lg w-full">
+              <div className="flex flex-col bg-gradient-to-r from-pink-950 to-blue-950 rounded-xl items-center w-full p-2">
+                {/* ✅ Dynamically show live balance */}
+                <span className="text-2xl font-bold text-white">
+                  {balance.toFixed(2)} $
+                </span>
                 <span className="text-sm font-medium text-gray-300 mb-1">
                   USDT Balance
                 </span>
               </div>
-              <div className="flex flex-col bg-gradient-to-r from-cyan-950 to-indigo-950 rounded-xl items-center  w-full p-2">
+              <div className="flex flex-col bg-gradient-to-r from-cyan-950 to-indigo-950 rounded-xl items-center w-full p-2">
                 <span className="text-2xl font-bold text-green-400">
                   +0.00$
                 </span>
@@ -65,6 +72,4 @@ const BalanceCard = () => {
       </div>
     </div>
   );
-};
-
-export default BalanceCard;
+}

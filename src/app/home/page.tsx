@@ -6,6 +6,7 @@ import BalanceCard from "@/components/BalanceCard";
 import BasicPlan from "@/components/BasicPlan";
 import IconGridNavigation from "@/components/IconGridNavigation";
 import InvestmentInfo from "@/components/InvestmentInfo";
+import { getSocket } from "@/lib/socket";
 
 export default function HomePage() {
   const router = useRouter();
@@ -20,37 +21,46 @@ export default function HomePage() {
 
     if (!token) {
       router.replace("/login");
-    } else {
-      setUser({ name: userName || "User", email: userEmail || "" });
+      return;
+    }
 
-      // ✅ Fetch referral link from backend (MongoDB)
-      if (userEmail) {
-        fetch(`/api/user/${userEmail}`)
-          .then(res => res.json())
-          .then(data => {
-            if (data.success && data.referralLink) {
-              setReferralLink(data.referralLink);
-              // Optional: save to localStorage for fallback
-              localStorage.setItem("referralLink", data.referralLink);
-            } else {
-              // fallback if API does not return referralLink
-              const localReferral = localStorage.getItem("referralLink");
-              if (localReferral) setReferralLink(localReferral);
-            }
-          })
-          .catch(err => {
-            console.log("Error fetching referral link:", err);
+    setUser({ name: userName || "User", email: userEmail || "" });
+
+    if (userEmail) {
+      fetch(`/api/user/${userEmail}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.referralLink) {
+            setReferralLink(data.referralLink);
+            localStorage.setItem("referralLink", data.referralLink);
+          } else {
             const localReferral = localStorage.getItem("referralLink");
             if (localReferral) setReferralLink(localReferral);
-          });
-      } else {
-        // fallback to localStorage if userEmail is missing
-        const localReferral = localStorage.getItem("referralLink");
-        if (localReferral) setReferralLink(localReferral);
-      }
+          }
+        })
+        .catch((err) => {
+          console.log("Error fetching referral link:", err);
+          const localReferral = localStorage.getItem("referralLink");
+          if (localReferral) setReferralLink(localReferral);
+        });
+    } else {
+      const localReferral = localStorage.getItem("referralLink");
+      if (localReferral) setReferralLink(localReferral);
     }
 
     setLoading(false);
+
+    // ✅ Connect socket only once & safely
+    const socket = getSocket();
+    if (socket) {
+      socket.on("depositUpdate", (data: any) => {
+        console.log("💰 Deposit updated from socket:", data);
+      });
+    }
+
+    return () => {
+      socket?.off("depositUpdate");
+    };
   }, [router]);
 
   const handleLogout = () => {

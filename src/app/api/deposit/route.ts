@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { Deposit } from "@/models/Deposit";
+import { io } from "../../../../server/socket-server"; // ✅ added your socket instance
 
 const ALCHEMY_URL =
   "https://bnb-mainnet.g.alchemy.com/v2/CLsc_8crKlQJL1wfRyVjQ";
 
 const SOCKET_EMIT_URL =
-  process.env.SOCKET_EMIT_URL || "http://localhost:4000/emit";
+  process.env.SOCKET_EMIT_URL || "http://localhost:3000/emit";
 
 export async function POST(req: Request) {
   try {
@@ -43,7 +44,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // 🪙 Step 3: Optional — Verify that USDT BEP-20 contract address matches
+    // 🪙 Step 3: Optional — Verify USDT BEP-20 contract address
     const isValidTo =
       txReceipt.to?.toLowerCase() ===
       "0x55d398326f99059ff775485246999027b3197955"; // USDT BEP20
@@ -67,31 +68,36 @@ export async function POST(req: Request) {
       confirmed: true,
     });
 
-    // 🔔 Step 5: Notify socket server (optional)
+    // 🔥 Step 5: Emit event via Socket.IO (Direct)
+    io.emit(`deposit_${wallet.toLowerCase()}`, {
+      amount,
+      token: token || "USDT",
+      txHash,
+      confirmed: true,
+    });
+
+    // 🌍 Step 6: Also send HTTP POST to backend socket server (optional redundancy)
     try {
       await fetch(SOCKET_EMIT_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          event: "depositConfirmed",
+          event: `deposit_${wallet}`,
           payload: {
-            id: deposit._id,
-            wallet: deposit.wallet,
-            amount: deposit.amount,
-            token: deposit.token,
-            chain: deposit.chain,
-            txHash: deposit.txHash,
-            confirmed: deposit.confirmed,
-            createdAt: deposit.createdAt,
+            wallet,
+            amount,
+            token,
+            txHash,
+            chain,
+            confirmed: true,
           },
         }),
       });
     } catch (err) {
-      console.warn("⚠ Socket emit failed:", err);
-      // Not fatal — deposit is already saved
+      console.warn("⚠ Socket emit HTTP fallback failed:", err);
     }
 
-    // 🎉 Step 6: Return success
+    // 🎉 Step 7: Return success
     return NextResponse.json({
       success: true,
       verified: true,

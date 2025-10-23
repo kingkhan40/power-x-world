@@ -30,7 +30,7 @@ const wagmiConfig = defaultWagmiConfig({
     name: "KRM Wallet",
     description:
       "Deposit USDT via MetaMask / TrustWallet / SafePal / TokenPocket",
-    url: "https://yourwebsite.com",
+    url: "http://localhost:3000",
     icons: ["https://yourwebsite.com/icon.png"],
   },
 });
