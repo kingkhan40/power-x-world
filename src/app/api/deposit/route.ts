@@ -9,6 +9,12 @@ const ALCHEMY_URL =
 const SOCKET_EMIT_URL =
   process.env.SOCKET_EMIT_URL || "http://localhost:3000/emit";
 
+const ALCHEMY_URL =
+  "https://bnb-mainnet.g.alchemy.com/v2/CLsc_8crKlQJL1wfRyVjQ";
+
+const SOCKET_EMIT_URL =
+  process.env.SOCKET_EMIT_URL || "http://localhost:4000/emit";
+
 export async function POST(req: Request) {
   try {
     const { wallet, amount, token, txHash, chain } = await req.json();
@@ -44,7 +50,11 @@ export async function POST(req: Request) {
       );
     }
 
+<<<<<<< Updated upstream
     // 🪙 Step 3: Optional — Verify USDT BEP-20 contract address
+=======
+    // 🪙 Step 3: Optional — Verify that USDT BEP-20 contract address matches
+>>>>>>> Stashed changes
     const isValidTo =
       txReceipt.to?.toLowerCase() ===
       "0x55d398326f99059ff775485246999027b3197955"; // USDT BEP20
@@ -68,6 +78,7 @@ export async function POST(req: Request) {
       confirmed: true,
     });
 
+<<<<<<< Updated upstream
     // 🔥 Step 5: Emit event via Socket.IO (Direct)
     io.emit(`deposit_${wallet.toLowerCase()}`, {
       amount,
@@ -77,11 +88,15 @@ export async function POST(req: Request) {
     });
 
     // 🌍 Step 6: Also send HTTP POST to backend socket server (optional redundancy)
+=======
+    // 🔔 Step 5: Notify socket server (optional)
+>>>>>>> Stashed changes
     try {
       await fetch(SOCKET_EMIT_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+<<<<<<< Updated upstream
           event: `deposit_${wallet}`,
           payload: {
             wallet,
@@ -90,14 +105,34 @@ export async function POST(req: Request) {
             txHash,
             chain,
             confirmed: true,
+=======
+          event: "depositConfirmed",
+          payload: {
+            id: deposit._id,
+            wallet: deposit.wallet,
+            amount: deposit.amount,
+            token: deposit.token,
+            chain: deposit.chain,
+            txHash: deposit.txHash,
+            confirmed: deposit.confirmed,
+            createdAt: deposit.createdAt,
+>>>>>>> Stashed changes
           },
         }),
       });
     } catch (err) {
+<<<<<<< Updated upstream
       console.warn("⚠ Socket emit HTTP fallback failed:", err);
     }
 
     // 🎉 Step 7: Return success
+=======
+      console.warn("⚠ Socket emit failed:", err);
+      // Not fatal — deposit is already saved
+    }
+
+    // 🎉 Step 6: Return success
+>>>>>>> Stashed changes
     return NextResponse.json({
       success: true,
       verified: true,
