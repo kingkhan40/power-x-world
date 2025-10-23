@@ -2,7 +2,10 @@
 // Run with: npx ts-node server/socket-server.ts
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -16,6 +19,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 
@@ -60,6 +64,8 @@ const PORT = Number(process.env.SOCKET_PORT) || 4000;
 =======
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
 app.use(cors());
 app.use(express.json());
 
@@ -90,6 +96,9 @@ app.post("/emit", (req: Request, res: Response) => {
 
 const PORT = process.env.SOCKET_PORT || 4000;
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes

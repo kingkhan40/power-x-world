@@ -21,6 +21,12 @@ const ALCHEMY_URL =
 const SOCKET_EMIT_URL =
   process.env.SOCKET_EMIT_URL || "http://localhost:4000/emit";
 
+const ALCHEMY_URL =
+  "https://bnb-mainnet.g.alchemy.com/v2/CLsc_8crKlQJL1wfRyVjQ";
+
+const SOCKET_EMIT_URL =
+  process.env.SOCKET_EMIT_URL || "http://localhost:4000/emit";
+
 export async function POST(req: Request) {
   try {
     const { wallet, amount, token, txHash, chain } = await req.json();
@@ -58,7 +64,11 @@ export async function POST(req: Request) {
 
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     // 🪙 Step 3: Optional — Verify USDT BEP-20 contract address
+=======
+    // 🪙 Step 3: Optional — Verify that USDT BEP-20 contract address matches
+>>>>>>> Stashed changes
 =======
     // 🪙 Step 3: Optional — Verify that USDT BEP-20 contract address matches
 >>>>>>> Stashed changes
@@ -90,6 +100,7 @@ export async function POST(req: Request) {
 
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     // 🔥 Step 5: Emit event via Socket.IO (Direct)
     io.emit(`deposit_${wallet.toLowerCase()}`, {
       amount,
@@ -105,11 +116,15 @@ export async function POST(req: Request) {
 =======
     // 🔔 Step 5: Notify socket server (optional)
 >>>>>>> Stashed changes
+=======
+    // 🔔 Step 5: Notify socket server (optional)
+>>>>>>> Stashed changes
     try {
       await fetch(SOCKET_EMIT_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
           event: `deposit_${wallet}`,
@@ -123,6 +138,8 @@ export async function POST(req: Request) {
 =======
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
           event: "depositConfirmed",
           payload: {
             id: deposit._id,
@@ -134,6 +151,9 @@ export async function POST(req: Request) {
             confirmed: deposit.confirmed,
             createdAt: deposit.createdAt,
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -143,11 +163,14 @@ export async function POST(req: Request) {
     } catch (err) {
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
       console.warn("⚠ Socket emit HTTP fallback failed:", err);
     }
 
     // 🎉 Step 7: Return success
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
       console.warn("⚠ Socket emit failed:", err);
@@ -156,6 +179,9 @@ export async function POST(req: Request) {
 
     // 🎉 Step 6: Return success
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
