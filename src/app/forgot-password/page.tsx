@@ -1,4 +1,5 @@
 "use client";
+
 import { FaArrowLeft } from "react-icons/fa6";
 import InputComponents from "@/components/UI/InputComponents";
 import { useState, useRef } from "react";
@@ -12,36 +13,49 @@ const ForgotPassword = () => {
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
   const router = useRouter();
 
-  // Initialize refs array
+  // Initialize refs array for OTP boxes
   if (otpRefs.current.length !== otp.length) {
     otpRefs.current = Array(otp.length).fill(null);
   }
 
-  const handleEmailSubmit = (e: React.FormEvent) => {
+  // ✅ Step 1: Send OTP to Email
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Validate email
+
     if (!email || !/\S+@\S+\.\S+/.test(email)) {
       alert("Please enter a valid email address");
       return;
     }
 
-    // Simulate sending OTP
-    console.log("Sending OTP to:", email);
-    alert(`OTP has been sent to ${email}`);
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
 
-    // Set OTP sent status
-    setOtpSent(true);
+      const data = await res.json();
+      if (res.ok) {
+        alert("✅ OTP sent to your email (check spam if not found)");
+        setOtpSent(true);
+      } else {
+        alert(data.error || "Failed to send OTP");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong!");
+    }
   };
 
+  // ✅ Step 2: Handle OTP Input
   const handleOtpChange = (index: number, value: string) => {
-    // Only allow numbers
-    if (!/^\d*$/.test(value)) return;
+    if (!/^\d*$/.test(value)) return; // Only numbers allowed
 
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
 
-    // Auto-focus to next input
+    // Auto-focus next input
     if (value && index < 5 && otpRefs.current[index + 1]) {
       otpRefs.current[index + 1]?.focus();
     }
@@ -51,7 +65,7 @@ const ForgotPassword = () => {
     index: number,
     e: React.KeyboardEvent<HTMLInputElement>
   ) => {
-    // Handle backspace to move to previous input
+    // Handle backspace navigation
     if (
       e.key === "Backspace" &&
       !otp[index] &&
@@ -62,40 +76,50 @@ const ForgotPassword = () => {
     }
   };
 
-  const handlePasswordSubmit = (e: React.FormEvent) => {
+  // ✅ Step 3: Verify OTP + Change Password
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate OTP (in a real app, you would verify this with your backend)
     const enteredOtp = otp.join("");
     if (enteredOtp.length !== 6) {
       alert("Please enter the complete 6-digit OTP");
       return;
     }
 
-    // Validate password
     if (!newPassword) {
       alert("Please enter a new password");
       return;
     }
 
-    // Update password in database (simulate API call)
-    setTimeout(() => {
-      alert("Password reset successfully!");
-      // Redirect to login page
-      router.push("/login");
-    }, 1000);
+    try {
+      const res = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp: enteredOtp, newPassword }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        alert("🎉 Password reset successful!");
+        router.push("/login");
+      } else {
+        alert(data.error || "Failed to reset password");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Server error");
+    }
   };
 
   const handleBack = () => {
-    // Go back to previous page
     router.back();
   };
 
   return (
     <div
-      className="absolute inset-0  text-gray-800 flex flex-col items-center justify-center z-[9999]"
+      className="absolute inset-0 text-gray-800 flex flex-col items-center justify-center z-[9999]"
       style={{
-        backgroundImage: `url('https://img.freepik.com/free-vector/gradient-stock-market-concept_23-2149215737.jpg?t=st=1758109323~exp=1758112923~hmac=a3d7697261013df3340cbe6029f3528fcf5836020cafac0526d3a6bd6a40e500&w=740')`,
+        backgroundImage: `url('https://img.freepik.com/free-vector/gradient-stock-market-concept_23-2149215737.jpg')`,
         backgroundSize: "cover",
         backgroundPosition: "center",
       }}
@@ -103,27 +127,39 @@ const ForgotPassword = () => {
       <div className="absolute inset-0 lg:bg-black/30 bg-black/80 bg-opacity-50"></div>
 
       <div className="relative z-10 w-full max-w-xl animate-slide-up">
-        <div className="lg:bg-gray-800/70  backdrop-blur-xs rounded-2xl p-8 shadow-xl">
+        <div className="lg:bg-gray-800/70 backdrop-blur-xs rounded-2xl p-8 shadow-xl">
           <h2 className="lg:text-4xl text-2xl font-bold text-gray-100 tracking-wide mb-2">
-            Forgot password
+            Forgot Password
           </h2>
           <p className="text-gray-300 text-sm mb-6">
             Enter your account email address to reset your password.
           </p>
 
           {/* Email Input Form */}
-          <form onSubmit={handleEmailSubmit} className="space-y-6 mb-6">
-            <InputComponents
-              name="email"
-              type="email"
-              placeholder="Type your Email"
-              required={true}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+          {!otpSent && (
+            <form onSubmit={handleEmailSubmit} className="space-y-6 mb-6">
+              <InputComponents
+                name="email"
+                type="email"
+                placeholder="Type your Email"
+                required={true}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
 
-            <div className="flex flex-col lg:flex-row lg:items-center lg:gap-x-3 gap-y-4">
-              <div className="flex order-1 lg:order-2 justify-between space-x-2">
+              <button
+                type="submit"
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 via-green-700 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
+              >
+                Send OTP
+              </button>
+            </form>
+          )}
+
+          {/* OTP + Password Form */}
+          {otpSent && (
+            <form onSubmit={handlePasswordSubmit} className="space-y-6">
+              <div className="flex justify-center space-x-2 mb-4">
                 {otp.map((digit, index) => (
                   <input
                     key={index}
@@ -132,44 +168,33 @@ const ForgotPassword = () => {
                     }}
                     type="text"
                     inputMode="numeric"
-                    pattern="[0-9]*"
                     maxLength={1}
                     value={digit}
                     onChange={(e) => handleOtpChange(index, e.target.value)}
                     onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                    className="lg:w-12 w-10 lg:h-12 h-10 text-center lg:text-lg text-base border border-gray-200 rounded-lg
-                              bg-transparent text-white
-                              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-10 h-10 lg:w-12 lg:h-12 text-center text-white text-lg border border-gray-200 rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
                 ))}
               </div>
+
+              <InputComponents
+                name="newPassword"
+                type="password"
+                placeholder="Enter new password"
+                required={true}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+              />
+
               <button
                 type="submit"
                 className="w-full bg-gradient-to-r from-blue-600 to-purple-600 via-green-700 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
               >
-                Send OTP
+                Reset Password
               </button>
-            </div>
-          </form>
-
-          <form onSubmit={handlePasswordSubmit} className="space-y-6">
-            <InputComponents
-              name="newPassword"
-              type="password"
-              placeholder="Enter new password"
-              required={true}
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-            />
-
-            <button
-              type="submit"
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 via-green-700 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
-            >
-              Reset Password
-            </button>
-          </form>
+            </form>
+          )}
 
           <button
             onClick={handleBack}
