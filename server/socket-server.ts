@@ -1,7 +1,10 @@
 // server/socket-server.ts
 // Run with: npx ts-node server/socket-server.ts
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 import express, { Request, Response } from "express";
@@ -13,6 +16,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 
 // ✅ CORS setup — restrict later to your actual domain
@@ -54,6 +58,8 @@ export { io };
 // ✅ Start Socket.IO server
 const PORT = Number(process.env.SOCKET_PORT) || 4000;
 =======
+=======
+>>>>>>> Stashed changes
 app.use(cors());
 app.use(express.json());
 
@@ -83,6 +89,9 @@ app.post("/emit", (req: Request, res: Response) => {
 });
 
 const PORT = process.env.SOCKET_PORT || 4000;
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
 server.listen(PORT, () => {
