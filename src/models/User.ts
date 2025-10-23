@@ -1,4 +1,3 @@
-// src/models/User.ts
 import mongoose, { Schema, Document, Types } from "mongoose";
 
 /* -----------------------------------------
@@ -29,6 +28,8 @@ export interface IUser extends Document {
   name: string;
   email: string;
   password: string;
+  role: string; // ✅ added
+  isActive: boolean; // ✅ added
   referralCode: string;
   referredBy?: string | null;
   team?: string;
@@ -53,6 +54,8 @@ const UserSchema = new Schema<IUser>(
     name: { type: String, required: true },
     email: { type: String, unique: true, required: true },
     password: { type: String, required: true },
+    role: { type: String, default: "User" }, // ✅ default role
+    isActive: { type: Boolean, default: true }, // ✅ active by default
 
     // 🎯 Referral System
     referralCode: { type: String, unique: true, required: true },

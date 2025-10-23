@@ -1,4 +1,3 @@
-// src/context/AdminContext.tsx
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
@@ -6,7 +5,6 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 /* -----------------------------
  * 🔧 Type Definitions
  * ----------------------------- */
-
 type NotificationSettings = {
   push: boolean;
   email: boolean;
@@ -33,12 +31,9 @@ type AdminProfile = {
 };
 
 type AdminContextType = {
-  // Data
   userStats: UserStats;
   settings: AdminSettings;
   profile: AdminProfile;
-
-  // Actions
   updateSettings: (newSettings: Partial<AdminSettings>) => Promise<void>;
   updateProfile: (newProfile: Partial<AdminProfile>) => Promise<void>;
   changePassword: (
@@ -50,13 +45,11 @@ type AdminContextType = {
 /* -----------------------------
  * 🧠 Context Initialization
  * ----------------------------- */
-
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
 /* -----------------------------
  * 🧩 Provider Component
  * ----------------------------- */
-
 export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [userStats, setUserStats] = useState<UserStats>({
     totalUsers: 0,
@@ -100,16 +93,16 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
    * ----------------------------- */
   const fetchProfileAndSettings = async () => {
     try {
-      const res = await fetch("/api/settings");
+      const res = await fetch("/api/profile"); // fetch saved profile from DB
       if (!res.ok) throw new Error(`Status ${res.status}`);
       const data = await res.json();
-
       if (data.success) {
-        if (data.settings) setSettings(data.settings);
-        if (data.name || data.email)
-          setProfile({ name: data.name, email: data.email });
-      } else {
-        console.error("Fetch settings error:", data.error);
+        setProfile({
+          name: data.name || "",
+          email: data.email || "",
+        });
+        // Note: Settings are not updated here as the replacement function does not handle them.
+        // If settings are fetched from another endpoint, you may need to call it separately.
       }
     } catch (err) {
       console.error("Fetch profile/settings error:", err);
@@ -121,14 +114,23 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
    * ----------------------------- */
   const updateSettings = async (newSettings: Partial<AdminSettings>) => {
     try {
+      // Optimistic update
+      setSettings((prev) => ({ ...prev, ...newSettings }));
+
       const res = await fetch("/api/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newSettings),
       });
       const data = await res.json();
-      if (data.success) setSettings(data.settings);
-      else console.error("Update settings error:", data.error);
+
+      if (data.success && data.settings) {
+        // Merge server response
+        setSettings((prev) => ({ ...prev, ...data.settings }));
+      } else {
+        console.error("Update settings error:", data.error);
+        // Optionally revert optimistic update here
+      }
     } catch (err) {
       console.error("Update settings error:", err);
     }
@@ -142,8 +144,15 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify(newProfile),
       });
       const data = await res.json();
-      if (data.success) setProfile({ name: data.name, email: data.email });
-      else console.error("Update profile error:", data.error);
+
+      if (data.success) {
+        setProfile({
+          name: data.name,
+          email: data.email,
+        });
+      } else {
+        console.error("Update profile error:", data.error);
+      }
     } catch (err) {
       console.error("Update profile error:", err);
     }
@@ -159,7 +168,8 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ currentPassword, newPassword }),
       });
-      return await res.json();
+      const data = await res.json();
+      return data;
     } catch (err) {
       console.error("Change password error:", err);
       return { success: false, error: "Failed to change password" };
@@ -176,7 +186,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     const interval = setInterval(() => {
       fetchTotalUsers();
       fetchProfileAndSettings();
-    }, 10000); // 10s
+    }, 60000); // 60s
 
     return () => clearInterval(interval);
   }, []);

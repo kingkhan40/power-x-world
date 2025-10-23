@@ -1,4 +1,4 @@
-// ✅ Updated /api/login.ts
+// src/app/api/login/route.ts
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
@@ -14,6 +14,14 @@ export async function POST(req: Request) {
     if (!user)
       return NextResponse.json({ message: "User not found" }, { status: 404 });
 
+    // ✅ isActive check
+    if (user.isActive === false) {
+      return NextResponse.json(
+        { message: "Account disabled — contact admin" },
+        { status: 403 }
+      );
+    }
+
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid)
       return NextResponse.json({ message: "Invalid credentials" }, { status: 401 });
@@ -22,7 +30,7 @@ export async function POST(req: Request) {
       expiresIn: "7d",
     });
 
-    // ✅ Return all important data
+    // ✅ Return all important data for frontend
     return NextResponse.json({
       message: "Login successful",
       token,
