@@ -109,26 +109,7 @@ export default function HomePage() {
       <div className="absolute inset-0 bg-black/70"></div>
 
       <div className="container mx-auto px-3 lg:px-6 py-6 relative z-10">
-        {/* Header Section */}
-        <div className="flex flex-col items-center justify-center mb-8 text-center">
-          <h1 className="text-3xl lg:text-4xl font-bold mb-3">
-            Welcome {user?.name ?? "User"} 👋
-          </h1>
-
-          {referralLink && (
-            <p className="text-sm mt-2 text-gray-300">
-              Your referral link:{" "}
-              <span className="text-blue-400 break-all">{referralLink}</span>
-            </p>
-          )}
-
-          <button
-            onClick={handleLogout}
-            className="mt-4 bg-red-500 hover:bg-red-600 transition-all px-5 py-2 rounded-md text-white font-medium"
-          >
-            Logout
-          </button>
-        </div>
+      
 
         {/* Main Content Section */}
         <div className="space-y-4">
