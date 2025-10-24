@@ -108,7 +108,13 @@ export default function HomePage() {
       {/* Background Overlay */}
       <div className="absolute inset-0 bg-black/70"></div>
 
+      {/* 🔹 Sidebar (kept above overlay) */}
+      <div className="relative z-50">
+      </div>
+
+      {/* Main Content Section */}
       <div className="container mx-auto px-3 lg:px-6 py-6 relative z-10">
+        {/* Header Section */}
       
 
         {/* Main Content Section */}
