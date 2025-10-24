@@ -83,17 +83,11 @@
   "devDependencies": {
     "@types/aos": "^3.0.7",
     "@types/cors": "^2.8.19",
-<<<<<<< Updated upstream
     "@types/dotenv": "^6.1.1",
     "@types/express": "^5.0.3",
     "@types/next-auth": "^3.13.0",
-    "@types/node": "^20",
-    "@types/nodemailer": "^6.4.20",
-=======
-    "@types/express": "^5.0.3",
-    "@types/next-auth": "^3.13.0",
     "@types/node": "^20.19.23",
->>>>>>> Stashed changes
+    "@types/nodemailer": "^6.4.20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "genkit-cli": "^1.14.1",

@@ -15,11 +15,21 @@ const ALCHEMY_URL =
 const SOCKET_EMIT_URL =
   process.env.SOCKET_EMIT_URL || "http://localhost:4000/emit";
 
+const ALCHEMY_URL =
+  "https://bnb-mainnet.g.alchemy.com/v2/CLsc_8crKlQJL1wfRyVjQ";
+
+const SOCKET_EMIT_URL =
+  process.env.SOCKET_EMIT_URL || "http://localhost:4000/emit";
+
 export async function POST(req: Request) {
   try {
     const { wallet, amount, token, txHash, chain } = await req.json();
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+    // 🛑 Validate required fields
+>>>>>>> Stashed changes
 =======
     // 🛑 Validate required fields
 >>>>>>> Stashed changes
@@ -29,6 +39,7 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 
     const verifyTx = await fetch(ALCHEMY_URL, {
@@ -65,6 +76,9 @@ export async function POST(req: Request) {
 =======
 >>>>>>> Stashed changes
 
+=======
+
+>>>>>>> Stashed changes
     // ✅ Step 1: Verify transaction using Alchemy
     const verifyTx = await fetch(ALCHEMY_URL, {
       method: "POST",
@@ -113,6 +127,7 @@ export async function POST(req: Request) {
     });
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     io.emit(`deposit_${wallet.toLowerCase()}`, {
       amount,
       token: token || "USDT",
@@ -120,6 +135,9 @@ export async function POST(req: Request) {
       confirmed: true,
     });
 
+=======
+    // 🔔 Step 5: Notify socket server (optional)
+>>>>>>> Stashed changes
 =======
     // 🔔 Step 5: Notify socket server (optional)
 >>>>>>> Stashed changes
@@ -143,15 +161,21 @@ export async function POST(req: Request) {
       });
     } catch (err) {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
       console.warn("⚠ Socket emit HTTP fallback failed:", err);
     }
 
 =======
+=======
+>>>>>>> Stashed changes
       console.warn("⚠ Socket emit failed:", err);
       // Not fatal — deposit is already saved
     }
 
     // 🎉 Step 6: Return success
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     return NextResponse.json({
       success: true,
