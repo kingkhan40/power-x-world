@@ -11,6 +11,7 @@ import {
 } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { teamLevels as staticTeamLevels } from "@/data/teamLevel";
+import socket from "@/lib/socket";
 
 interface StatsItem {
   id: number;
@@ -34,99 +35,123 @@ interface TeamLevel {
   description: string;
 }
 
-interface Feature {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  gradient: string;
-  border: string;
+interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  deposit: number;
+  status: "active" | "inactive";
+}
+
+interface DashboardData {
+  level?: number;
+  totalTeam?: number;
+  activeUsers?: number;
+  totalBusiness?: number;
+  wallet?: number;
+  totalCommission?: number;
 }
 
 const Team = () => {
   const router = useRouter();
-  const [totalTeam, setTotalTeam] = useState<number>(0);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loadingTeam, setLoadingTeam] = useState<boolean>(true);
   const [errorTeam, setErrorTeam] = useState<string>("");
+  const [dashboard, setDashboard] = useState<DashboardData>({});
+  const [loading, setLoading] = useState<boolean>(true);
 
+  // Fetch Dashboard stats + socket updates
   useEffect(() => {
-    const fetchTeam = async () => {
+    const fetchDashboard = async () => {
       try {
         const userId = localStorage.getItem("userId");
         if (!userId) return;
 
-        const res = await fetch(`/api/team?userId=${userId}`);
+        const res = await fetch(`/api/user/dashboard?userId=${userId}`);
+        const data = await res.json();
+        if (res.ok) {
+          setDashboard(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch dashboard:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboard();
+
+    const userWallet = localStorage.getItem("userWallet");
+    if (socket && userWallet) {
+      socket.on(`level_update_${userWallet}`, (data: any) => {
+        setDashboard(prev => ({ ...prev, level: data.level }));
+      });
+    }
+
+    return () => {
+      if (socket && localStorage.getItem("userWallet")) {
+        const w = localStorage.getItem("userWallet");
+        socket.off(`level_update_${w}`);
+      }
+    };
+  }, []);
+
+  // Fetch Team Members
+  useEffect(() => {
+    const fetchTeamMembers = async () => {
+      try {
+        const userId = localStorage.getItem("userId");
+        if (!userId) return;
+
+        const res = await fetch(`/api/user/team?userId=${userId}`);
         const data = await res.json();
 
         if (!res.ok) {
-          setErrorTeam(data.message || "Failed to fetch team data");
+          setErrorTeam(data.message || "Failed to fetch team members");
           return;
         }
 
-        setTotalTeam(data.totalTeam);
+        setTeamMembers(data.team || []);
       } catch (err) {
-        console.error("Failed to fetch team data:", err);
+        console.error("Failed to fetch team members:", err);
         setErrorTeam("Network error. Please try again.");
       } finally {
         setLoadingTeam(false);
       }
     };
 
-    fetchTeam();
+    fetchTeamMembers();
   }, []);
 
   const statsData: StatsItem[] = [
     {
       id: 1,
-      value: loadingTeam ? "Loading..." : totalTeam.toString(),
+      value: loading ? "Loading..." : (dashboard.totalTeam ?? 0).toString(),
       label: "Total Team",
       icon: <FaUsers className="text-blue-400" />,
     },
     {
       id: 2,
-      value: "$8585",
+      value: `$${loading ? "..." : dashboard.totalBusiness ?? 0}`,
       label: "Total Business",
       icon: <FaChartLine className="text-green-400" />,
     },
     {
       id: 3,
-      value: "0 Users",
-      label: "Active With 50$",
+      value: `${loading ? "..." : dashboard.activeUsers ?? 0} Users`,
+      label: "Active With $50+",
       icon: <FaUserCheck className="text-purple-400" />,
     },
     {
       id: 4,
-      value: "1 Level",
+      value: loading ? "..." : `Level ${dashboard.level ?? 0}`,
       label: "Invest Levels",
       icon: <FaLayerGroup className="text-yellow-400" />,
     },
   ];
 
-  const features: Feature[] = [
-    {
-      icon: <FaUsers className="text-2xl text-blue-300" />,
-      title: "Team Growth",
-      description: "Expand your network and unlock higher levels",
-      gradient: "from-blue-500/20 to-cyan-500/20",
-      border: "border-blue-400/30",
-    },
-    {
-      icon: <FaDollarSign className="text-2xl text-green-300" />,
-      title: "Passive Income",
-      description: "Earn commissions from team activities",
-      gradient: "from-green-500/20 to-emerald-500/20",
-      border: "border-green-400/30",
-    },
-    {
-      icon: <FaChartLine className="text-2xl text-purple-300" />,
-      title: "Performance Tracking",
-      description: "Monitor your team's progress in real-time",
-      gradient: "from-purple-500/20 to-pink-500/20",
-      border: "border-purple-400/30",
-    },
-  ];
-
-  const handleLevelClick = (levelId: number) => {
-    router.push(`/team/${levelId}`);
+  const handleMemberClick = (memberId: string) => {
+    router.push(`/team/member/${memberId}`);
   };
 
   return (
@@ -190,9 +215,7 @@ const Team = () => {
           <p className="text-blue-100 lg:text-lg text-sm">
             Grow Your Team & Maximize Earnings
           </p>
-          {errorTeam && (
-            <p className="text-red-400 mt-2 text-sm">{errorTeam}</p>
-          )}
+          {errorTeam && <p className="text-red-400 mt-2 text-sm">{errorTeam}</p>}
         </div>
 
         {/* Stats Grid */}
@@ -215,48 +238,14 @@ const Team = () => {
           ))}
         </div>
 
-        {/* Info Card */}
-        <div className="p-6 rounded-2xl relative overflow-hidden bg-gray-900 border border-gray-800 shadow-2xl mb-8">
-          <div
-            className="absolute -inset-2 rounded-2xl animate-spin opacity-70"
-            style={{
-              background:
-                "conic-gradient(from 0deg, #3b82f6, #8b5cf6, #ec4899, #10b981, #f59e0b, #3b82f6)",
-              animationDuration: "10000ms",
-              zIndex: 0,
-            }}
-          ></div>
-          <div className="absolute inset-0.5 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 z-1"></div>
-
-          <div className="relative z-20">
-            <div className="flex flex-col items-start gap-4">
-              <div className="flex items-center gap-x-2">
-                <div className="bg-blue-500/30 p-2 rounded-xl">
-                  <FaUsers className="text-2xl text-blue-300" />
-                </div>
-                <h3 className="text-white lg:text-lg text-base font-bold">
-                  Team Level Requirements
-                </h3>
-              </div>
-
-              <p className="text-blue-100 leading-relaxed">
-                Unlock advanced team levels by activating just 1 direct members with{" "}
-                <span className="text-yellow-300 font-semibold px-1">$50 contribution</span>{" "}
-                each on your initial level. financial growth exponentially through
-                team performance and collective business development.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Team Levels Grid */}
+        {/* Team Levels Grid (UNCHANGED) */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {staticTeamLevels.map((levelData: TeamLevel) => (
             <div
               key={levelData.id}
               className="lg:p-6 p-3 rounded-2xl relative overflow-hidden bg-gray-900 border border-gray-800 shadow-2xl hover:transform hover:scale-105 transition-all duration-500 group"
             >
-              {/* Rotating Border Animation */}
+              {/* Rotating Border */}
               <div
                 className="absolute -inset-2 rounded-2xl animate-spin opacity-50"
                 style={{
@@ -281,7 +270,6 @@ const Team = () => {
                 </div>
               </div>
 
-              {/* Level Header */}
               <div className="text-center mb-2 pt-2 relative z-20">
                 <h3 className="text-2xl font-bold text-white mb-2">
                   Level {levelData.level.toString().padStart(2, "0")}
@@ -293,36 +281,28 @@ const Team = () => {
                 <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 backdrop-blur-sm rounded-md lg:p-4 p-2 border border-blue-400/30">
                   <div className="flex items-center justify-between">
                     <FaDollarSign className="text-blue-300 text-xl" />
-                    <div className="text-white lg:text-lg text-sm font-bold">
-                      {levelData.business}
-                    </div>
+                    <div className="text-white lg:text-lg text-sm font-bold">{levelData.business}</div>
                   </div>
                   <div className="text-blue-200 text-sm mt-1">Business</div>
                 </div>
                 <div className="bg-gradient-to-br from-green-500/20 to-green-600/20 backdrop-blur-sm rounded-md lg:p-4 p-2 border border-green-400/30">
                   <div className="flex items-center justify-between">
                     <FaChartLine className="text-green-300 text-xl" />
-                    <div className="text-white lg:text-lg text-sm font-bold">
-                      ${levelData.commissions}
-                    </div>
+                    <div className="text-white lg:text-lg text-sm font-bold">${levelData.commissions}</div>
                   </div>
                   <div className="text-green-200 text-sm mt-1">Commissions</div>
                 </div>
               </div>
 
-              {/* Commission Details */}
+              {/* Invite & Team Commissions */}
               <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 backdrop-blur-sm rounded-md lg:p-4 p-2 border border-purple-400/30 mb-2 relative z-20">
                 <div className="grid grid-cols-2 gap-4 text-center">
                   <div>
-                    <div className="text-white text-lg font-bold">
-                      {levelData.inviteCommission}
-                    </div>
+                    <div className="text-white text-lg font-bold">{levelData.inviteCommission}</div>
                     <div className="text-purple-200 text-xs">Invite Commission</div>
                   </div>
                   <div>
-                    <div className="text-white text-lg font-bold">
-                      {levelData.teamCommission}
-                    </div>
+                    <div className="text-white text-lg font-bold">{levelData.teamCommission}</div>
                     <div className="text-pink-200 text-xs">Team Commission</div>
                   </div>
                 </div>
@@ -330,28 +310,12 @@ const Team = () => {
 
               {/* Action Button */}
               <button
-                onClick={() => handleLevelClick(levelData.id)}
+                onClick={() => router.push(`/team/${levelData.id}`)}
                 className="w-full lg:py-3 py-1.5 text-sm lg:text-lg rounded-xl font-bold text-white transition-all duration-300 transform hover:scale-105 shadow-2xl flex items-center justify-center gap-2 relative z-20
                 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-400 hover:to-purple-400 opacity-90 cursor-pointer"
               >
-                <span>View Details</span>
+                View Details
               </button>
-            </div>
-          ))}
-        </div>
-
-        {/* Features Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-          {features.map((feature, index) => (
-            <div
-              key={index}
-              className={`p-6 rounded-2xl relative overflow-hidden bg-gradient-to-br ${feature.gradient} backdrop-blur-lg border ${feature.border} shadow-2xl`}
-            >
-              <div className="bg-white/10 p-3 rounded-xl w-12 h-12 mx-auto mb-4 flex items-center justify-center">
-                {feature.icon}
-              </div>
-              <h4 className="text-white font-bold mb-2 text-center">{feature.title}</h4>
-              <p className="text-white/80 text-sm text-center">{feature.description}</p>
             </div>
           ))}
         </div>

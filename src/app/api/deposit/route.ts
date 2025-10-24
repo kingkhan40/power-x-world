@@ -1,122 +1,34 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { Deposit } from "@/models/Deposit";
-import { io } from "../../../../server/socket-server";
+import User from "@/models/User";
+import { ObjectId } from "mongodb";
 
-const ALCHEMY_URL =
-  "https://bnb-mainnet.g.alchemy.com/v2/CLsc_8crKlQJL1wfRyVjQ";
-
-const SOCKET_EMIT_URL =
-  process.env.SOCKET_EMIT_URL || "http://localhost:4000/emit";
-
-const ALCHEMY_URL =
-  "https://bnb-mainnet.g.alchemy.com/v2/CLsc_8crKlQJL1wfRyVjQ";
-
-const SOCKET_EMIT_URL =
-  process.env.SOCKET_EMIT_URL || "http://localhost:4000/emit";
-
-const ALCHEMY_URL =
-  "https://bnb-mainnet.g.alchemy.com/v2/CLsc_8crKlQJL1wfRyVjQ";
-
-const SOCKET_EMIT_URL =
-  process.env.SOCKET_EMIT_URL || "http://localhost:4000/emit";
-
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const { wallet, amount, token, txHash, chain } = await req.json();
+    const {
+      wallet,
+      amount,
+      token,
+      txHash,
+      chain,
+      userId,
+    }: {
+      wallet?: string;
+      amount?: number;
+      token?: string;
+      txHash?: string;
+      chain?: string;
+      userId?: string;
+    } = await req.json();
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-    // 🛑 Validate required fields
->>>>>>> Stashed changes
-=======
-    // 🛑 Validate required fields
->>>>>>> Stashed changes
-    if (!wallet || !amount || !txHash) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      );
-    }
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-
-    const verifyTx = await fetch(ALCHEMY_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        jsonrpc: "2.0",
-        id: 1,
-        method: "eth_getTransactionReceipt",
-        params: [txHash],
-      }),
-    });
-
-    const result = await verifyTx.json();
-    const txReceipt = result.result;
-
-    if (!txReceipt || txReceipt.status !== "0x1") {
-      return NextResponse.json(
-        { error: "Transaction not confirmed or failed on blockchain" },
-        { status: 400 }
-      );
+    if (!wallet || !amount || !txHash || !userId) {
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const isValidTo =
-      txReceipt.to?.toLowerCase() ===
-      "0x55d398326f99059ff775485246999027b3197955"; // ✅ USDT BEP20
-
-    if (!isValidTo) {
-      return NextResponse.json(
-        { error: "Invalid or unsupported token transaction" },
-        { status: 400 }
-      );
-    }
-=======
->>>>>>> Stashed changes
-
-=======
-
->>>>>>> Stashed changes
-    // ✅ Step 1: Verify transaction using Alchemy
-    const verifyTx = await fetch(ALCHEMY_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        jsonrpc: "2.0",
-        id: 1,
-        method: "eth_getTransactionReceipt",
-        params: [txHash],
-      }),
-    });
-
-    const result = await verifyTx.json();
-    const txReceipt = result.result;
-
-    // 🧾 Step 2: Check if transaction was successful
-    if (!txReceipt || txReceipt.status !== "0x1") {
-      return NextResponse.json(
-        { error: "Transaction not confirmed or failed on blockchain" },
-        { status: 400 }
-      );
-    }
-
-    // 🪙 Step 3: Optional — Verify that USDT BEP-20 contract address matches
-    const isValidTo =
-      txReceipt.to?.toLowerCase() ===
-      "0x55d398326f99059ff775485246999027b3197955"; // USDT BEP20
-
-    if (!isValidTo) {
-      return NextResponse.json(
-        { error: "Invalid or unsupported token transaction" },
-        { status: 400 }
-      );
-    }
-
-    // 💾 Step 4: Save verified deposit in DB
     await connectDB();
 
+    // Step 1: Save deposit
     const deposit = await Deposit.create({
       wallet,
       amount,
@@ -126,67 +38,75 @@ export async function POST(req: Request) {
       confirmed: true,
     });
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-    io.emit(`deposit_${wallet.toLowerCase()}`, {
-      amount,
-      token: token || "USDT",
-      txHash,
-      confirmed: true,
-    });
+    // Step 2: Update user investments
+    const user = await User.findById(userId);
+    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-=======
-    // 🔔 Step 5: Notify socket server (optional)
->>>>>>> Stashed changes
-=======
-    // 🔔 Step 5: Notify socket server (optional)
->>>>>>> Stashed changes
-    try {
-      await fetch(SOCKET_EMIT_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          event: "depositConfirmed",
-          payload: {
-            id: deposit._id,
-            wallet: deposit.wallet,
-            amount: deposit.amount,
-            token: deposit.token,
-            chain: deposit.chain,
-            txHash: deposit.txHash,
-            confirmed: deposit.confirmed,
-            createdAt: deposit.createdAt,
-          },
-        }),
-      });
-    } catch (err) {
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-      console.warn("⚠ Socket emit HTTP fallback failed:", err);
+    user.investments.push({ amount });
+    user.wallet += amount;
+
+    // Step 3: Multi-level referral commission
+    const commissionLevels = [0.12, 0.05, 0.02, 0.02]; // Level 1 → 12%, 2 → 5%, 3 → 2%, 4 → 2%
+    let currentReferrerId = user.referredBy;
+
+    for (let level = 0; level < commissionLevels.length; level++) {
+      if (!currentReferrerId) break;
+
+      const referrer = await User.findById(currentReferrerId);
+      if (!referrer) break;
+
+      // Initialize commissionedUsers array if missing
+      if (!referrer.commissionedUsers) referrer.commissionedUsers = [];
+
+      const uniqueCommissionKey = `${user._id.toString()}_L${level + 1}`;
+      const alreadyCommissioned = referrer.commissionedUsers.includes(uniqueCommissionKey);
+
+      if (!alreadyCommissioned && amount >= 50) {
+        // Add commission
+        const commission = amount * commissionLevels[level];
+        referrer.wallet += commission;
+
+        // Only level 1 adds user to teamMembers
+        if (level === 0 && !referrer.teamMembers.includes(user._id)) {
+          referrer.teamMembers.push(user._id);
+        }
+
+        // Track commission
+        referrer.commissionedUsers.push(uniqueCommissionKey);
+
+        // Recalculate total team and active users
+        referrer.totalTeam = referrer.teamMembers.length;
+
+        const activeUsersCount = await Promise.all(
+          referrer.teamMembers.map(async (id: ObjectId | string) => {
+            const member = await User.findById(id);
+            // ✅ TypeScript-safe dep
+            return member?.investments?.some((dep: { amount: number }) => dep.amount >= 50) ? 1 : 0;
+          })
+        );
+        referrer.activeUsers = activeUsersCount.reduce((a, b) => a + b, 0);
+
+        // Unlock level (max 4)
+        if (referrer.level < 4) referrer.level += 1;
+
+        await referrer.save();
+      }
+
+      // Move to next level up
+      currentReferrerId = referrer.referredBy;
     }
 
-=======
-=======
->>>>>>> Stashed changes
-      console.warn("⚠ Socket emit failed:", err);
-      // Not fatal — deposit is already saved
-    }
+    await user.save();
 
-    // 🎉 Step 6: Return success
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
     return NextResponse.json({
       success: true,
       verified: true,
       deposit,
+      wallet: user.wallet,
     });
   } catch (err) {
     console.error("❌ Deposit Error:", err);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+ 

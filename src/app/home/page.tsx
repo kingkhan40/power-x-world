@@ -8,18 +8,29 @@ import IconGridNavigation from "@/components/IconGridNavigation";
 import InvestmentInfo from "@/components/InvestmentInfo";
 import socket from "@/lib/socket";
 
+type DashboardData = {
+  level?: number;
+  totalTeam?: number;
+  activeUsers?: number;
+  wallet?: number;
+  totalCommission?: number;
+};
+
 export default function HomePage() {
   const router = useRouter();
   const [user, setUser] = useState<{ name?: string; email?: string; wallet?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [referralLink, setReferralLink] = useState<string | null>(null);
   const [balance, setBalance] = useState<number>(0);
+  const [totalCommission, setTotalCommission] = useState<number>(0);
+  const [dashboard, setDashboard] = useState<DashboardData>({});
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     const userEmail = localStorage.getItem("userEmail");
     const userName = localStorage.getItem("userName");
     const userWallet = localStorage.getItem("userWallet");
+    const userId = localStorage.getItem("userId");
 
     if (!token) {
       router.replace("/login");
@@ -28,7 +39,7 @@ export default function HomePage() {
 
     setUser({ name: userName || "User", email: userEmail || "", wallet: userWallet || "" });
 
-    // ✅ Fetch referral link
+    // Fetch referral link
     if (userEmail) {
       fetch(`/api/user/${userEmail}`)
         .then((res) => res.json())
@@ -45,33 +56,35 @@ export default function HomePage() {
           const localReferral = localStorage.getItem("referralLink");
           if (localReferral) setReferralLink(localReferral);
         });
-    } else {
-      const localReferral = localStorage.getItem("referralLink");
-      if (localReferral) setReferralLink(localReferral);
+    }
+
+    // Fetch dashboard stats
+    if (userId) {
+      fetch(`/api/user/dashboard?userId=${userId}`)
+        .then((res) => res.json())
+        .then((data) => {
+          setDashboard(data);
+          setBalance(data.wallet ?? 0); // wallet balance
+          setTotalCommission(data.totalCommission ?? 0); // total commission
+        })
+        .catch(console.error);
     }
 
     setLoading(false);
 
-    // ✅ Real-time socket setup
+    // Setup socket listeners
     if (socket && userWallet) {
-      // Deposit event (live updates)
-      socket.on(`deposit_${userWallet}`, (data: any) => {
-        console.log("💰 Deposit Event:", data);
-        setBalance(Number(data.newBalance));
-      });
-
-      // Withdraw event (live updates)
-      socket.on(`withdraw_${userWallet}`, (data: any) => {
-        console.log("💸 Withdraw Event:", data);
-        setBalance(Number(data.newBalance));
-      });
+      socket.on(`deposit_${userWallet}`, (data: any) => setBalance(Number(data.newBalance)));
+      socket.on(`withdraw_${userWallet}`, (data: any) => setBalance(Number(data.newBalance)));
+      socket.on(`commission_${userWallet}`, (data: any) => setTotalCommission(Number(data.totalCommission)));
     }
 
-    // ✅ Cleanup on unmount
+    // Cleanup
     return () => {
       if (socket && userWallet) {
         socket.off(`deposit_${userWallet}`);
         socket.off(`withdraw_${userWallet}`);
+        socket.off(`commission_${userWallet}`);
       }
     };
   }, [router]);
@@ -105,25 +118,29 @@ export default function HomePage() {
         backgroundRepeat: "no-repeat",
       }}
     >
-      {/* Background Overlay */}
       <div className="absolute inset-0 bg-black/70"></div>
 
-      {/* 🔹 Sidebar (kept above overlay) */}
       <div className="relative z-50">
+        {/* Add header / sidebar here if needed */}
       </div>
 
-      {/* Main Content Section */}
-      <div className="container mx-auto px-3 lg:px-6 py-6 relative z-10">
-        {/* Header Section */}
-      
+      <div className="container mx-auto px-3 lg:px-6 py-6 relative z-10 space-y-6">
+        {/* USDT Balance Card */}
+        <BalanceCard balance={balance + totalCommission} />
 
-        {/* Main Content Section */}
-        <div className="space-y-4">
-          <BalanceCard balance={balance} />
-          <InvestmentInfo userEmail={user?.email ?? ""} />
-          <IconGridNavigation />
-          <BasicPlan />
-        </div>
+        <InvestmentInfo userEmail={user?.email ?? ""} />
+
+        {/* Navigation & Plans */}
+        <IconGridNavigation />
+        <BasicPlan />
+
+        {/* Logout Button */}
+        <button
+          className="bg-red-600 px-4 py-2 rounded hover:bg-red-700 transition"
+          onClick={handleLogout}
+        >
+          Logout
+        </button>
       </div>
     </div>
   );
