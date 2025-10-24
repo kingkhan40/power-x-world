@@ -6,26 +6,29 @@ import BalanceCard from "@/components/BalanceCard";
 import BasicPlan from "@/components/BasicPlan";
 import IconGridNavigation from "@/components/IconGridNavigation";
 import InvestmentInfo from "@/components/InvestmentInfo";
-import { getSocket } from "@/lib/socket";
+import socket from "@/lib/socket";
 
 export default function HomePage() {
   const router = useRouter();
-  const [user, setUser] = useState<{ name?: string; email?: string } | null>(null);
+  const [user, setUser] = useState<{ name?: string; email?: string; wallet?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [referralLink, setReferralLink] = useState<string | null>(null);
+  const [balance, setBalance] = useState<number>(0);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     const userEmail = localStorage.getItem("userEmail");
     const userName = localStorage.getItem("userName");
+    const userWallet = localStorage.getItem("userWallet");
 
     if (!token) {
       router.replace("/login");
       return;
     }
 
-    setUser({ name: userName || "User", email: userEmail || "" });
+    setUser({ name: userName || "User", email: userEmail || "", wallet: userWallet || "" });
 
+    // ✅ Fetch referral link
     if (userEmail) {
       fetch(`/api/user/${userEmail}`)
         .then((res) => res.json())
@@ -38,8 +41,7 @@ export default function HomePage() {
             if (localReferral) setReferralLink(localReferral);
           }
         })
-        .catch((err) => {
-          console.log("Error fetching referral link:", err);
+        .catch(() => {
           const localReferral = localStorage.getItem("referralLink");
           if (localReferral) setReferralLink(localReferral);
         });
@@ -50,16 +52,27 @@ export default function HomePage() {
 
     setLoading(false);
 
-    // ✅ Connect socket only once & safely
-    const socket = getSocket();
-    if (socket) {
-      socket.on("depositUpdate", (data: any) => {
-        console.log("💰 Deposit updated from socket:", data);
+    // ✅ Real-time socket setup
+    if (socket && userWallet) {
+      // Deposit event (live updates)
+      socket.on(`deposit_${userWallet}`, (data: any) => {
+        console.log("💰 Deposit Event:", data);
+        setBalance(Number(data.newBalance));
+      });
+
+      // Withdraw event (live updates)
+      socket.on(`withdraw_${userWallet}`, (data: any) => {
+        console.log("💸 Withdraw Event:", data);
+        setBalance(Number(data.newBalance));
       });
     }
 
+    // ✅ Cleanup on unmount
     return () => {
-      socket?.off("depositUpdate");
+      if (socket && userWallet) {
+        socket.off(`deposit_${userWallet}`);
+        socket.off(`withdraw_${userWallet}`);
+      }
     };
   }, [router]);
 
@@ -69,6 +82,7 @@ export default function HomePage() {
     localStorage.removeItem("referralLink");
     localStorage.removeItem("userEmail");
     localStorage.removeItem("userName");
+    localStorage.removeItem("userWallet");
     router.replace("/login");
   };
 
@@ -101,7 +115,6 @@ export default function HomePage() {
             Welcome {user?.name ?? "User"} 👋
           </h1>
 
-          {/* ✅ Display Referral Link */}
           {referralLink && (
             <p className="text-sm mt-2 text-gray-300">
               Your referral link:{" "}
@@ -119,7 +132,7 @@ export default function HomePage() {
 
         {/* Main Content Section */}
         <div className="space-y-4">
-          <BalanceCard />
+          <BalanceCard balance={balance} />
           <InvestmentInfo userEmail={user?.email ?? ""} />
           <IconGridNavigation />
           <BasicPlan />

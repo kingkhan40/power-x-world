@@ -1,4 +1,3 @@
-// server/socket-server.ts
 import express, { Request, Response } from "express";
 import http from "http";
 import { Server } from "socket.io";
@@ -7,12 +6,16 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+
+let io: Server | null = null;
+
+// ✅ Initialize Express app
 const app = express();
 
 // ✅ Setup CORS
 app.use(
   cors({
-    origin: "http://localhost:3000", // update when deployed
+    origin: process.env.CLIENT_URL || "http://localhost:3000",
     methods: ["GET", "POST"],
     credentials: true,
   })
@@ -23,28 +26,60 @@ app.use(express.json());
 // ✅ Create HTTP server
 const server = http.createServer(app);
 
-// ✅ Initialize Socket.IO
-const io = new Server(server, {
-  cors: {
-    origin: "http://localhost:3000",
-    methods: ["GET", "POST"],
-  },
-});
+/**
+ * ✅ Initialize Socket.io (only once)
+ */
+export function initSocket(serverInstance?: http.Server): Server {
+  if (!io) {
+    io = new Server(serverInstance || server, {
+      cors: {
+        origin: process.env.CLIENT_URL || "http://localhost:3000",
+        methods: ["GET", "POST"],
+        credentials: true,
+      },
+    });
 
-// ✅ Socket connection event
-io.on("connection", (socket) => {
-  console.log("🟢 Socket connected:", socket.id);
+    io.on("connection", (socket) => {
+      console.log("🟢 Socket connected:", socket.id);
 
-  socket.on("disconnect", () => {
-    console.log("🔴 Socket disconnected:", socket.id);
-  });
-});
+      // 🔄 Example: handle a test event
+      socket.on("testEvent", (data) => {
+        console.log("📩 testEvent received:", data);
+        socket.emit("serverResponse", { message: "Server received your data!" });
+      });
 
-// ✅ HTTP fallback emit endpoint (Next.js API can POST here)
+      socket.on("disconnect", () => {
+        console.log("🔴 Socket disconnected:", socket.id);
+      });
+    });
+
+    console.log("✅ Socket.IO server initialized");
+  }
+
+  return io;
+}
+
+/**
+ * ✅ Get Socket.io instance safely (for use in Next.js API routes)
+ */
+export function getIO(): Server {
+  if (!io) {
+    throw new Error("❌ Socket.IO not initialized! Please call initSocket() first.");
+  }
+  return io;
+}
+
+/**
+ * ✅ HTTP fallback emit endpoint (for Next.js APIs to trigger events)
+ */
 app.post("/emit", (req: Request, res: Response) => {
   try {
     const { event, payload } = req.body;
-    console.log(`📡 Emitting: ${event}`, payload);
+    console.log(`📡 Emitting event: ${event}`, payload);
+
+    if (!io) {
+      throw new Error("Socket.IO not initialized");
+    }
 
     io.emit(event, payload);
     res.json({ success: true });
@@ -54,10 +89,19 @@ app.post("/emit", (req: Request, res: Response) => {
   }
 });
 
-export { io };
+// ✅ Start server only when run directly
+const isDirectRun =
+  import.meta.url === `file://${process.argv[1]}` ||
+  process.argv[1]?.endsWith("socket-server.ts");
 
-// ✅ Start Server
-const PORT = Number(process.env.SOCKET_PORT) || 3000;
-server.listen(PORT, () => {
-  console.log(`🚀 Socket.IO server running on port ${PORT}`);
-});
+if (isDirectRun) {
+  const PORT = Number(process.env.SOCKET_PORT) || 4000;
+  initSocket(server);
+  server.listen(PORT, () => {
+    console.log("✅ Socket.IO server initialized");
+    console.log(`🚀 Socket.IO server running on port ${PORT}`);
+  });
+}
+
+
+export { app, io, server };

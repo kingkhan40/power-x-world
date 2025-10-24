@@ -1,13 +1,25 @@
-// src/lib/socket.ts
-import { io as ClientIO, Socket } from "socket.io-client";
+import { io, Socket } from "socket.io-client";
 
-let socket: Socket | null = null;
+// ✅ Use environment variable or fallback
+const SOCKET_URL =
+  process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:4000";
 
-if (typeof window !== "undefined") {
-  socket = ClientIO("http://localhost:3000", {
-    transports: ["websocket"],
-    withCredentials: true,
-  });
-}
+// ✅ Create single socket instance
+const socket: Socket = io(SOCKET_URL, {
+  transports: ["websocket"],
+  reconnection: true,
+  reconnectionAttempts: 5,
+  reconnectionDelay: 1000,
+});
 
-export const getSocket = () => socket;
+// ✅ Connection logs
+socket.on("connect", () => {
+  console.log("🟢 Connected to Socket.IO server:", socket.id);
+});
+
+socket.on("disconnect", (reason) => {
+  console.log("🔴 Disconnected from Socket.IO server:", reason);
+});
+
+// ✅ Export default for simple import usage
+export default socket;
