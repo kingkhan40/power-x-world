@@ -28,8 +28,8 @@ export interface IUser extends Document {
   name: string;
   email: string;
   password: string;
-  role: string; // ✅ added
-  isActive: boolean; // ✅ added
+  role: string;
+  isActive: boolean;
   referralCode: string;
   referredBy?: string | null;
   team?: string;
@@ -43,6 +43,13 @@ export interface IUser extends Document {
   settings?: IUserSettings;
   createdAt?: Date;
   updatedAt?: Date;
+
+  // 🪙 Reward System Fields
+  usdtBalance?: number;
+  selfBusiness?: number;
+  directBusiness?: number;
+  rewardBalance?: number;
+  currentRewardLevel?: number;
 }
 
 /* -----------------------------------------
@@ -54,8 +61,8 @@ const UserSchema = new Schema<IUser>(
     name: { type: String, required: true },
     email: { type: String, unique: true, required: true },
     password: { type: String, required: true },
-    role: { type: String, default: "User" }, // ✅ default role
-    isActive: { type: Boolean, default: true }, // ✅ active by default
+    role: { type: String, default: "User" },
+    isActive: { type: Boolean, default: true },
 
     // 🎯 Referral System
     referralCode: { type: String, unique: true, required: true },
@@ -90,12 +97,20 @@ const UserSchema = new Schema<IUser>(
       twoFactorAuth: { type: Boolean, default: true },
       profilePicture: { type: String, default: "" },
     },
+
+    // 🪙 Reward System Fields
+    usdtBalance: { type: Number, default: 0 },
+    selfBusiness: { type: Number, default: 0 },
+    directBusiness: { type: Number, default: 0 },
+    rewardBalance: { type: Number, default: 0 },
+    currentRewardLevel: { type: Number, default: 1 },
   },
-  { timestamps: true } // includes createdAt + updatedAt
+  { timestamps: true }
 );
 
 /* -----------------------------------------
  * 🧠 Export Model (Hot Reload Safe)
  * ----------------------------------------- */
-const User = mongoose.models.User || mongoose.model<IUser>("User", UserSchema);
+const User =
+  mongoose.models.User || mongoose.model<IUser>("User", UserSchema);
 export default User;

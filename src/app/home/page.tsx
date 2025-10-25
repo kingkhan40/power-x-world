@@ -24,10 +24,11 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [referralLink, setReferralLink] = useState<string | null>(null);
   const [dashboard, setDashboard] = useState<DashboardData>({});
-  const [balance, setBalance] = useState<number>(0);
+  const [balance, setBalance] = useState<number>(0); // wallet balance
   const [totalCommission, setTotalCommission] = useState<number>(0);
   const [rewardPayment, setRewardPayment] = useState<number>(0);
   const [otherPayments, setOtherPayments] = useState<number>(0);
+  const [usdtBalance, setUsdtBalance] = useState<number>(0); // 🔹 new state for live USDT balance
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -36,13 +37,11 @@ export default function HomePage() {
     const userWallet = localStorage.getItem("userWallet");
     const userId = localStorage.getItem("userId");
 
-    // 🔒 Redirect to login if no token
     if (!token) {
       router.replace("/login");
       return;
     }
 
-    // 🧍 Set user info
     setUser({ name: userName || "User", email: userEmail || "", wallet: userWallet || "" });
 
     // 🔗 Fetch referral link
@@ -74,6 +73,16 @@ export default function HomePage() {
           setTotalCommission(data.totalCommission ?? 0);
           setRewardPayment(data.rewardPayment ?? 0);
           setOtherPayments(data.otherPayments ?? 0);
+        })
+        .catch(console.error);
+
+      // 🔹 Fetch live USDT balance
+      fetch(`/api/user/${userId}`)
+        .then((res) => res.json())
+        .then((userData) => {
+          if (userData && userData.usdtBalance !== undefined) {
+            setUsdtBalance(userData.usdtBalance);
+          }
         })
         .catch(console.error);
     }
@@ -127,9 +136,13 @@ export default function HomePage() {
     );
   }
 
-  // 💰 Total combined balance (wallet + commission + rewards + others)
+  // 💰 Total combined balance (wallet + commission + rewards + others + USDT)
   const totalBalance =
-    (balance ?? 0) + (totalCommission ?? 0) + (rewardPayment ?? 0) + (otherPayments ?? 0);
+    (balance ?? 0) +
+    (totalCommission ?? 0) +
+    (rewardPayment ?? 0) +
+    (otherPayments ?? 0) +
+    (usdtBalance ?? 0);
 
   return (
     <div
@@ -149,7 +162,7 @@ export default function HomePage() {
       </div>
 
       <div className="container mx-auto px-3 lg:px-6 py-6 relative z-10 space-y-6">
-        {/* 💵 USDT Balance Card (merged with all payments) */}
+        {/* 💵 USDT Balance Card */}
         <BalanceCard balance={totalBalance} />
 
         {/* 📈 Investment info */}

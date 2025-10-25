@@ -1,4 +1,3 @@
-// components/Rewards.tsx
 "use client";
 import React, { useState, useEffect } from "react";
 import {
@@ -16,16 +15,17 @@ import {
   FaRocket,
 } from "react-icons/fa";
 import Image from "next/image";
-import { useBalance } from "context/BalanceContext"; // Fixed path
-import { RewardPlan,StatData } from "types";
-import { parseRewardAmount } from "utils/parseRewardAmount";// Fixed path
+import { useBalance } from "context/BalanceContext"; // Adjust path as needed
+import { RewardPlan, StatData } from "types"; // Adjust path as needed
+import { parseRewardAmount } from "utils/parseRewardAmount"; // Adjust path as needed
 
-const Rewards = () => {
+export default function RewardPage() {
   const { usdtBalance, addToBalance, claimedRewards, addClaimedReward } = useBalance();
   const [selectedReward, setSelectedReward] = useState<RewardPlan | null>(null);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const [showConfetti, setShowConfetti] = useState<boolean>(false);
+  const [message, setMessage] = useState<string>(""); // From original RewardPage
   const [rewardPlans, setRewardPlans] = useState<RewardPlan[]>([
     {
       id: 1,
@@ -35,8 +35,7 @@ const Rewards = () => {
       rewardAmount: "200$",
       color: "from-blue-500 to-indigo-500",
       icon: <FaLaptop className="text-3xl text-white" />,
-      image:
-        "https://i.pinimg.com/1200x/96/dd/c8/96ddc807d329e89f14616245ea7c2e52.jpg",
+      image: "https://i.pinimg.com/1200x/96/dd/c8/96ddc807d329e89f14616245ea7c2e52.jpg",
       achieved: true,
     },
     {
@@ -47,8 +46,7 @@ const Rewards = () => {
       rewardAmount: "400$",
       color: "from-purple-500 to-pink-500",
       icon: <FaMobile className="text-3xl text-white" />,
-      image:
-        "https://i.pinimg.com/736x/eb/8d/d2/eb8dd224fe917f6c331c25a7968f5107.jpg",
+      image: "https://i.pinimg.com/736x/eb/8d/d2/eb8dd224fe917f6c331c25a7968f5107.jpg",
       achieved: false,
     },
     {
@@ -59,8 +57,7 @@ const Rewards = () => {
       rewardAmount: "500$",
       color: "from-green-500 to-emerald-500",
       icon: <FaMotorcycle className="text-3xl text-white" />,
-      image:
-        "https://i.pinimg.com/1200x/f1/e7/ec/f1e7ec2a68eeaef27976438a19a93cca.jpg",
+      image: "https://i.pinimg.com/1200x/f1/e7/ec/f1e7ec2a68eeaef27976438a19a93cca.jpg",
       achieved: false,
     },
     {
@@ -71,8 +68,7 @@ const Rewards = () => {
       rewardAmount: "2,000$",
       color: "from-red-500 to-orange-500",
       icon: <FaCar className="text-3xl text-white" />,
-      image:
-        "https://i.pinimg.com/736x/ee/7e/63/ee7e63cb5796dea3620360475b753722.jpg",
+      image: "https://i.pinimg.com/736x/ee/7e/63/ee7e63cb5796dea3620360475b753722.jpg",
       achieved: false,
     },
     {
@@ -83,8 +79,7 @@ const Rewards = () => {
       rewardAmount: "N/A",
       color: "from-cyan-500 to-blue-500",
       icon: <FaCar className="text-3xl text-white" />,
-      image:
-        "https://i.pinimg.com/736x/4d/63/e7/4d63e788bf1f48e8ad5b03419c47859b.jpg",
+      image: "https://i.pinimg.com/736x/4d/63/e7/4d63e788bf1f48e8ad5b03419c47859b.jpg",
       achieved: false,
     },
     {
@@ -95,8 +90,7 @@ const Rewards = () => {
       rewardAmount: "N/A",
       color: "from-cyan-500 to-blue-500",
       icon: <FaCar className="text-3xl text-white" />,
-      image:
-        "https://i.pinimg.com/736x/28/85/92/288592f5e8d2abb19606f74b611d129b.jpg",
+      image: "https://i.pinimg.com/736x/28/85/92/288592f5e8d2abb19606f74b611d129b.jpg",
       achieved: false,
     },
     {
@@ -107,8 +101,7 @@ const Rewards = () => {
       rewardAmount: "N/A",
       color: "from-rose-500 to-red-500",
       icon: <FaHome className="text-3xl text-white" />,
-      image:
-        "https://i.pinimg.com/736x/82/d1/d9/82d1d911e17c46ea377e5f0573a5105e.jpg",
+      image: "https://i.pinimg.com/736x/82/d1/d9/82d1d911e17c46ea377e5f0573a5105e.jpg",
       achieved: false,
     },
   ]);
@@ -120,9 +113,8 @@ const Rewards = () => {
     const nextIndex = currentIndex + 1;
     if (nextIndex < rewardPlans.length) {
       const nextReward = rewardPlans[nextIndex];
-      // TODO: Replace with actual business data check (e.g., API call)
-      const userSelfBusiness = 1000; // Example: Fetch from API or state
-      const userDirectBusiness = 15000; // Example: Fetch from API or state
+      const userSelfBusiness = 1000; // Replace with actual data (e.g., API or state)
+      const userDirectBusiness = 15000; // Replace with actual data
       const selfBusinessMet =
         parseFloat(userSelfBusiness.toString()) >=
         parseFloat(nextReward.selfBusiness.replace(",", ""));
@@ -154,30 +146,53 @@ const Rewards = () => {
     setIsProcessing(false);
     setIsSuccess(false);
     setShowConfetti(false);
+    setMessage(""); // Reset message from original RewardPage
   };
 
-  const handleClaimRewards = () => {
+  const handleClaimRewards = async () => {
     if (!selectedReward || claimedRewards.includes(selectedReward.id)) {
       return;
     }
     setIsProcessing(true);
     setShowConfetti(true);
 
-    setTimeout(() => {
-      setIsProcessing(false);
-      setIsSuccess(true);
+    try {
+      // Integrate API call from original RewardPage
+      const res = await fetch("/api/user/reward", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: "YOUR_USER_ID_HERE", rewardId: selectedReward.id }), // Add rewardId
+      });
 
-      const amount = parseRewardAmount(selectedReward.rewardAmount);
-      if (amount > 0) {
-        addToBalance(amount);
+      const data = await res.json();
+      setMessage(data.message);
+
+      if (res.ok) {
+        setTimeout(() => {
+          setIsProcessing(false);
+          setIsSuccess(true);
+
+          const amount = parseRewardAmount(selectedReward.rewardAmount);
+          if (amount > 0) {
+            addToBalance(amount);
+          }
+          addClaimedReward(selectedReward.id);
+          unlockNextReward(selectedReward.id);
+
+          setTimeout(() => {
+            handleCloseModal();
+          }, 5000);
+        }, 5000);
+      } else {
+        setIsProcessing(false);
+        setShowConfetti(false);
+        setMessage(data.message || "Failed to claim reward");
       }
-      addClaimedReward(selectedReward.id);
-      unlockNextReward(selectedReward.id);
-
-      setTimeout(() => {
-        handleCloseModal();
-      }, 5000);
-    }, 5000);
+    } catch (error) {
+      setIsProcessing(false);
+      setShowConfetti(false);
+      setMessage("An error occurred while claiming the reward");
+    }
   };
 
   useEffect(() => {
@@ -423,6 +438,13 @@ const Rewards = () => {
             </div>
           ))}
         </div>
+
+        {/* Display API message */}
+        {message && (
+          <p className="text-center text-white mt-4 bg-gray-800 p-4 rounded-lg">
+            {message}
+          </p>
+        )}
       </div>
 
       {selectedReward && selectedReward.achieved && (
@@ -618,6 +640,4 @@ const Rewards = () => {
       )}
     </div>
   );
-};
-
-export default Rewards;
+}
