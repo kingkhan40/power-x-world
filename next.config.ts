@@ -1,3 +1,4 @@
+import path from "path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -10,13 +11,20 @@ const nextConfig: NextConfig = {
   },
 
   images: {
-    domains: ["applepakistan.com.pk", "i.pinimg.com", "images.unsplash.com", 'minerx.global', 'vproptrader.com'],
+    domains: [
+      "applepakistan.com.pk",
+      "i.pinimg.com",
+      "images.unsplash.com",
+      "minerx.global",
+      "vproptrader.com",
+    ],
     unoptimized: true,
   },
 
   experimental: {
     // Next.js 14 ke new features
   },
+
   async headers() {
     return [
       {
@@ -33,6 +41,17 @@ const nextConfig: NextConfig = {
         ],
       },
     ];
+  },
+
+  // 👇 Add this part to alias the AsyncStorage issue
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      "@react-native-async-storage/async-storage": path.resolve(
+        "./src/utils/asyncStorageShim.ts"
+      ),
+    };
+    return config;
   },
 };
 
