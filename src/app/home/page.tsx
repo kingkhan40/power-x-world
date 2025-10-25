@@ -14,6 +14,8 @@ type DashboardData = {
   activeUsers?: number;
   wallet?: number;
   totalCommission?: number;
+  rewardPayment?: number;
+  otherPayments?: number;
 };
 
 export default function HomePage() {
@@ -21,9 +23,11 @@ export default function HomePage() {
   const [user, setUser] = useState<{ name?: string; email?: string; wallet?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [referralLink, setReferralLink] = useState<string | null>(null);
+  const [dashboard, setDashboard] = useState<DashboardData>({});
   const [balance, setBalance] = useState<number>(0);
   const [totalCommission, setTotalCommission] = useState<number>(0);
-  const [dashboard, setDashboard] = useState<DashboardData>({});
+  const [rewardPayment, setRewardPayment] = useState<number>(0);
+  const [otherPayments, setOtherPayments] = useState<number>(0);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -32,14 +36,16 @@ export default function HomePage() {
     const userWallet = localStorage.getItem("userWallet");
     const userId = localStorage.getItem("userId");
 
+    // 🔒 Redirect to login if no token
     if (!token) {
       router.replace("/login");
       return;
     }
 
+    // 🧍 Set user info
     setUser({ name: userName || "User", email: userEmail || "", wallet: userWallet || "" });
 
-    // Fetch referral link
+    // 🔗 Fetch referral link
     if (userEmail) {
       fetch(`/api/user/${userEmail}`)
         .then((res) => res.json())
@@ -58,37 +64,50 @@ export default function HomePage() {
         });
     }
 
-    // Fetch dashboard stats
+    // 📊 Fetch dashboard data
     if (userId) {
       fetch(`/api/user/dashboard?userId=${userId}`)
         .then((res) => res.json())
         .then((data) => {
           setDashboard(data);
-          setBalance(data.wallet ?? 0); // wallet balance
-          setTotalCommission(data.totalCommission ?? 0); // total commission
+          setBalance(data.wallet ?? 0);
+          setTotalCommission(data.totalCommission ?? 0);
+          setRewardPayment(data.rewardPayment ?? 0);
+          setOtherPayments(data.otherPayments ?? 0);
         })
         .catch(console.error);
     }
 
     setLoading(false);
 
-    // Setup socket listeners
+    // ⚡ Setup socket listeners for live updates
     if (socket && userWallet) {
       socket.on(`deposit_${userWallet}`, (data: any) => setBalance(Number(data.newBalance)));
       socket.on(`withdraw_${userWallet}`, (data: any) => setBalance(Number(data.newBalance)));
-      socket.on(`commission_${userWallet}`, (data: any) => setTotalCommission(Number(data.totalCommission)));
+      socket.on(`commission_${userWallet}`, (data: any) =>
+        setTotalCommission(Number(data.totalCommission))
+      );
+      socket.on(`reward_${userWallet}`, (data: any) =>
+        setRewardPayment(Number(data.rewardPayment))
+      );
+      socket.on(`otherpayment_${userWallet}`, (data: any) =>
+        setOtherPayments(Number(data.otherPayments))
+      );
     }
 
-    // Cleanup
+    // 🧹 Cleanup listeners
     return () => {
       if (socket && userWallet) {
         socket.off(`deposit_${userWallet}`);
         socket.off(`withdraw_${userWallet}`);
         socket.off(`commission_${userWallet}`);
+        socket.off(`reward_${userWallet}`);
+        socket.off(`otherpayment_${userWallet}`);
       }
     };
   }, [router]);
 
+  // 🚪 Logout handler
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("userId");
@@ -99,6 +118,7 @@ export default function HomePage() {
     router.replace("/login");
   };
 
+  // 🕒 Loading state
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-black text-white">
@@ -106,6 +126,10 @@ export default function HomePage() {
       </div>
     );
   }
+
+  // 💰 Total combined balance (wallet + commission + rewards + others)
+  const totalBalance =
+    (balance ?? 0) + (totalCommission ?? 0) + (rewardPayment ?? 0) + (otherPayments ?? 0);
 
   return (
     <div
@@ -125,16 +149,19 @@ export default function HomePage() {
       </div>
 
       <div className="container mx-auto px-3 lg:px-6 py-6 relative z-10 space-y-6">
-        {/* USDT Balance Card */}
-        <BalanceCard balance={balance + totalCommission} />
+        {/* 💵 USDT Balance Card (merged with all payments) */}
+        <BalanceCard balance={totalBalance} />
 
+        {/* 📈 Investment info */}
         <InvestmentInfo userEmail={user?.email ?? ""} />
 
-        {/* Navigation & Plans */}
+        {/* 🧭 Navigation grid */}
         <IconGridNavigation />
+
+        {/* 📊 Basic Plan */}
         <BasicPlan />
 
-        {/* Logout Button */}
+        {/* 🚪 Logout button */}
         <button
           className="bg-red-600 px-4 py-2 rounded hover:bg-red-700 transition"
           onClick={handleLogout}

@@ -1,8 +1,10 @@
+// app/layout.tsx
 import type { Metadata } from "next";
 import "./globals.css";
 import { Outfit } from "next/font/google";
 import ClientLayout from "@/components/ClientLayout";
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
+import { BalanceProvider } from "context/BalanceContext"; 
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -25,7 +27,9 @@ export default function RootLayout({
     <html lang="en" className={outfit.variable}>
       <body className="min-h-screen bg-background font-sans antialiased">
         <SessionProviderWrapper>
-          <ClientLayout>{children}</ClientLayout>
+          <BalanceProvider>
+            <ClientLayout>{children}</ClientLayout>
+          </BalanceProvider>
         </SessionProviderWrapper>
       </body>
     </html>
