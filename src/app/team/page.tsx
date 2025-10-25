@@ -60,7 +60,6 @@ const Team = () => {
   const [dashboard, setDashboard] = useState<DashboardData>({});
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Fetch Dashboard stats + socket updates
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
@@ -96,7 +95,6 @@ const Team = () => {
     };
   }, []);
 
-  // Fetch Team Members
   useEffect(() => {
     const fetchTeamMembers = async () => {
       try {
@@ -131,12 +129,6 @@ const Team = () => {
       icon: <FaUsers className="text-blue-400" />,
     },
     {
-      id: 2,
-      value: `$${loading ? "..." : dashboard.totalBusiness ?? 0}`,
-      label: "Total Business",
-      icon: <FaChartLine className="text-green-400" />,
-    },
-    {
       id: 3,
       value: `${loading ? "..." : dashboard.activeUsers ?? 0} Users`,
       label: "Active With $50+",
@@ -166,10 +158,8 @@ const Team = () => {
         backgroundAttachment: "fixed",
       }}
     >
-      {/* Background Overlay */}
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
 
-      {/* Animated Gradient Circles */}
       <div
         className="absolute top-0 left-0 w-72 h-72 rounded-full z-10"
         style={{
@@ -204,7 +194,6 @@ const Team = () => {
       ></div>
 
       <div className="container mx-auto max-w-7xl relative z-20">
-        {/* Header Section */}
         <div className="text-center mb-8">
           <h1 className="lg:text-4xl text-2xl mb-3">
             👥{" "}
@@ -218,8 +207,7 @@ const Team = () => {
           {errorTeam && <p className="text-red-400 mt-2 text-sm">{errorTeam}</p>}
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           {statsData.map((item) => (
             <div
               key={item.id}
@@ -232,7 +220,9 @@ const Team = () => {
                   </div>
                   <div className="lg:text-2xl text-xl">{item.icon}</div>
                 </div>
-                <div className="text-blue-100 text-sm font-medium">{item.label}</div>
+                <div className="text-blue-100 text-sm font-medium">
+                  {item.label}
+                </div>
               </div>
             </div>
           ))}
@@ -245,7 +235,6 @@ const Team = () => {
               key={levelData.id}
               className="lg:p-6 p-3 rounded-2xl relative overflow-hidden bg-gray-900 border border-gray-800 shadow-2xl hover:transform hover:scale-105 transition-all duration-500 group"
             >
-              {/* Rotating Border */}
               <div
                 className="absolute -inset-2 rounded-2xl animate-spin opacity-50"
                 style={{
@@ -257,7 +246,6 @@ const Team = () => {
               ></div>
               <div className="absolute inset-0.5 rounded-2xl bg-gray-900 z-1"></div>
 
-              {/* Level Badge */}
               <div className="absolute top-0 right-2 z-20">
                 <div
                   className={`flex justify-center items-center text-lg font-bold text-white w-12 h-12 rounded-full shadow-2xl ${
@@ -281,14 +269,18 @@ const Team = () => {
                 <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 backdrop-blur-sm rounded-md lg:p-4 p-2 border border-blue-400/30">
                   <div className="flex items-center justify-between">
                     <FaDollarSign className="text-blue-300 text-xl" />
-                    <div className="text-white lg:text-lg text-sm font-bold">{levelData.business}</div>
+                    <div className="text-white lg:text-lg text-sm font-bold">
+                      {levelData.business}
+                    </div>
                   </div>
                   <div className="text-blue-200 text-sm mt-1">Business</div>
                 </div>
                 <div className="bg-gradient-to-br from-green-500/20 to-green-600/20 backdrop-blur-sm rounded-md lg:p-4 p-2 border border-green-400/30">
                   <div className="flex items-center justify-between">
                     <FaChartLine className="text-green-300 text-xl" />
-                    <div className="text-white lg:text-lg text-sm font-bold">${levelData.commissions}</div>
+                    <div className="text-white lg:text-lg text-sm font-bold">
+                      ${levelData.commissions}
+                    </div>
                   </div>
                   <div className="text-green-200 text-sm mt-1">Commissions</div>
                 </div>
@@ -298,17 +290,24 @@ const Team = () => {
               <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 backdrop-blur-sm rounded-md lg:p-4 p-2 border border-purple-400/30 mb-2 relative z-20">
                 <div className="grid grid-cols-2 gap-4 text-center">
                   <div>
-                    <div className="text-white text-lg font-bold">{levelData.inviteCommission}</div>
-                    <div className="text-purple-200 text-xs">Invite Commission</div>
+                    <div className="text-white text-lg font-bold">
+                      {levelData.inviteCommission}
+                    </div>
+                    <div className="text-purple-200 text-xs">
+                      Invite Commission
+                    </div>
                   </div>
                   <div>
-                    <div className="text-white text-lg font-bold">{levelData.teamCommission}</div>
-                    <div className="text-pink-200 text-xs">Team Commission</div>
+                    <div className="text-white text-lg font-bold">
+                      {levelData.teamCommission}
+                    </div>
+                    <div className="text-pink-200 text-xs">
+                      Team Commission
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Action Button */}
               <button
                 onClick={() => router.push(`/team/${levelData.id}`)}
                 className="w-full lg:py-3 py-1.5 text-sm lg:text-lg rounded-xl font-bold text-white transition-all duration-300 transform hover:scale-105 shadow-2xl flex items-center justify-center gap-2 relative z-20
