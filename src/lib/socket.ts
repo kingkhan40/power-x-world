@@ -3,7 +3,7 @@ import { io, Socket } from "socket.io-client";
 
 // ✅ Use environment variable or fallback to localhost:4004
 const SOCKET_URL =
-  process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:4004";
+  process.env.NEXT_PUBLIC_SOCKET_URL || "https://powerxworld.uk";
 
 // ✅ Create a single, reusable socket instance
 const socket: Socket = io(SOCKET_URL, {

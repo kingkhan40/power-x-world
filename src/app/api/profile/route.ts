@@ -1,4 +1,3 @@
-// app/api/profile/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 
 // Mock database (replace with your actual DB, e.g., Prisma, MongoDB)

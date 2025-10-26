@@ -1,4 +1,3 @@
-// app/api/change-password/route.ts (or src/app/api/change-password/route.ts with srcDir configured)
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import User from '@/models/User';

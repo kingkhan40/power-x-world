@@ -32,6 +32,20 @@ export default function HomePage() {
   const [otherPayments, setOtherPayments] = useState<number>(0);
   const [usdtBalance, setUsdtBalance] = useState<number>(0);
 
+  // 🧩 New event listener merged here (window event)
+  useEffect(() => {
+    const handleBalanceUpdate = (e: any) => {
+      if (e.detail?.balance !== undefined) {
+        setBalance(e.detail.balance);
+        setContextBalance?.(e.detail.balance);
+        localStorage.setItem("userBalance", e.detail.balance.toString()); // ✅ sync
+      }
+    };
+
+    window.addEventListener("balanceUpdated", handleBalanceUpdate);
+    return () => window.removeEventListener("balanceUpdated", handleBalanceUpdate);
+  }, []);
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     const userEmail = localStorage.getItem("userEmail");
@@ -71,11 +85,14 @@ export default function HomePage() {
         .then((res) => res.json())
         .then((data) => {
           setDashboard(data);
-          setBalance(data.wallet ?? 0);
+          const mainBalance = data.wallet ?? 0;
+          setBalance(mainBalance);
+          setContextBalance?.(mainBalance);
+          localStorage.setItem("userBalance", mainBalance.toString()); // ✅ sync
+
           setTotalCommission(data.totalCommission ?? 0);
           setRewardPayment(data.rewardPayment ?? 0);
           setOtherPayments(data.otherPayments ?? 0);
-          setContextBalance?.(data.wallet ?? 0); // ✅ sync with context
         })
         .catch(console.error);
 
@@ -94,33 +111,21 @@ export default function HomePage() {
 
     // ⚡ Setup socket listeners for live updates
     if (socket && userWallet) {
-      socket.on(`deposit_${userWallet}`, (data: any) => {
-        const newBalance = Number(data.newBalance);
-        setBalance(newBalance);
-        setContextBalance?.(newBalance); // ✅ update context too
-      });
-
-      socket.on(`withdraw_${userWallet}`, (data: any) => {
-        const newBalance = Number(data.newBalance);
+      const updateAllBalances = (newBalance: number) => {
         setBalance(newBalance);
         setContextBalance?.(newBalance);
-      });
+        localStorage.setItem("userBalance", newBalance.toString()); // ✅ sync
+      };
 
-      socket.on(`commission_${userWallet}`, (data: any) =>
-        setTotalCommission(Number(data.totalCommission))
-      );
-      socket.on(`reward_${userWallet}`, (data: any) =>
-        setRewardPayment(Number(data.rewardPayment))
-      );
-      socket.on(`otherpayment_${userWallet}`, (data: any) =>
-        setOtherPayments(Number(data.otherPayments))
-      );
+      socket.on(`deposit_${userWallet}`, (data: any) => updateAllBalances(Number(data.newBalance)));
+      socket.on(`withdraw_${userWallet}`, (data: any) => updateAllBalances(Number(data.newBalance)));
+      socket.on(`commission_${userWallet}`, (data: any) => setTotalCommission(Number(data.totalCommission)));
+      socket.on(`reward_${userWallet}`, (data: any) => setRewardPayment(Number(data.rewardPayment)));
+      socket.on(`otherpayment_${userWallet}`, (data: any) => setOtherPayments(Number(data.otherPayments)));
 
-      // Reward update event
       socket.on("rewardUpdated", (data: any) => {
         if (data?.userId && typeof data.newBalance === "number") {
-          setBalance(data.newBalance);
-          setContextBalance?.(data.newBalance);
+          updateAllBalances(data.newBalance);
         }
       });
     }
@@ -146,6 +151,7 @@ export default function HomePage() {
     localStorage.removeItem("userEmail");
     localStorage.removeItem("userName");
     localStorage.removeItem("userWallet");
+    localStorage.removeItem("userBalance"); // ✅ clear also
     router.replace("/login");
   };
 
@@ -178,7 +184,6 @@ export default function HomePage() {
       <div className="absolute inset-0 bg-black/70"></div>
 
       <div className="container mx-auto px-3 lg:px-6 py-6 relative z-10 space-y-6">
-        {/* ✅ Now uses both state + context (synced) */}
         <BalanceCard balance={totalBalance} />
         <InvestmentInfo userEmail={user?.email ?? ""} />
         <IconGridNavigation />

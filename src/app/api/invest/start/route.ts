@@ -5,7 +5,8 @@ import { Investment } from "@/models/Investment";
 import { Withdrawal } from "@/models/Withdrawal";
 import { calculateDailyRate } from "@/lib/staking";
 
-const SOCKET_EMIT_URL = process.env.SOCKET_EMIT_URL || "http://localhost:4000/emit";
+const SOCKET_EMIT_URL = process.env.SOCKET_EMIT_URL || "http://powerxworld.uk/emit";
+
 
 export async function POST(req: Request) {
   try {

@@ -7,7 +7,7 @@ import { io } from "@server/socket-server";
  // ✅ Imported socket instance
 
 const SOCKET_EMIT_URL =
-  process.env.SOCKET_EMIT_URL || "http://localhost:4004/emit";
+  process.env.SOCKET_EMIT_URL || "http://powerxworld.uk/emit";
 
 // NOTE: This endpoint computes rewards, updates DB, emits socket updates, and finalizes investments.
 export async function POST(req: Request) {
