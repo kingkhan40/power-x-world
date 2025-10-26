@@ -19,7 +19,7 @@ const InvestmentInfo: React.FC<InvestmentInfoProps> = ({ userEmail }) => {
         const res = await fetch(`/api/user/${userEmail}`);
         if (res.status === 401) {
           setError("Please log in again to view your referral link.");
-          setReferralLink("https://powerxworld.uk/register");
+          setReferralLink("https://www.powerxworld.uk/register");
           return;
         }
 
@@ -29,12 +29,12 @@ const InvestmentInfo: React.FC<InvestmentInfoProps> = ({ userEmail }) => {
         if (data.success && data.referralLink) {
           setReferralLink(data.referralLink);
         } else {
-          setReferralLink("https://powerxworld.uk/register");
+          setReferralLink("https://www.powerxworld.uk/register");
         }
       } catch (err) {
         console.error("Error fetching referral link:", err);
         setError("Failed to load referral link. Try refreshing the page.");
-        setReferralLink("https://powerxworld.uk/register");
+        setReferralLink("https://www.powerxworld.uk/register");
       } finally {
         setLoading(false);
       }
