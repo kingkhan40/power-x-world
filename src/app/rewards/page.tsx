@@ -15,7 +15,7 @@ import {
   FaRocket,
 } from "react-icons/fa";
 import Image from "next/image";
-import { useBalance } from "context/BalanceContext"; // Adjust path as needed
+import { useBalance } from "@/context/BalanceContext";
 import { RewardPlan, StatData } from "types"; // Adjust path as needed
 import { parseRewardAmount } from "utils/parseRewardAmount"; // Adjust path as needed
 

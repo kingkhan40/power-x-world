@@ -1,50 +1,41 @@
+// src/context/BalanceContext.tsx
 "use client";
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import socket from "@/lib/socket"; // ✅ default import
 
-// Context ka type define karo
-interface BalanceContextType {
-  balance: number;
-  setBalance: React.Dispatch<React.SetStateAction<number>>;
+import { createContext, useContext, useState, ReactNode } from "react";
+
+export interface BalanceContextType {
+  usdtBalance: number;
+  addToBalance: (amount: number) => void;
+  claimedRewards: number[];
+  addClaimedReward: (rewardId: number) => void;
 }
 
-// Default null se context create
-const BalanceContext = createContext<BalanceContextType | null>(null);
-
-interface BalanceProviderProps {
+interface Props {
   children: ReactNode;
 }
 
-export const BalanceProvider: React.FC<BalanceProviderProps> = ({ children }) => {
-  const [balance, setBalance] = useState<number>(0);
+export const BalanceContext = createContext<BalanceContextType | null>(null);
 
-  useEffect(() => {
-    // ✅ Jab socket se balance update event aaye
-    socket.on("rewardUpdated", (data: { newBalance: number }) => {
-      if (data && typeof data.newBalance === "number") {
-        setBalance(data.newBalance);
-      }
-    });
+export const BalanceProvider = ({ children }: Props) => {
+  const [usdtBalance, setUsdtBalance] = useState<number>(0);
+  const [claimedRewards, setClaimedRewards] = useState<number[]>([]);
 
-    return () => {
-      socket.off("rewardUpdated");
-    };
-  }, []);
+  const addToBalance = (amount: number) => setUsdtBalance((prev) => prev + amount);
+  const addClaimedReward = (rewardId: number) =>
+    setClaimedRewards((prev) => [...prev, rewardId]);
 
   return (
-    <BalanceContext.Provider value={{ balance, setBalance }}>
+    <BalanceContext.Provider
+      value={{ usdtBalance, addToBalance, claimedRewards, addClaimedReward }}
+    >
       {children}
     </BalanceContext.Provider>
   );
 };
 
-// Custom hook for consuming the context
+// Custom hook
 export const useBalance = (): BalanceContextType => {
   const context = useContext(BalanceContext);
-  if (!context) {
-    throw new Error("useBalance must be used within a BalanceProvider");
-  }
+  if (!context) throw new Error("useBalance must be used inside BalanceProvider");
   return context;
 };
-
-export default BalanceContext;
