@@ -8,20 +8,28 @@ interface RouteParams {
   };
 }
 
-// ✅ GET — Fetch user details by email & generate dynamic referral link
-export async function GET(request: Request, { params }: RouteParams) {
+// ✅ GET — Fetch user details by email or userId
+export async function GET(request: Request, context: RouteParams) {
   try {
     await connectDB();
-    const { email } = params;
 
-    if (!email) {
+    // ✅ Await params properly (Next.js requires this)
+    const params = await context.params;
+    const emailOrId = params.email;
+
+    if (!emailOrId) {
       return NextResponse.json(
-        { success: false, message: "Email is required" },
+        { success: false, message: "Email or ID is required" },
         { status: 400 }
       );
     }
 
-    const user = await User.findOne({ email });
+    // ✅ Detect if it's ObjectId or Email
+    const isObjectId = /^[0-9a-fA-F]{24}$/.test(emailOrId);
+
+    const user = isObjectId
+      ? await User.findById(emailOrId)
+      : await User.findOne({ email: emailOrId });
 
     if (!user) {
       return NextResponse.json(
@@ -30,10 +38,14 @@ export async function GET(request: Request, { params }: RouteParams) {
       );
     }
 
-    // ✅ Construct referral link dynamically using referralCode
+    // ✅ Dynamic referral link
     const referralLink = `https://powerxworld.uk/register?ref=${user.referralCode}`;
 
-    return NextResponse.json({ success: true, referralLink });
+    return NextResponse.json({
+      success: true,
+      user,
+      referralLink,
+    });
   } catch (error) {
     console.error("❌ Error fetching user:", error);
     return NextResponse.json(
@@ -43,11 +55,13 @@ export async function GET(request: Request, { params }: RouteParams) {
   }
 }
 
-// ✅ POST — Save user's wallet address
-export async function POST(request: Request, { params }: RouteParams) {
+// ✅ POST — Save wallet address
+export async function POST(request: Request, context: RouteParams) {
   try {
     await connectDB();
-    const { email } = params;
+    const params = await context.params;
+    const emailOrId = params.email;
+
     const body = await request.json();
     const { walletAddress } = body;
 
@@ -58,11 +72,19 @@ export async function POST(request: Request, { params }: RouteParams) {
       );
     }
 
-    const user = await User.findOneAndUpdate(
-      { email },
-      { $set: { walletAddress } },
-      { new: true }
-    );
+    const isObjectId = /^[0-9a-fA-F]{24}$/.test(emailOrId);
+
+    const user = isObjectId
+      ? await User.findByIdAndUpdate(
+          emailOrId,
+          { $set: { walletAddress } },
+          { new: true }
+        )
+      : await User.findOneAndUpdate(
+          { email: emailOrId },
+          { $set: { walletAddress } },
+          { new: true }
+        );
 
     if (!user) {
       return NextResponse.json(
@@ -77,7 +99,7 @@ export async function POST(request: Request, { params }: RouteParams) {
       user,
     });
   } catch (error) {
-    console.error("❌ Error saving wallet address:", error);
+    console.error("❌ Error saving wallet:", error);
     return NextResponse.json(
       { success: false, message: "Server error", error: String(error) },
       { status: 500 }

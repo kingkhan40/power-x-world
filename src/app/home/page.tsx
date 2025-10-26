@@ -24,11 +24,11 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [referralLink, setReferralLink] = useState<string | null>(null);
   const [dashboard, setDashboard] = useState<DashboardData>({});
-  const [balance, setBalance] = useState<number>(0); // wallet balance
+  const [balance, setBalance] = useState<number>(0);
   const [totalCommission, setTotalCommission] = useState<number>(0);
   const [rewardPayment, setRewardPayment] = useState<number>(0);
   const [otherPayments, setOtherPayments] = useState<number>(0);
-  const [usdtBalance, setUsdtBalance] = useState<number>(0); // 🔹 new state for live USDT balance
+  const [usdtBalance, setUsdtBalance] = useState<number>(0);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -91,7 +91,6 @@ export default function HomePage() {
 
     // ⚡ Setup socket listeners for live updates
     if (socket && userWallet) {
-<<<<<<< HEAD
       socket.on(`deposit_${userWallet}`, (data: any) => setBalance(Number(data.newBalance)));
       socket.on(`withdraw_${userWallet}`, (data: any) => setBalance(Number(data.newBalance)));
       socket.on(`commission_${userWallet}`, (data: any) =>
@@ -103,33 +102,16 @@ export default function HomePage() {
       socket.on(`otherpayment_${userWallet}`, (data: any) =>
         setOtherPayments(Number(data.otherPayments))
       );
-    }
 
-    // 🧹 Cleanup listeners
-=======
-      // Deposit event
-      socket.on(`deposit_${userWallet}`, (data: any) => {
-        console.log("💰 Deposit Event:", data);
-        setBalance(Number(data.newBalance));
-      });
-
-      // Withdraw event
-      socket.on(`withdraw_${userWallet}`, (data: any) => {
-        console.log("💸 Withdraw Event:", data);
-        setBalance(Number(data.newBalance));
-      });
-
-      // ✅ Reward update event (merged from previous code)
+      // Reward update event
       socket.on("rewardUpdated", (data: any) => {
         if (data?.userId && typeof data.newBalance === "number") {
-          console.log("🎁 Reward Updated:", data);
           setBalance(data.newBalance);
         }
       });
     }
 
-    // ✅ Cleanup listeners on unmount
->>>>>>> 70978df (new one)
+    // 🧹 Cleanup listeners
     return () => {
       if (socket && userWallet) {
         socket.off(`deposit_${userWallet}`);
@@ -153,7 +135,6 @@ export default function HomePage() {
     router.replace("/login");
   };
 
-  // 🕒 Loading state
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-black text-white">
@@ -162,7 +143,6 @@ export default function HomePage() {
     );
   }
 
-  // 💰 Total combined balance (wallet + commission + rewards + others + USDT)
   const totalBalance =
     (balance ?? 0) +
     (totalCommission ?? 0) +
@@ -183,45 +163,20 @@ export default function HomePage() {
     >
       <div className="absolute inset-0 bg-black/70"></div>
 
-<<<<<<< HEAD
-      <div className="relative z-50">
-        {/* Add header / sidebar here if needed */}
-      </div>
-
       <div className="container mx-auto px-3 lg:px-6 py-6 relative z-10 space-y-6">
-        {/* 💵 USDT Balance Card */}
         <BalanceCard balance={totalBalance} />
-
-        {/* 📈 Investment info */}
         <InvestmentInfo userEmail={user?.email ?? ""} />
-
-        {/* 🧭 Navigation grid */}
         <IconGridNavigation />
-
-        {/* 📊 Basic Plan */}
         <BasicPlan />
 
-        {/* 🚪 Logout button */}
         <button
           className="bg-red-600 px-4 py-2 rounded hover:bg-red-700 transition"
           onClick={handleLogout}
         >
           Logout
         </button>
-=======
-      {/* 🔹 Sidebar (kept above overlay) */}
-      <div className="relative z-50"></div>
-
-      {/* Main Content Section */}
-      <div className="container mx-auto px-3 lg:px-6 py-6 relative z-10">
-        <div className="space-y-4">
-          <BalanceCard balance={balance} />
-          <InvestmentInfo userEmail={user?.email ?? ""} />
-          <IconGridNavigation />
-          <BasicPlan />
-        </div>
->>>>>>> 70978df (new one)
       </div>
     </div>
   );
 }
+ 
