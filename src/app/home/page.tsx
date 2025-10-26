@@ -7,7 +7,7 @@ import BasicPlan from "@/components/BasicPlan";
 import IconGridNavigation from "@/components/IconGridNavigation";
 import InvestmentInfo from "@/components/InvestmentInfo";
 import socket from "@/lib/socket";
-import { useBalance } from "@/context/BalanceContext"; // ✅ merged context
+import { useBalance } from "@/context/BalanceContext";
 
 type DashboardData = {
   level?: number;
