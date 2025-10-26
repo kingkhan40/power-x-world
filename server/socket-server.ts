@@ -4,6 +4,8 @@ import http from "http";
 import { Server } from "socket.io";
 import cors from "cors";
 import dotenv from "dotenv";
+import cron from "node-cron";
+import axios from "axios";
 
 dotenv.config();
 
@@ -76,11 +78,22 @@ app.post("/emit", (req, res) => {
 
     io.emit(event, payload);
     res.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     console.error("❌ Emit Error:", error);
     res.status(500).json({ error: "Emit failed" });
   }
 });
+
+/// 🕒 Auto reward updater every minute
+cron.schedule("* * * * *", async () => {
+  try {
+    await axios.post("http://localhost:3000/api/invest/reward");
+    console.log("✅ Reward updated successfully");
+  } catch (err: any) {
+    console.error("❌ Error updating reward:", err.message);
+  }
+});
+
 
 // ✅ Start server if run directly
 const isDirectRun =
@@ -88,8 +101,7 @@ const isDirectRun =
   process.argv[1]?.endsWith("socket-server.ts");
 
 if (isDirectRun) {
-  // ✅ Change the port if already used
-  const PORT = Number(process.env.SOCKET_PORT) || 4001; // changed from 4000 → 4001
+  const PORT = Number(process.env.SOCKET_PORT) || 4004;
   initSocket(server);
   server.listen(PORT, () => {
     console.log(`🚀 Socket.IO server running on port ${PORT}`);

@@ -1,17 +1,32 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema, models, model } from "mongoose";
 
-export interface IInvestment extends mongoose.Document {
-  user: mongoose.Types.ObjectId;
+export interface IInvestment {
+  wallet: string;
   amount: number;
-  status: "pending" | "active" | "completed";
-  createdAt: Date;
+  dailyRate: number;
+  durationDays: number;
+  startAt: Date;
+  earned: number;
+  status: string;
+  lockedAmount: number;
+  meta?: Record<string, any>;
 }
 
-const InvestmentSchema = new Schema<IInvestment>({
-  user: { type: Schema.Types.ObjectId, ref: "User", required: true },
-  amount: { type: Number, required: true },
-  status: { type: String, enum: ["pending", "active", "completed"], default: "active" },
-  createdAt: { type: Date, default: () => new Date() },
-});
+const InvestmentSchema = new Schema<IInvestment>(
+  {
+    wallet: { type: String, required: true },
+    amount: { type: Number, required: true },
+    dailyRate: { type: Number, required: true },
+    durationDays: { type: Number, default: 7 },
+    startAt: { type: Date, default: Date.now },
+    earned: { type: Number, default: 0 },
+    status: { type: String, default: "active" },
+    lockedAmount: { type: Number, required: true },
+    meta: { type: Object, default: {} },
+  },
+  { timestamps: true }
+);
 
-export default mongoose.models.Investment || mongoose.model<IInvestment>("Investment", InvestmentSchema);
+// 👇 Add this export
+export const Investment =
+  models.Investment || model<IInvestment>("Investment", InvestmentSchema);

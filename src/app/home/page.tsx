@@ -91,6 +91,7 @@ export default function HomePage() {
 
     // ⚡ Setup socket listeners for live updates
     if (socket && userWallet) {
+<<<<<<< HEAD
       socket.on(`deposit_${userWallet}`, (data: any) => setBalance(Number(data.newBalance)));
       socket.on(`withdraw_${userWallet}`, (data: any) => setBalance(Number(data.newBalance)));
       socket.on(`commission_${userWallet}`, (data: any) =>
@@ -105,6 +106,30 @@ export default function HomePage() {
     }
 
     // 🧹 Cleanup listeners
+=======
+      // Deposit event
+      socket.on(`deposit_${userWallet}`, (data: any) => {
+        console.log("💰 Deposit Event:", data);
+        setBalance(Number(data.newBalance));
+      });
+
+      // Withdraw event
+      socket.on(`withdraw_${userWallet}`, (data: any) => {
+        console.log("💸 Withdraw Event:", data);
+        setBalance(Number(data.newBalance));
+      });
+
+      // ✅ Reward update event (merged from previous code)
+      socket.on("rewardUpdated", (data: any) => {
+        if (data?.userId && typeof data.newBalance === "number") {
+          console.log("🎁 Reward Updated:", data);
+          setBalance(data.newBalance);
+        }
+      });
+    }
+
+    // ✅ Cleanup listeners on unmount
+>>>>>>> 70978df (new one)
     return () => {
       if (socket && userWallet) {
         socket.off(`deposit_${userWallet}`);
@@ -113,6 +138,7 @@ export default function HomePage() {
         socket.off(`reward_${userWallet}`);
         socket.off(`otherpayment_${userWallet}`);
       }
+      socket.off("rewardUpdated");
     };
   }, [router]);
 
@@ -157,6 +183,7 @@ export default function HomePage() {
     >
       <div className="absolute inset-0 bg-black/70"></div>
 
+<<<<<<< HEAD
       <div className="relative z-50">
         {/* Add header / sidebar here if needed */}
       </div>
@@ -181,6 +208,19 @@ export default function HomePage() {
         >
           Logout
         </button>
+=======
+      {/* 🔹 Sidebar (kept above overlay) */}
+      <div className="relative z-50"></div>
+
+      {/* Main Content Section */}
+      <div className="container mx-auto px-3 lg:px-6 py-6 relative z-10">
+        <div className="space-y-4">
+          <BalanceCard balance={balance} />
+          <InvestmentInfo userEmail={user?.email ?? ""} />
+          <IconGridNavigation />
+          <BasicPlan />
+        </div>
+>>>>>>> 70978df (new one)
       </div>
     </div>
   );

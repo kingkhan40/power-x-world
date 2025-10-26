@@ -1,17 +1,28 @@
-import mongoose, { Schema, models } from "mongoose";
+import mongoose, { Schema, models, model } from "mongoose";
 
-const DepositSchema = new Schema(
+export interface IDeposit {
+  wallet: string;
+  amount: number;
+  token?: string;
+  txHash?: string;
+  chain?: string;
+  confirmed?: boolean;
+  meta?: Record<string, any>;
+}
+
+const DepositSchema = new Schema<IDeposit>(
   {
     wallet: { type: String, required: true },
-    amount: { type: Number, required: true }, // should be Number, not String
-    token: { type: String }, // optional if you want token symbol like USDT
-    txHash: { type: String, required: true },
-    chain: { type: String, required: true },
+    amount: { type: Number, required: true },
+    token: { type: String },
+    txHash: { type: String },
+    chain: { type: String },
     confirmed: { type: Boolean, default: false },
+    meta: { type: Object, default: {} },
   },
   { timestamps: true }
 );
 
-// ✅ Prevent model overwrite issues in Next.js
+// 👇 Add this export
 export const Deposit =
-  models.Deposit || mongoose.model("Deposit", DepositSchema);
+  models.Deposit || model<IDeposit>("Deposit", DepositSchema);

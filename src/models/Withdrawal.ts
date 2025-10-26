@@ -1,20 +1,28 @@
-import mongoose, { Schema, models } from "mongoose";
+import mongoose, { Schema, models, model } from "mongoose";
 
-const WithdrawalSchema = new Schema(
+export interface IWithdrawal {
+  userWallet: string;
+  destination: string;
+  amount: number;
+  token?: string;
+  chain?: string;
+  status?: string;
+  meta?: Record<string, any>;
+}
+
+const WithdrawalSchema = new Schema<IWithdrawal>(
   {
     userWallet: { type: String, required: true },
     destination: { type: String, required: true },
     amount: { type: Number, required: true },
     token: { type: String, default: "USDT (BEP20)" },
     chain: { type: String, default: "BNB Smart Chain" },
-    status: {
-      type: String,
-      enum: ["pending", "completed", "failed"],
-      default: "pending",
-    },
+    status: { type: String, default: "pending" },
+    meta: { type: Object, default: {} },
   },
   { timestamps: true }
 );
 
+// 👇 Add this export
 export const Withdrawal =
-  models.Withdrawal || mongoose.model("Withdrawal", WithdrawalSchema);
+  models.Withdrawal || model<IWithdrawal>("Withdrawal", WithdrawalSchema);

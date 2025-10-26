@@ -14,10 +14,14 @@
     "jsx": "preserve",
     "incremental": true,
     "forceConsistentCasingInFileNames": true,
-    "baseUrl": ".",                        // ✅ Added baseUrl
+
+    // ✅ Base URL and path aliases merged
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]                     // ✅ Corrected relative path
+      "@/*": ["src/*"],
+      "@server/*": ["server/*"]
     },
+
     "plugins": [
       {
         "name": "next"
