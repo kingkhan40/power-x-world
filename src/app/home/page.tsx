@@ -7,6 +7,7 @@ import BasicPlan from "@/components/BasicPlan";
 import IconGridNavigation from "@/components/IconGridNavigation";
 import InvestmentInfo from "@/components/InvestmentInfo";
 import socket from "@/lib/socket";
+import { useBalance } from "@/context/BalanceContext"; // ✅ merged context
 
 type DashboardData = {
   level?: number;
@@ -20,6 +21,7 @@ type DashboardData = {
 
 export default function HomePage() {
   const router = useRouter();
+  const { balance: contextBalance, setBalance: setContextBalance } = useBalance(); // ✅ from context
   const [user, setUser] = useState<{ name?: string; email?: string; wallet?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [referralLink, setReferralLink] = useState<string | null>(null);
@@ -73,6 +75,7 @@ export default function HomePage() {
           setTotalCommission(data.totalCommission ?? 0);
           setRewardPayment(data.rewardPayment ?? 0);
           setOtherPayments(data.otherPayments ?? 0);
+          setContextBalance?.(data.wallet ?? 0); // ✅ sync with context
         })
         .catch(console.error);
 
@@ -91,8 +94,18 @@ export default function HomePage() {
 
     // ⚡ Setup socket listeners for live updates
     if (socket && userWallet) {
-      socket.on(`deposit_${userWallet}`, (data: any) => setBalance(Number(data.newBalance)));
-      socket.on(`withdraw_${userWallet}`, (data: any) => setBalance(Number(data.newBalance)));
+      socket.on(`deposit_${userWallet}`, (data: any) => {
+        const newBalance = Number(data.newBalance);
+        setBalance(newBalance);
+        setContextBalance?.(newBalance); // ✅ update context too
+      });
+
+      socket.on(`withdraw_${userWallet}`, (data: any) => {
+        const newBalance = Number(data.newBalance);
+        setBalance(newBalance);
+        setContextBalance?.(newBalance);
+      });
+
       socket.on(`commission_${userWallet}`, (data: any) =>
         setTotalCommission(Number(data.totalCommission))
       );
@@ -107,6 +120,7 @@ export default function HomePage() {
       socket.on("rewardUpdated", (data: any) => {
         if (data?.userId && typeof data.newBalance === "number") {
           setBalance(data.newBalance);
+          setContextBalance?.(data.newBalance);
         }
       });
     }
@@ -122,7 +136,7 @@ export default function HomePage() {
       }
       socket.off("rewardUpdated");
     };
-  }, [router]);
+  }, [router, setContextBalance]);
 
   // 🚪 Logout handler
   const handleLogout = () => {
@@ -164,10 +178,15 @@ export default function HomePage() {
       <div className="absolute inset-0 bg-black/70"></div>
 
       <div className="container mx-auto px-3 lg:px-6 py-6 relative z-10 space-y-6">
+        {/* ✅ Now uses both state + context (synced) */}
         <BalanceCard balance={totalBalance} />
         <InvestmentInfo userEmail={user?.email ?? ""} />
         <IconGridNavigation />
         <BasicPlan />
+
+        <div className="text-center text-sm text-gray-300 mt-4">
+          <p>Live USDT Balance: {contextBalance ?? usdtBalance}</p>
+        </div>
 
         <button
           className="bg-red-600 px-4 py-2 rounded hover:bg-red-700 transition"
@@ -179,4 +198,3 @@ export default function HomePage() {
     </div>
   );
 }
- 

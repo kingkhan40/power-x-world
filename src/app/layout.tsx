@@ -1,11 +1,11 @@
-// app/layout.tsx
 import type { Metadata } from "next";
 import "./globals.css";
 import { Outfit } from "next/font/google";
 import ClientLayout from "@/components/ClientLayout";
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
-import { BalanceProvider } from "context/BalanceContext"; 
+import { BalanceProvider } from "@/context/BalanceContext"; // ✅ context import
 
+// ✅ Google Font
 const outfit = Outfit({
   subsets: ["latin"],
   display: "swap",
@@ -13,11 +13,13 @@ const outfit = Outfit({
   weight: ["400", "500", "600", "700"],
 });
 
+// ✅ SEO Metadata
 export const metadata: Metadata = {
   title: "PowerXWorld",
   description: "Next.js + NextAuth authentication example",
 };
 
+// ✅ Root Layout
 export default function RootLayout({
   children,
 }: {

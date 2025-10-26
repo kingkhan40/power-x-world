@@ -1,142 +1,90 @@
 "use client";
-import { useState } from "react";
+
+import React, { useState } from "react";
+import { useBalance } from "@/context/BalanceContext"; // ✅ Balance Context import
 
 export default function WithdrawPage() {
-  const [wallet, setWallet] = useState("");
-  const [balance, setBalance] = useState<number | null>(null);
-  const [amount, setAmount] = useState<number>(0);
-  const [loading, setLoading] = useState(false);
+  const { balance } = useBalance(); // ✅ live balance from context
+  const [walletAddress, setWalletAddress] = useState("");
+  const [amount, setAmount] = useState<number | "">("");
 
-  // ✅ Fetch balance manually after entering wallet
-  const fetchBalance = async () => {
-    if (!wallet) return alert("⚠️ Please enter your wallet address first.");
+  const handleWithdraw = async () => {
+    if (!walletAddress || !amount) {
+      alert("⚠️ Please fill in all required fields.");
+      return;
+    }
 
     try {
-      setLoading(true);
-      const res = await fetch(`/api/user/${wallet}`);
+      const res = await fetch("/api/withdraw", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          walletAddress,
+          amount: Number(amount),
+        }),
+      });
+
       const data = await res.json();
 
-      if (data.balance !== undefined) {
-        setBalance(data.balance);
+      if (data.success) {
+        alert("✅ Withdrawal request submitted successfully!");
+        setAmount("");
+        setWalletAddress("");
       } else {
-        alert("⚠️ Wallet not found or balance not available");
-        setBalance(0);
+        alert(data.message || "❌ Withdrawal failed. Try again later.");
       }
-    } catch (err) {
-      console.error("Balance fetch error:", err);
-      alert("❌ Failed to fetch balance");
-      setBalance(0);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ✅ Withdraw request handler
-  const handleWithdraw = async () => {
-    if (!wallet || amount <= 0) return alert("Enter valid data");
-
-    const res = await fetch("/api/withdraw", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userWallet: wallet,
-        destination: wallet, // same wallet for now
-        amount,
-      }),
-    });
-
-    const data = await res.json();
-
-    if (data.success) {
-      alert("✅ Withdrawal completed successfully!");
-      setBalance(data.newBalance);
-      setAmount(0);
-    } else {
-      alert(data.error || "Something went wrong");
+    } catch (error) {
+      console.error("Withdraw Error:", error);
+      alert("❌ Something went wrong while processing your request.");
     }
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-b from-[#14002b] to-[#080013] text-white">
-      <div className="bg-[#1b0034]/70 backdrop-blur-xl p-8 rounded-2xl w-[400px] shadow-xl border border-[#2a0055]">
-        <h2 className="text-center text-2xl font-semibold mb-2">
-          Secure Withdrawal Process
-        </h2>
-        <p className="text-center text-sm text-gray-400 mb-6">
-          Enter your wallet address and withdrawal amount
-        </p>
+    <div className="p-8 bg-[#10001f] rounded-2xl text-white max-w-md mx-auto">
+      <h2 className="text-2xl font-bold mb-6 text-center">
+        Secure Withdrawal Process
+      </h2>
 
-        {/* 🪙 Wallet Input */}
-        <label className="block text-sm font-semibold text-green-400 mb-2">
-          Enter Wallet Address *
-        </label>
-        <div className="flex items-center bg-[#2a1150] rounded-lg border border-gray-600 mb-5">
-          <input
-            type="text"
-            value={wallet}
-            onChange={(e) => setWallet(e.target.value)}
-            className="w-full bg-transparent p-3 text-white outline-none"
-            placeholder="Enter your wallet address"
-          />
-        </div>
+      {/* ✅ Wallet Address Input */}
+      <label className="block text-sm mb-2">Enter Wallet Address *</label>
+      <input
+        type="text"
+        value={walletAddress}
+        onChange={(e) => setWalletAddress(e.target.value)}
+        placeholder="Enter your wallet address"
+        className="w-full p-2 rounded-md bg-[#2a004f] mb-5 border border-[#4b0082] focus:outline-none focus:ring-2 focus:ring-green-500"
+      />
 
-        {/* 🔘 Fetch Balance Button */}
-        <button
-          onClick={fetchBalance}
-          disabled={!wallet || loading}
-          className={`w-full mb-6 py-3 rounded-lg font-semibold transition-all ${
-            !wallet || loading
-              ? "bg-gray-600 cursor-not-allowed"
-              : "bg-gradient-to-r from-indigo-600 to-purple-500 hover:opacity-90"
-          }`}
-        >
-          {loading ? "Fetching..." : "Check Balance"}
-        </button>
-
-        {/* 💰 Available Balance */}
-        {balance !== null && (
-          <div className="bg-[#2a1150] p-5 rounded-xl mb-6 flex justify-between items-center">
-            <div>
-              <p className="text-gray-300 text-sm">Available Balance</p>
-              <p className="text-3xl font-bold">{balance.toFixed(2)}$</p>
-            </div>
-            <span className="text-yellow-400 text-3xl">💰</span>
-          </div>
-        )}
-
-        {/* 🧾 Withdrawal Input */}
-        {balance !== null && (
-          <>
-            <label className="block text-sm font-semibold text-green-400 mb-2">
-              Enter Withdrawal Amount *
-            </label>
-            <div className="flex items-center bg-[#2a1150] rounded-lg border border-gray-600 mb-5">
-              <input
-                type="number"
-                min="0"
-                value={amount}
-                onChange={(e) => setAmount(parseFloat(e.target.value))}
-                className="w-full bg-transparent p-3 text-white outline-none"
-                placeholder="Enter withdrawal amount"
-              />
-              <span className="pr-3 text-gray-400 text-lg">$</span>
-            </div>
-
-            {/* 🚀 Withdraw Button */}
-            <button
-              onClick={handleWithdraw}
-              disabled={!wallet || amount <= 0 || amount > balance}
-              className={`w-full py-3 rounded-lg font-semibold transition-all ${
-                amount <= 0 || amount > balance
-                  ? "bg-gray-600 cursor-not-allowed"
-                  : "bg-gradient-to-r from-purple-600 to-indigo-500 hover:opacity-90"
-              }`}
-            >
-              Continue to Withdraw
-            </button>
-          </>
-        )}
+      {/* ✅ Live Balance Display */}
+      <div className="bg-[#31006a] p-4 rounded-lg mb-5 text-center shadow-md">
+        <p className="text-sm text-gray-300">Available Balance</p>
+        <h3 className="text-2xl font-semibold text-green-400">
+          ${balance ? balance.toFixed(2) : "0.00"}
+        </h3>
       </div>
+
+      {/* ✅ Withdraw Amount Input */}
+      <label className="block text-sm mb-2">Enter Withdrawal Amount *</label>
+      <input
+        type="number"
+        value={amount}
+        onChange={(e) => setAmount(e.target.value === "" ? "" : Number(e.target.value))}
+        placeholder="0"
+        className="w-full p-2 rounded-md bg-[#2a004f] mb-6 border border-[#4b0082] focus:outline-none focus:ring-2 focus:ring-green-500"
+      />
+
+      {/* ✅ Withdraw Button */}
+      <button
+        onClick={handleWithdraw}
+        disabled={!walletAddress || !amount || Number(amount) <= 0}
+        className={`w-full p-2 rounded-md font-semibold transition-all duration-200 ${
+          !walletAddress || !amount || Number(amount) <= 0
+            ? "bg-gray-600 cursor-not-allowed"
+            : "bg-green-600 hover:bg-green-700"
+        }`}
+      >
+        Continue to Withdraw
+      </button>
     </div>
   );
 }
