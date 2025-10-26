@@ -39,7 +39,7 @@ export async function GET(request: Request, context: RouteParams) {
     }
 
     // ✅ Dynamic referral link
-    const referralLink = `https://powerxworld.uk/register?ref=${user.referralCode}`;
+    const referralLink = `https://www.powerxworld.uk/register?ref=${user.referralCode}`;
 
     return NextResponse.json({
       success: true,
