@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
+import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
 import {
   FaUser,
   FaEdit,
@@ -10,7 +10,7 @@ import {
   FaShieldAlt,
   FaTimes,
   FaCamera,
-} from 'react-icons/fa';
+} from "react-icons/fa";
 
 interface UserData {
   name: string;
@@ -48,31 +48,36 @@ interface ReferrerData {
 const ProfileRecords = () => {
   // Initialize userData from localStorage
   const [userData, setUserData] = useState<UserData>(() => {
-    const savedData = localStorage.getItem('userData');
+    const savedData = localStorage.getItem("userData");
     return savedData
       ? JSON.parse(savedData)
       : {
-          name: 'John Doe',
-          email: 'john@mail.com',
-          phone: '+1 (555) 123-4567',
-          address: '123 Main Street, New York, NY 10001',
-          joinDate: '2024-01-15',
-          userId: 'USR001234',
-          kycStatus: 'verified',
-          accountType: 'Premium',
-          totalInvestment: '$12,450.50',
-          totalEarnings: '$2,350.75',
-          activePlans: '3',
-          referralCode: 'JOHNDOE25',
+          name: "John Doe",
+          email: "john@mail.com",
+          phone: "+1 (555) 123-4567",
+          address: "123 Main Street, New York, NY 10001",
+          joinDate: "2024-01-15",
+          userId: "USR001234",
+          kycStatus: "verified",
+          accountType: "Premium",
+          totalInvestment: "$12,450.50",
+          totalEarnings: "$2,350.75",
+          activePlans: "3",
+          referralCode: "JOHNDOE25",
           profilePic: null,
         };
   });
 
-  // State for referrer data
-  const [referrerData, setReferrerData] = useState<ReferrerData>({
-    name: userData.name,
-    sponsorId: 'SPN001500',
-    profile: userData.profilePic,
+  // Referrer data ko alag se initialize karo
+  const [referrerData, setReferrerData] = useState<ReferrerData>(() => {
+    const savedReferrerData = localStorage.getItem("referrerData");
+    return savedReferrerData
+      ? JSON.parse(savedReferrerData)
+      : {
+          name: "Alex Johnson", // Referrer ka alag name
+          sponsorId: "SPN001500",
+          profile: null, // Referrer ka alag profile
+        };
   });
 
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
@@ -81,30 +86,51 @@ const ProfileRecords = () => {
 
   // Save userData to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem('userData', JSON.stringify(userData));
-    setReferrerData((prev) => ({
-      ...prev,
-      name: userData.name,
-      profile: userData.profilePic,
-    }));
+    localStorage.setItem("userData", JSON.stringify(userData));
   }, [userData]);
+
+  // Referrer data ko alag se save karo
+  useEffect(() => {
+    localStorage.setItem("referrerData", JSON.stringify(referrerData));
+  }, [referrerData]);
 
   // Fetch sponsorId from API on component mount
   useEffect(() => {
     async function fetchSponsorId() {
       try {
-        const res = await fetch('/api/referrer');
+        const res = await fetch("/api/referrer");
         const data = await res.json();
         setReferrerData((prev) => ({
           ...prev,
-          sponsorId: data.sponsorId || 'SPN001500',
+          sponsorId: data.sponsorId || "SPN001500",
         }));
       } catch (err) {
-        console.error('Failed to fetch sponsorId:', err);
+        console.error("Failed to fetch sponsorId:", err);
       }
     }
     fetchSponsorId();
   }, []);
+
+  // Email mask karne ka function
+  const maskEmail = (email: string): string => {
+    if (!email) return "";
+
+    const [localPart, domain] = email.split("@");
+    if (!localPart || !domain) return email;
+
+    // Local part ko mask karo - first character aur last 2 characters show karo
+    let maskedLocalPart = "";
+    if (localPart.length <= 3) {
+      maskedLocalPart = localPart.charAt(0) + "***".repeat(localPart.length - 1);
+    } else {
+      maskedLocalPart =
+        localPart.charAt(0) +
+        "*".repeat(localPart.length - 3) +
+        localPart.slice(-2);
+    }
+
+    return `${maskedLocalPart}@${domain}`;
+  };
 
   // Handle profile picture change
   const handleProfilePicChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -145,52 +171,52 @@ const ProfileRecords = () => {
   // Sample logout function to preserve userData
   const handleLogout = () => {
     // Preserve userData in localStorage
-    const savedData = localStorage.getItem('userData');
+    const savedData = localStorage.getItem("userData");
     localStorage.clear(); // Clear other items if needed
     if (savedData) {
-      localStorage.setItem('userData', savedData); // Restore userData
+      localStorage.setItem("userData", savedData); // Restore userData
     }
     // Redirect to login page or perform other logout actions
-    window.location.href = '/login';
+    window.location.href = "/login";
   };
 
   const personalInfo: PersonalInfoItem[] = [
     {
       icon: <FaUser className="text-blue-400" />,
-      label: 'My Self Invest',
+      label: "My Self Invest",
       value: userData.totalInvestment,
     },
     {
       icon: <FaEnvelope className="text-purple-400" />,
-      label: 'Profit Record',
+      label: "Profit Record",
       value: userData.totalEarnings,
     },
     {
       icon: <FaCalendar className="text-yellow-400" />,
-      label: 'My Total Deposit',
-      value: '$0.00',
+      label: "My Total Deposit",
+      value: "$0.00",
     },
     {
       icon: <FaIdCard className="text-indigo-400" />,
-      label: 'My Withdrawals',
-      value: '$0.00',
+      label: "My Withdrawals",
+      value: "$0.00",
     },
     {
       icon: <FaShieldAlt className="text-green-400" />,
-      label: 'Team Commission',
-      value: '$0.00',
+      label: "Team Commission",
+      value: "$0.00",
     },
     {
       icon: <FaUser className="text-blue-400" />,
-      label: 'Direct Commission',
-      value: '$0.00',
+      label: "Direct Commission",
+      value: "$0.00",
     },
   ];
 
   const accountRecords: AccountRecord[] = [
     {
-      title: 'My Total USDT Earning',
-      amount: '0.00$',
+      title: "My Total USDT Earning",
+      amount: "0.00$",
     },
   ];
 
@@ -200,10 +226,10 @@ const ProfileRecords = () => {
       style={{
         backgroundImage:
           "url('https://i.pinimg.com/1200x/18/9d/30/189d3007b4da750e7e65e1823954464e.jpg')",
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed',
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        backgroundAttachment: "fixed",
       }}
     >
       {/* Background Overlay */}
@@ -215,7 +241,7 @@ const ProfileRecords = () => {
           <div className="relative z-20 flex flex-col lg:flex-row items-center gap-2">
             {/* Profile Picture */}
             <div className="relative">
-              <div className="w-12 h-12 lg:w-20 lg:h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center border-4 border-white/30 shadow-2xl overflow-hidden">
+              <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center border-4 border-white/30 shadow-2xl overflow-hidden">
                 {userData.profilePic ? (
                   <img
                     src={userData.profilePic}
@@ -227,7 +253,9 @@ const ProfileRecords = () => {
                 )}
               </div>
               <button
-                onClick={() => document.getElementById('profilePicInput')?.click()}
+                onClick={() =>
+                  document.getElementById("profilePicInput")?.click()
+                }
                 className="absolute -bottom-1 -right-1 p-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full border-2 border-white/30 shadow-lg hover:scale-110 transition-transform duration-300"
               >
                 <FaCamera className="text-white text-xs" />
@@ -246,7 +274,9 @@ const ProfileRecords = () => {
               <h2 className="text-base lg:text-2xl font-bold text-white">
                 {userData.name}
               </h2>
-              <p className="text-blue-100 text-sm lg:text-base">{userData.email}</p>
+              <p className="text-blue-100 text-sm lg:text-base">
+                {maskEmail(userData.email)}
+              </p>
             </div>
 
             {/* Edit Button */}
@@ -263,20 +293,6 @@ const ProfileRecords = () => {
             >
               <FaEdit className="text-sm" />
             </button>
-
-            {/* Logout Button */}
-            <button
-              onClick={handleLogout}
-              className="bg-gradient-to-r lg:flex hidden from-red-500 to-pink-500 hover:from-red-400 hover:to-pink-400 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-2xl items-center gap-2"
-            >
-              Logout
-            </button>
-            <button
-              onClick={handleLogout}
-              className="bg-gradient-to-r block lg:hidden from-red-500 to-pink-500 hover:from-red-400 hover:to-pink-400 text-white p-2 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-2xl items-center absolute top-12 right-2 gap-2"
-            >
-              Logout
-            </button>
           </div>
         </div>
 
@@ -285,25 +301,25 @@ const ProfileRecords = () => {
           <div
             className="absolute -top-8 -left-8 w-24 h-24 rounded-full z-10"
             style={{
-              background: 'linear-gradient(45deg, #a855f7, #ec4899, #a855f7)',
-              filter: 'blur(12px)',
-              opacity: '0.6',
+              background: "linear-gradient(45deg, #a855f7, #ec4899, #a855f7)",
+              filter: "blur(12px)",
+              opacity: "0.6",
             }}
           ></div>
           <div
             className="absolute -bottom-8 -right-8 w-20 h-20 rounded-full z-10"
             style={{
-              background: 'linear-gradient(135deg, #3b82f6, #10b981, #3b82f6)',
-              filter: 'blur(10px)',
-              opacity: '0.4',
+              background: "linear-gradient(135deg, #3b82f6, #10b981, #3b82f6)",
+              filter: "blur(10px)",
+              opacity: "0.4",
             }}
           ></div>
           <div
             className="absolute -inset-2 rounded-2xl animate-spin opacity-70"
             style={{
               background:
-                'conic-gradient(from 0deg, #3b82f6, #8b5cf6, #ec4899, #10b981, #f59e0b, #3b82f6)',
-              animationDuration: '10000ms',
+                "conic-gradient(from 0deg, #3b82f6, #8b5cf6, #ec4899, #10b981, #f59e0b, #3b82f6)",
+              animationDuration: "10000ms",
               zIndex: 0,
             }}
           ></div>
@@ -339,25 +355,25 @@ const ProfileRecords = () => {
           <div
             className="absolute -top-8 -left-8 w-24 h-24 rounded-full z-10"
             style={{
-              background: 'linear-gradient(45deg, #a855f7, #ec4899, #a855f7)',
-              filter: 'blur(12px)',
-              opacity: '0.6',
+              background: "linear-gradient(45deg, #a855f7, #ec4899, #a855f7)",
+              filter: "blur(12px)",
+              opacity: "0.6",
             }}
           ></div>
           <div
             className="absolute -bottom-8 -right-8 w-20 h-20 rounded-full z-10"
             style={{
-              background: 'linear-gradient(135deg, #3b82f6, #10b981, #3b82f6)',
-              filter: 'blur(10px)',
-              opacity: '0.4',
+              background: "linear-gradient(135deg, #3b82f6, #10b981, #3b82f6)",
+              filter: "blur(10px)",
+              opacity: "0.4",
             }}
           ></div>
           <div
             className="absolute -inset-2 rounded-2xl animate-spin opacity-50"
             style={{
               background:
-                'conic-gradient(from 0deg, #3b82f6, #8b5cf6, #ec4899, #10b981, #f59e0b, #3b82f6)',
-              animationDuration: '12000ms',
+                "conic-gradient(from 0deg, #3b82f6, #8b5cf6, #ec4899, #10b981, #f59e0b, #3b82f6)",
+              animationDuration: "12000ms",
               zIndex: 0,
             }}
           ></div>
@@ -384,25 +400,25 @@ const ProfileRecords = () => {
           <div
             className="absolute -top-8 -left-8 w-24 h-24 rounded-full z-10"
             style={{
-              background: 'linear-gradient(45deg, #a855f7, #ec4899, #a855f7)',
-              filter: 'blur(12px)',
-              opacity: '0.6',
+              background: "linear-gradient(45deg, #a855f7, #ec4899, #a855f7)",
+              filter: "blur(12px)",
+              opacity: "0.6",
             }}
           ></div>
           <div
             className="absolute -bottom-8 -right-8 w-20 h-20 rounded-full z-10"
             style={{
-              background: 'linear-gradient(135deg, #3b82f6, #10b981, #3b82f6)',
-              filter: 'blur(10px)',
-              opacity: '0.4',
+              background: "linear-gradient(135deg, #3b82f6, #10b981, #3b82f6)",
+              filter: "blur(10px)",
+              opacity: "0.4",
             }}
           ></div>
           <div
             className="absolute -inset-2 rounded-2xl animate-spin opacity-50"
             style={{
               background:
-                'conic-gradient(from 0deg, #3b82f6, #8b5cf6, #ec4899, #10b981, #f59e0b, #3b82f6)',
-              animationDuration: '12000ms',
+                "conic-gradient(from 0deg, #3b82f6, #8b5cf6, #ec4899, #10b981, #f59e0b, #3b82f6)",
+              animationDuration: "12000ms",
               zIndex: 0,
             }}
           ></div>
@@ -439,8 +455,8 @@ const ProfileRecords = () => {
                   className="w-full h-full animate-spin opacity-70"
                   style={{
                     background:
-                      'conic-gradient(from 0deg, #a855f7, #ec4899, #f59e0b, #10b981, #3b82f6, #a855f7)',
-                    animationDuration: '10000ms',
+                      "conic-gradient(from 0deg, #a855f7, #ec4899, #f59e0b, #10b981, #3b82f6, #a855f7)",
+                    animationDuration: "10000ms",
                   }}
                 ></div>
               </div>
@@ -474,7 +490,7 @@ const ProfileRecords = () => {
                         <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center border-4 border-white/30 shadow-2xl overflow-hidden">
                           {profileImage || editForm.profilePic ? (
                             <img
-                              src={profileImage || editForm.profilePic || ''}
+                              src={profileImage || editForm.profilePic || ""}
                               alt="Profile Preview"
                               className="w-full h-full object-cover"
                             />
@@ -511,16 +527,6 @@ const ProfileRecords = () => {
                           value={editForm.name}
                           onChange={handleInputChange}
                           className="w-full p-3 bg-gradient-to-r from-gray-800/90 to-gray-900 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300 backdrop-blur-sm"
-                        />
-                      </div>
-                      <div className="space-y-3">
-                        <label className="text-white font-semibold">Email</label>
-                        <input
-                          type="email"
-                          name="email"
-                          value={editForm.email}
-                          onChange={handleInputChange}
-                          className="w-full p-3 bg-gradient-to-r from-gray-800/90 to-gray-900 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all duration-300 backdrop-blur-sm"
                         />
                       </div>
                     </div>

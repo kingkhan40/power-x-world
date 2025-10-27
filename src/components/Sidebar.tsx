@@ -299,7 +299,7 @@ const Sidebar = () => {
             className="h-14 w-14 object-cover rounded-full border-2 border-blue-200 p-1"
           />
           <div className="flex flex-col ml-2">
-            <h3 className="lg:text-3xl text-lg font-extrabold tracking-wider text-white font-mono">
+            <h3 className="lg:text-3xl text-lg font-medium tracking-wider text-white font-mono">
               {userName}
             </h3>
             <p className="md:text-xs transition-colors text-[13px] text-gray-200 duration-300">
@@ -308,15 +308,7 @@ const Sidebar = () => {
           </div>
         </div>
 
-        {/* Right Section — Logout Button (Desktop) */}
-        <button
-          onClick={handleLogout}
-          className="hidden md:inline-flex px-4 py-2 bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold rounded-full hover:opacity-90 transition-all duration-300 shadow-lg"
-        >
-          Logout
-        </button>
-
-        {/* Fixed Floating Menu Icon (Mobile) */}
+        
         <motion.div
           className="fixed bottom-4 right-2 z-50 cursor-pointer"
           whileHover={{ scale: 1.1 }}

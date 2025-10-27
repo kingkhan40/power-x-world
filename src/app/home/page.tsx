@@ -19,10 +19,15 @@ type DashboardData = {
   otherPayments?: number;
 };
 
-export default function HomePage() {
+function HomePage() {
   const router = useRouter();
-  const { balance: contextBalance, setBalance: setContextBalance } = useBalance(); // ✅ from context
-  const [user, setUser] = useState<{ name?: string; email?: string; wallet?: string } | null>(null);
+  const { balance: contextBalance, setBalance: setContextBalance } =
+    useBalance(); // ✅ from context
+  const [user, setUser] = useState<{
+    name?: string;
+    email?: string;
+    wallet?: string;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [referralLink, setReferralLink] = useState<string | null>(null);
   const [dashboard, setDashboard] = useState<DashboardData>({});
@@ -43,7 +48,8 @@ export default function HomePage() {
     };
 
     window.addEventListener("balanceUpdated", handleBalanceUpdate);
-    return () => window.removeEventListener("balanceUpdated", handleBalanceUpdate);
+    return () =>
+      window.removeEventListener("balanceUpdated", handleBalanceUpdate);
   }, []);
 
   useEffect(() => {
@@ -58,7 +64,11 @@ export default function HomePage() {
       return;
     }
 
-    setUser({ name: userName || "User", email: userEmail || "", wallet: userWallet || "" });
+    setUser({
+      name: userName || "User",
+      email: userEmail || "",
+      wallet: userWallet || "",
+    });
 
     // 🔗 Fetch referral link
     if (userEmail) {
@@ -117,11 +127,21 @@ export default function HomePage() {
         localStorage.setItem("userBalance", newBalance.toString()); // ✅ sync
       };
 
-      socket.on(`deposit_${userWallet}`, (data: any) => updateAllBalances(Number(data.newBalance)));
-      socket.on(`withdraw_${userWallet}`, (data: any) => updateAllBalances(Number(data.newBalance)));
-      socket.on(`commission_${userWallet}`, (data: any) => setTotalCommission(Number(data.totalCommission)));
-      socket.on(`reward_${userWallet}`, (data: any) => setRewardPayment(Number(data.rewardPayment)));
-      socket.on(`otherpayment_${userWallet}`, (data: any) => setOtherPayments(Number(data.otherPayments)));
+      socket.on(`deposit_${userWallet}`, (data: any) =>
+        updateAllBalances(Number(data.newBalance))
+      );
+      socket.on(`withdraw_${userWallet}`, (data: any) =>
+        updateAllBalances(Number(data.newBalance))
+      );
+      socket.on(`commission_${userWallet}`, (data: any) =>
+        setTotalCommission(Number(data.totalCommission))
+      );
+      socket.on(`reward_${userWallet}`, (data: any) =>
+        setRewardPayment(Number(data.rewardPayment))
+      );
+      socket.on(`otherpayment_${userWallet}`, (data: any) =>
+        setOtherPayments(Number(data.otherPayments))
+      );
 
       socket.on("rewardUpdated", (data: any) => {
         if (data?.userId && typeof data.newBalance === "number") {
@@ -142,18 +162,6 @@ export default function HomePage() {
       socket.off("rewardUpdated");
     };
   }, [router, setContextBalance]);
-
-  // 🚪 Logout handler
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userId");
-    localStorage.removeItem("referralLink");
-    localStorage.removeItem("userEmail");
-    localStorage.removeItem("userName");
-    localStorage.removeItem("userWallet");
-    localStorage.removeItem("userBalance"); // ✅ clear also
-    router.replace("/login");
-  };
 
   if (loading) {
     return (
@@ -188,18 +196,9 @@ export default function HomePage() {
         <InvestmentInfo userEmail={user?.email ?? ""} />
         <IconGridNavigation />
         <BasicPlan />
-
-        <div className="text-center text-sm text-gray-300 mt-4">
-          <p>Live USDT Balance: {contextBalance ?? usdtBalance}</p>
-        </div>
-
-        <button
-          className="bg-red-600 px-4 py-2 rounded hover:bg-red-700 transition"
-          onClick={handleLogout}
-        >
-          Logout
-        </button>
       </div>
     </div>
   );
 }
+
+export default HomePage;

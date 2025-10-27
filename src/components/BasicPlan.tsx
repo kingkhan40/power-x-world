@@ -32,6 +32,18 @@ const BasicPlan = () => {
     },
     {
       id: 2,
+      name: "Big Surprise",
+      description:
+        "Big Opportunity We Launched In One Months ",
+      image:
+        "https://i.pinimg.com/1200x/a7/80/72/a780728baa7a7c63708bd8c7316598d6.jpg",
+      bgImage:
+        "https://i.pinimg.com/736x/f3/9a/ce/f39acee5a2c39a591aaa9057e0c430f1.jpg",
+      link: "/investment",
+      launched: false,
+    },
+    {
+      id: 3,
       name: "Power X Coin",
       description: "Power X Coin: $1 to $1000 in 1-2 Years!",
       image: "/powerxcoin.jpg",
@@ -51,6 +63,17 @@ const BasicPlan = () => {
     e.stopPropagation(); // Prevent card click event from firing
     if (user.launched) {
       router.push(user.link);
+    }
+  };
+
+  // Function to get button text based on card ID
+  const getButtonText = (user: User) => {
+    if (user.launched) {
+      return "Click Here";
+    } else if (user.id === 2) {
+      return "Coming Soon In One Month";
+    } else {
+      return "Coming Soon 5, 6 Months";
     }
   };
 
@@ -147,9 +170,7 @@ const BasicPlan = () => {
 
                 <div className="mt-4" >
                   <Buttons
-                    text={
-                      user.launched ? "Click Here" : "Coming Soon 2, 3 Months"
-                    }
+                    text={getButtonText(user)}
                     disabled={!user.launched}
                     onClick={(e) => handleButtonClick(user, e)}
                   />
