@@ -184,12 +184,12 @@ const ProfileRecords = () => {
     {
       icon: <FaUser className="text-blue-400" />,
       label: "My Self Invest",
-      value: userData.totalInvestment,
+      value: "$0.00",
     },
     {
       icon: <FaEnvelope className="text-purple-400" />,
       label: "Profit Record",
-      value: userData.totalEarnings,
+      value: "$0.00",
     },
     {
       icon: <FaCalendar className="text-yellow-400" />,
