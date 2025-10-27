@@ -8,6 +8,8 @@ const Register = () => {
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [showCodeInput, setShowCodeInput] = useState(false); // To show code input field
+  const [verificationCode, setVerificationCode] = useState(""); // Store verification code input
 
   const [formData, setFormData] = useState({
     name: "",
@@ -16,13 +18,14 @@ const Register = () => {
     confirmPassword: "",
   });
 
-  // ✅ Get referral from URL (example: /register?ref=XYZ123)
+  // ✅ Get referral from URL
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const ref = urlParams.get("ref");
     if (ref) setReferralCode(ref);
   }, []);
 
+  // ✅ Handle form input
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -31,7 +34,7 @@ const Register = () => {
     }));
   };
 
-  // ✅ Handle Registration Submit
+  // ✅ Handle Registration (send code)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -51,7 +54,7 @@ const Register = () => {
           name: formData.name,
           email: formData.email,
           password: formData.password,
-          referralCode, // ✅ Correct key for backend
+          referralCode,
         }),
       });
 
@@ -59,12 +62,44 @@ const Register = () => {
       setLoading(false);
 
       if (res.ok && data.success) {
-        setMessage("Account created successfully!");
-        // optionally store user info
+        setMessage("Verification code sent to your email!");
+        setShowCodeInput(true); // Show verification input
+      } else {
+        setMessage(data.message || "Registration failed");
+      }
+    } catch (error) {
+      console.error(error);
+      setLoading(false);
+      setMessage("Something went wrong. Please try again.");
+    }
+  };
+
+  // ✅ Handle Verification Code (use /api/verify)
+  const handleCodeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      setLoading(true);
+      setMessage("");
+
+      const res = await fetch("/api/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          code: verificationCode,
+        }),
+      });
+
+      const data = await res.json();
+      setLoading(false);
+
+      if (res.ok && data.success) {
+        setMessage("Email verified successfully! Account created.");
         localStorage.setItem("user", JSON.stringify(data.user));
         router.push("/login");
       } else {
-        setMessage(data.message || "Registration failed");
+        setMessage(data.message || "Invalid or expired code");
       }
     } catch (error) {
       console.error(error);
@@ -97,62 +132,85 @@ const Register = () => {
             </p>
           </div>
 
-          <form className="space-y-5" onSubmit={handleSubmit}>
-            <InputComponents
-              name="name"
-              type="text"
-              placeholder="Full Name"
-              required={true}
-              value={formData.name}
-              onChange={handleInputChange}
-            />
+          {/* ✅ If user hasn't received code yet */}
+          {!showCodeInput ? (
+            <form className="space-y-5" onSubmit={handleSubmit}>
+              <InputComponents
+                name="name"
+                type="text"
+                placeholder="Full Name"
+                required={true}
+                value={formData.name}
+                onChange={handleInputChange}
+              />
 
-            <InputComponents
-              name="email"
-              type="email"
-              placeholder="Email"
-              required={true}
-              value={formData.email}
-              onChange={handleInputChange}
-            />
+              <InputComponents
+                name="email"
+                type="email"
+                placeholder="Email"
+                required={true}
+                value={formData.email}
+                onChange={handleInputChange}
+              />
 
-            <InputComponents
-              name="password"
-              type="password"
-              placeholder="Password"
-              required={true}
-              value={formData.password}
-              onChange={handleInputChange}
-            />
+              <InputComponents
+                name="password"
+                type="password"
+                placeholder="Password"
+                required={true}
+                value={formData.password}
+                onChange={handleInputChange}
+              />
 
-            <InputComponents
-              name="confirmPassword"
-              type="password"
-              placeholder="Confirm Password"
-              required={true}
-              value={formData.confirmPassword}
-              onChange={handleInputChange}
-            />
+              <InputComponents
+                name="confirmPassword"
+                type="password"
+                placeholder="Confirm Password"
+                required={true}
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+              />
 
-            {/* 🔗 Referral display if exists */}
-            {referralCode && (
-              <p className="text-green-400 text-sm font-semibold">
-                Referral Code: {referralCode}
-              </p>
-            )}
+              {referralCode && (
+                <p className="text-green-400 text-sm font-semibold">
+                  Referral Code: {referralCode}
+                </p>
+              )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className={`w-full bg-gradient-to-r from-blue-600 to-purple-600 via-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg ${
-                loading && "opacity-70 cursor-not-allowed"
-              }`}
-            >
-              {loading ? "Creating Account..." : "Sign Up"}
-            </button>
-          </form>
+              <button
+                type="submit"
+                disabled={loading}
+                className={`w-full bg-gradient-to-r from-blue-600 to-purple-600 via-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg ${
+                  loading && "opacity-70 cursor-not-allowed"
+                }`}
+              >
+                {loading ? "Sending Code..." : "Sign Up"}
+              </button>
+            </form>
+          ) : (
+            // ✅ Show verification code input
+            <form className="space-y-5" onSubmit={handleCodeSubmit}>
+              <InputComponents
+                name="verificationCode"
+                type="text"
+                placeholder="Enter Verification Code"
+                required={true}
+                value={verificationCode}
+                onChange={(e) => setVerificationCode(e.target.value)}
+              />
 
-          {/* ✅ Success/Error Message */}
+              <button
+                type="submit"
+                disabled={loading}
+                className={`w-full bg-gradient-to-r from-blue-600 to-purple-600 via-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg ${
+                  loading && "opacity-70 cursor-not-allowed"
+                }`}
+              >
+                {loading ? "Verifying..." : "Verify Code"}
+              </button>
+            </form>
+          )}
+
           {message && (
             <p className="text-center mt-4 text-sm font-medium text-gray-100">
               {message}

@@ -1,93 +1,88 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
-import User from "@/models/User";
+import { MongoClient } from "mongodb";
+import nodemailer from "nodemailer";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import { nanoid } from "nanoid";
 
-// Generate unique referral code
-function generateRefCode(name: string): string {
-  return `${name.toLowerCase().replace(/\s+/g, "")}-${nanoid(6)}`;
-}
+// Initialize MongoDB client
+const client = new MongoClient(process.env.MONGODB_URI || "");
 
-export async function POST(req: Request): Promise<NextResponse> {
+// Initialize Nodemailer transporter
+const transporter = nodemailer.createTransport({
+  service: "gmail", // or use another email service like SendGrid
+  auth: {
+    user: process.env.EMAIL_USER, // Your email
+    pass: process.env.EMAIL_PASS, // Your email password or app-specific password
+  },
+});
+
+// POST /api/register
+export async function POST(req: Request) {
   try {
-    // ✅ Connect to MongoDB
-    await connectDB();
-
+    // Parse request body
     const { name, email, password, referralCode } = await req.json();
 
-    // ✅ Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
+    // Validate input
+    if (!name || !email || !password) {
       return NextResponse.json(
-        { success: false, message: "User already exists" },
+        { message: "All fields are required" },
         { status: 400 }
       );
     }
 
-    // ✅ Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Connect to MongoDB
+    await client.connect();
+    const db = client.db("your_database");
+    const usersCollection = db.collection("users");
+    const codesCollection = db.collection("verification_codes");
+    const pendingUsersCollection = db.collection("pending_users");
 
-    // ✅ Generate user's own referral code
-    const userReferralCode = generateRefCode(name);
-
-    // ✅ Default values
-    let referredBy: string | null = null;
-    let team = "admin"; // default team
-    let referrer: any = null; // ✅ declare here to avoid ReferenceError
-
-    // ✅ If referred via referral link
-    if (referralCode) {
-      referrer = await User.findOne({ referralCode });
-
-      if (referrer) {
-        referredBy = referrer._id.toString(); // store ObjectId as string
-        team = referrer.name; // assign new user to referrer's team
-      }
+    // Check if email already exists
+    const existingUser = await usersCollection.findOne({ email });
+    if (existingUser) {
+      return NextResponse.json(
+        { message: "Email already registered" },
+        { status: 400 }
+      );
     }
 
-    // ✅ Create new user
-    const newUser = await User.create({
+    // Generate 6-digit verification code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Store verification code with expiration (10 minutes)
+    await codesCollection.insertOne({
+      email,
+      code: verificationCode,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes from now
+    });
+
+    // Send email with verification code
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Verify Your Email",
+      text: `Your verification code is: ${verificationCode}. It expires in 10 minutes.`,
+    });
+
+    // Temporarily store user data in pending_users
+    await pendingUsersCollection.insertOne({
       name,
       email,
-      password: hashedPassword,
-      referralCode: userReferralCode,
-      referredBy,
-      team,
-      teamMembers: [],
-      totalTeam: 0,
-      activeUsers: 0,
-      wallet: 0,
-      level: 1,
+      password: await bcrypt.hash(password, 10),
+      referralCode,
+      createdAt: new Date(),
     });
 
-    // ✅ Update referrer's teamMembers and totalTeam if applicable
-    if (referrer) {
-      await User.findByIdAndUpdate(referrer._id, {
-        $push: { teamMembers: newUser._id }, // push ObjectId
-        $inc: { totalTeam: 1 },
-      });
-    }
-
-    // ✅ Generate JWT
-    const jwtSecret = process.env.JWT_SECRET;
-    if (!jwtSecret) throw new Error("JWT_SECRET is missing");
-
-    const token = jwt.sign({ id: newUser._id }, jwtSecret, { expiresIn: "7d" });
-
-    return NextResponse.json({
-      success: true,
-      message: "User registered successfully",
-      token,
-      user: newUser,
-      referralLink: `${process.env.NEXT_PUBLIC_BASE_URL}/register?ref=${userReferralCode}`,
-    });
-  } catch (error: any) {
-    console.error("Registration Error:", error);
     return NextResponse.json(
-      { success: false, message: error.message || "Server error" },
+      { success: true, message: "Verification code sent to your email" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Registration error:", error);
+    return NextResponse.json(
+      { message: "Server error" },
       { status: 500 }
     );
+  } finally {
+    await client.close();
   }
 }
