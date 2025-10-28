@@ -1,8 +1,8 @@
-// Simple shim for web (Next.js)
+// src/utils/asyncStorageShim.ts
 const AsyncStorage = {
-  getItem: async (key: string) => null,
-  setItem: async (key: string, value: string) => {},
-  removeItem: async (key: string) => {},
+  getItem: async (_key: string) => null,
+  setItem: async (_key: string, _value: string) => {},
+  removeItem: async (_key: string) => {},
   clear: async () => {},
 };
 
