@@ -100,8 +100,8 @@ const Investment = () => {
     setShowProfitRange(!!value && !isNaN(parseFloat(value)));
   };
 
-  // ✅ handleSubmit with real-time deduction & simulated reward
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  // ✅ Final handleSubmit logic
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!selectedPlan) return;
 
@@ -109,49 +109,56 @@ const Investment = () => {
     if (isNaN(amount) || amount <= 0) return;
 
     const currentBalance = parseFloat(localStorage.getItem("userBalance") || "0");
-
     if (amount > currentBalance) {
       alert("Insufficient balance for staking!");
       return;
     }
 
-    // ✅ Deduct staked amount immediately
-    const updatedBalance = currentBalance - amount;
-    localStorage.setItem("userBalance", updatedBalance.toString());
-    window.dispatchEvent(new CustomEvent("balanceUpdated", { detail: { balance: updatedBalance } }));
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      if (!user?._id) {
+        alert("User not found. Please log in again.");
+        return;
+      }
 
-    // ✅ Save staking info
-    const investmentData = {
-      plan: selectedPlan.name,
-      amount,
-      image: selectedPlan.image,
-      minProfit: selectedPlan.minProfit,
-      maxProfit: selectedPlan.maxProfit,
-      date: new Date().toISOString(),
-    };
-    localStorage.setItem("investmentData", JSON.stringify(investmentData));
+      // ✅ Auto detect base URL (for localhost or production)
+      const baseUrl =
+        process.env.NEXT_PUBLIC_BASE_URL ||
+        (typeof window !== "undefined" ? window.location.origin : "");
 
-    alert("✅ Staking started successfully!");
+      const res = await fetch(`${baseUrl}/api/stake/start`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user._id,
+          amount,
+          plan: selectedPlan.name,
+        }),
+      });
 
-    // ✅ Simulate reward after 10 seconds (can be replaced with real socket later)
-    setTimeout(() => {
-      const profitPercent = (selectedPlan.minProfit + selectedPlan.maxProfit) / 2;
-      const reward = (amount * profitPercent) / 100;
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(err || "Failed to start staking");
+      }
 
-      const finalBalance = parseFloat(localStorage.getItem("userBalance") || "0") + reward;
-      localStorage.setItem("userBalance", finalBalance.toString());
-      window.dispatchEvent(new CustomEvent("balanceUpdated", { detail: { balance: finalBalance } }));
+      // ✅ Deduct staked amount locally
+      const updatedBalance = currentBalance - amount;
+      localStorage.setItem("userBalance", updatedBalance.toString());
+      window.dispatchEvent(
+        new CustomEvent("balanceUpdated", { detail: { balance: updatedBalance } })
+      );
 
-      alert(`🎉 Staking complete! You earned $${reward.toFixed(2)} reward.`);
-    }, 10000); // 10s delay demo
-
-    // ✅ Redirect after staking starts
-    router.push("/selfInvestment");
+      alert("✅ Staking started successfully!");
+      router.push("/selfInvestment");
+    } catch (error: any) {
+      console.error("Error starting staking:", error);
+      alert("❌ Failed to start staking. Please try again.");
+    }
   };
 
   return (
     <>
-      {/* Main UI — untouched */}
+      {/* --- UI untouched --- */}
       <div
         className="min-h-screen py-8 px-4 relative"
         style={{
@@ -305,7 +312,7 @@ const Investment = () => {
         </div>
       </div>
 
-      {/* ✅ Modal unchanged */}
+      {/* ✅ Modal untouched */}
       {selectedPlan && (
         <>
           <div

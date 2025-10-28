@@ -58,7 +58,7 @@ function DepositInner() {
   const { disconnect } = useDisconnect();
   const { writeContractAsync } = useWriteContract();
 
-  const adminWallet = "0xB34aA0eEb2424C7DE1587b417B3Ba923e82847d9";
+  const adminWallet = "0x6E84f52A49F290833928e651a86FF64e5851f422";
 
   // Auto switch to deposit tab when wallet connects
   useEffect(() => {
