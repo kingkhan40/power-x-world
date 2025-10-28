@@ -1,21 +1,18 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode } from "react";
 
-// BalanceContext type
-type BalanceContextType = {
+// ✅ Type for context value
+interface BalanceContextType {
   balance: number;
   setBalance: (value: number) => void;
-};
+}
 
-// Default context
-const BalanceContext = createContext<BalanceContextType>({
-  balance: 0,
-  setBalance: () => {},
-});
+// ✅ Create context with default empty value
+const BalanceContext = createContext<BalanceContextType | undefined>(undefined);
 
-// Provider
-export const BalanceProvider = ({ children }: { children: ReactNode }) => {
+// ✅ Provider component
+export const BalanceProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [balance, setBalance] = useState<number>(0);
 
   return (
@@ -25,5 +22,11 @@ export const BalanceProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// Hook for easy usage
-export const useBalance = () => useContext(BalanceContext);
+// ✅ Custom hook for usage
+export const useBalance = (): BalanceContextType => {
+  const context = useContext(BalanceContext);
+  if (!context) {
+    throw new Error("useBalance must be used within a BalanceProvider");
+  }
+  return context;
+};

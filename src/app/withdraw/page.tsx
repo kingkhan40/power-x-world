@@ -1,33 +1,42 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { FaCoins, FaDollarSign } from "react-icons/fa";
-import { FaUnlockKeyhole } from "react-icons/fa6";
+import { FaCoins } from "react-icons/fa";
+import { useBalance } from "@/context/BalanceContext";
 
 function WithdrawPage() {
+  const { balance, setBalance } = useBalance();
   const [walletAddress, setWalletAddress] = useState("");
-  const [amount, setAmount] = useState<number | "">("");
-  const [balance, setBalance] = useState<number>(0);
-  const userEmail = "talha@gmail.com"; // ✅ Replace with logged-in user email (from auth/session)
+  const [amount, setAmount] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  // ✅ Fetch real balance from MongoDB
-  const fetchBalance = async () => {
-    try {
-      const res = await fetch(`/api/user-balance?email=${userEmail}`);
-      const data = await res.json();
-      if (data.success) {
-        setBalance(data.balance);
-      }
-    } catch (err) {
-      console.error("Balance fetch error:", err);
-    }
-  };
+  const email =
+    typeof window !== "undefined" ? localStorage.getItem("userEmail") : null;
 
+  // ✅ Fetch balance if not already set in context
   useEffect(() => {
-    fetchBalance();
-  }, []);
+    const fetchBalance = async () => {
+      if (!email) return;
+      try {
+        const res = await fetch(`/api/user-balance?email=${email}`);
+        const data = await res.json();
+        if (data.success) {
+          setBalance(data.balance);
+        }
+      } catch (err) {
+        console.error("Error fetching balance:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // ✅ Withdraw handler
+    if (balance === 0) {
+      fetchBalance();
+    } else {
+      setLoading(false);
+    }
+  }, [email, balance, setBalance]);
+
   const handleWithdraw = async () => {
     if (!walletAddress || !amount) {
       alert("⚠️ Please fill in all required fields.");
@@ -39,7 +48,7 @@ function WithdrawPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: userEmail,
+          email,
           walletAddress,
           amount: Number(amount),
         }),
@@ -49,88 +58,63 @@ function WithdrawPage() {
 
       if (data.success) {
         alert("✅ Withdrawal successful!");
-        setAmount("");
+        setBalance(data.newBalance); // 🔥 instantly updates everywhere
         setWalletAddress("");
-        setBalance(data.newBalance); // ✅ update balance on frontend instantly
+        setAmount("");
       } else {
         alert(data.message || "❌ Withdrawal failed.");
       }
-    } catch (error) {
-      console.error("Withdraw Error:", error);
+    } catch (err) {
+      console.error("Withdraw error:", err);
       alert("❌ Something went wrong.");
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen text-white bg-black">
+        <p>Loading balance...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen py-8 px-4 relative">
-      {/* ... (your same background and styling) */}
+    <div className="min-h-screen p-8 bg-gray-900 text-white">
+      <div className="max-w-lg mx-auto bg-gray-800 p-6 rounded-2xl shadow-2xl">
+        <h1 className="text-3xl font-bold text-center mb-6">💸 Withdraw Funds</h1>
 
-      <div className="container mx-auto max-w-2xl relative z-10">
-        <div className="text-center mb-8">
-          <h1 className="lg:text-4xl text-3xl mb-4 text-white font-bold">
-            💸 Withdraw Funds
-          </h1>
+        {/* ✅ Live MongoDB Wallet Balance */}
+        <div className="border border-white/20 rounded-2xl p-6 mb-6">
+          <p className="text-gray-300 text-sm mb-2">Available Balance</p>
+          <div className="flex items-center justify-between">
+            <p className="text-3xl font-bold">${balance.toFixed(2)}</p>
+            <FaCoins className="text-yellow-400 text-3xl" />
+          </div>
         </div>
 
-        <div className="p-6 bg-gray-900/80 rounded-2xl border border-gray-700 shadow-xl">
-          {/* Wallet Address */}
-          <div className="mb-6">
-            <h3 className="font-bold text-white mb-2 flex items-center gap-2 text-lg">
-              <FaUnlockKeyhole className="text-blue-300" />
-              Enter Wallet Address
-            </h3>
-            <input
-              type="text"
-              value={walletAddress}
-              onChange={(e) => setWalletAddress(e.target.value)}
-              placeholder="Enter your wallet address"
-              className="w-full p-3 bg-transparent border border-white/30 rounded-md text-white"
-            />
-          </div>
+        <input
+          type="text"
+          value={walletAddress}
+          onChange={(e) => setWalletAddress(e.target.value)}
+          placeholder="Enter wallet address"
+          className="w-full p-3 mb-4 rounded-md bg-gray-700 text-white outline-none"
+        />
 
-          {/* ✅ Show Real Balance */}
-          <div className="rounded-2xl p-6 mb-6 border border-white/30">
-            <p className="text-blue-100 text-sm tracking-wider mb-2">
-              Available Balance
-            </p>
-            <div className="flex items-center justify-between">
-              <p className="lg:text-3xl text-2xl font-bold text-white">
-                ${balance.toFixed(2)}
-              </p>
-              <FaCoins className="text-3xl text-yellow-400" />
-            </div>
-          </div>
+        <input
+          type="number"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          placeholder="Enter withdrawal amount"
+          className="w-full p-3 mb-4 rounded-md bg-gray-700 text-white outline-none"
+        />
 
-          {/* Withdrawal Amount */}
-          <div className="mb-6">
-            <label className="text-white text-lg font-semibold mb-4 flex items-center gap-2">
-              <FaDollarSign className="text-green-400" />
-              Enter Withdrawal Amount
-            </label>
-            <input
-              type="number"
-              value={amount}
-              onChange={(e) =>
-                setAmount(e.target.value === "" ? "" : Number(e.target.value))
-              }
-              className="w-full p-3 bg-transparent border border-white/30 rounded-md text-white"
-              placeholder="Enter withdrawal amount"
-            />
-          </div>
-
-          {/* Withdraw Button */}
-          <button
-            onClick={handleWithdraw}
-            disabled={!walletAddress || !amount || Number(amount) <= 0}
-            className={`w-full p-3 rounded-md font-semibold transition-all duration-200 ${
-              !walletAddress || !amount || Number(amount) <= 0
-                ? "bg-gray-600 cursor-not-allowed"
-                : "bg-gradient-to-r from-blue-600 to-purple-600 hover:opacity-90"
-            }`}
-          >
-            Continue to Withdraw
-          </button>
-        </div>
+        <button
+          onClick={handleWithdraw}
+          disabled={!walletAddress || !amount || Number(amount) <= 0}
+          className="w-full bg-gradient-to-r from-blue-500 to-purple-600 py-3 rounded-md font-semibold hover:opacity-90 transition"
+        >
+          Continue to Withdraw
+        </button>
       </div>
     </div>
   );

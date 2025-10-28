@@ -2,18 +2,16 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 
-export async function POST(req: Request) {  // ✅ Explicitly type the parameter
+// 👇 Add `: Request` type annotation
+export async function GET(req: Request) {
   try {
     await connectDB();
 
-    const { email, walletAddress, amount } = await req.json() as {
-      email: string;
-      walletAddress: string;
-      amount: number;
-    };
+    const { searchParams } = new URL(req.url);
+    const email = searchParams.get("email");
 
-    if (!email || !walletAddress || !amount) {
-      return NextResponse.json({ success: false, message: "Missing fields" });
+    if (!email) {
+      return NextResponse.json({ success: false, message: "Email required" });
     }
 
     const user = await User.findOne({ email });
@@ -22,24 +20,12 @@ export async function POST(req: Request) {  // ✅ Explicitly type the parameter
       return NextResponse.json({ success: false, message: "User not found" });
     }
 
-    if (user.wallet < amount) {
-      return NextResponse.json({
-        success: false,
-        message: "Insufficient balance",
-      });
-    }
-
-    // ✅ Update wallet balance
-    user.wallet -= amount;
-    await user.save();
-
     return NextResponse.json({
       success: true,
-      message: "Withdrawal successful",
-      newBalance: user.wallet,
+      balance: user.wallet || 0,
     });
   } catch (error) {
-    console.error("Withdraw API Error:", error);
+    console.error("Balance Fetch Error:", error);
     return NextResponse.json({ success: false, message: "Server error" });
   }
 }
