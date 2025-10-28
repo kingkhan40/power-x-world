@@ -6,7 +6,6 @@ import BalanceCard from "@/components/BalanceCard";
 import BasicPlan from "@/components/BasicPlan";
 import IconGridNavigation from "@/components/IconGridNavigation";
 import InvestmentInfo from "@/components/InvestmentInfo";
-import socket from "@/lib/socket";
 import { useBalance } from "@/context/BalanceContext";
 
 type DashboardData = {
@@ -93,13 +92,15 @@ function HomePage() {
     );
   }
 
-  const totalBalance = (balance ?? 0) + (totalCommission ?? 0) + (rewardPayment ?? 0) + (otherPayments ?? 0) + (usdtBalance ?? 0);
+  const totalBalance =
+    (balance ?? 0) + (totalCommission ?? 0) + (rewardPayment ?? 0) + (otherPayments ?? 0) + (usdtBalance ?? 0);
 
   return (
     <div
       className="min-h-screen relative text-white"
       style={{
-        backgroundImage: "url('https://i.pinimg.com/736x/21/e7/a7/21e7a74605dc7bc6b548b7ecb00cf900.jpg')",
+        backgroundImage:
+          "url('https://i.pinimg.com/736x/21/e7/a7/21e7a74605dc7bc6b548b7ecb00cf900.jpg')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
@@ -123,21 +124,7 @@ function HomePage() {
         <IconGridNavigation />
         <BasicPlan />
 
-        {/* Buttons */}
-        <div className="flex gap-4 mt-4">
-          {/* Deposit button fully disabled */}
-          <button
-            disabled
-            className="bg-green-600 text-white font-semibold py-2 px-5 rounded-lg shadow opacity-50 cursor-not-allowed"
-          >
-            Deposit
-          </button>
-
-          {/* Withdraw button normal */}
-          <button className="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg shadow hover:bg-blue-700">
-            Withdraw
-          </button>
-        </div>
+        {/* Deposit & Withdraw buttons removed */}
       </div>
     </div>
   );
