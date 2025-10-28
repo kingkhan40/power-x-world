@@ -1,4 +1,3 @@
-// Run with: npx ts-node server/socket-server.ts
 import expressPkg from "express";
 import http from "http";
 import { Server } from "socket.io";
@@ -20,7 +19,7 @@ const app = express();
 // ✅ Setup CORS
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    origin: process.env.CLIENT_URL || "https://powerxworld.uk",
     methods: ["GET", "POST"],
     credentials: true,
   })
@@ -38,7 +37,7 @@ export function initSocket(serverInstance?: http.Server): Server {
   if (!io) {
     io = new Server(serverInstance || server, {
       cors: {
-        origin: process.env.CLIENT_URL || "http://localhost:3000",
+        origin: process.env.CLIENT_URL || "https://powerxworld.uk",
         methods: ["GET", "POST"],
         credentials: true,
       },
@@ -87,7 +86,7 @@ app.post("/emit", (req, res) => {
 /// 🕒 Auto reward updater every minute
 cron.schedule("* * * * *", async () => {
   try {
-    await axios.post("http://localhost:3000/api/invest/reward");
+    await axios.post("https://powerxworld.uk/api/invest/reward");
     console.log("✅ Reward updated successfully");
   } catch (err: any) {
     console.error("❌ Error updating reward:", err.message);
