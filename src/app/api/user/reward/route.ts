@@ -4,7 +4,7 @@ import User from "@/models/User";
 
 export async function POST(req: Request) {
   try {
-    await connectDB();
+    await connectDB();       
 
     const { userId } = await req.json();
     const user = await User.findById(userId);
