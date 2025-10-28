@@ -1,12 +1,19 @@
+// A lightweight mock of AsyncStorage for web (MetaMask SDK compatibility)
+
+const storage: Record<string, string> = {};
+
 const AsyncStorage = {
-  getItem: async (key: string): Promise<string | null> => {
-    return typeof window !== "undefined" ? localStorage.getItem(key) : null;
+  async setItem(key: string, value: string): Promise<void> {
+    storage[key] = value;
   },
-  setItem: async (key: string, value: string): Promise<void> => {
-    if (typeof window !== "undefined") localStorage.setItem(key, value);
+  async getItem(key: string): Promise<string | null> {
+    return storage[key] || null;
   },
-  removeItem: async (key: string): Promise<void> => {
-    if (typeof window !== "undefined") localStorage.removeItem(key);
+  async removeItem(key: string): Promise<void> {
+    delete storage[key];
+  },
+  async clear(): Promise<void> {
+    Object.keys(storage).forEach((key) => delete storage[key]);
   },
 };
 
