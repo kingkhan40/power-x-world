@@ -19,7 +19,7 @@ const EarnSection = () => {
           <div className="p-4 rounded-xl relative overflow-hidden w-full h-full">
             {/* Animated Rotating Border */}
             <div
-              className="absolute -inset-2 rounded-xl animate-spin opacity-70"
+              className="absolute -inset-1 rounded-xl animate-spin opacity-70"
               style={{
                 background: "conic-gradient(from 0deg, #7d9efb, #a83bf8, #ff6b6b, #51cf66, #7d9efb)",
                 animationDuration: "12000ms",
@@ -28,7 +28,7 @@ const EarnSection = () => {
             ></div>
             
             {/* Background for content */}
-            <div className="absolute inset-1 rounded-xl bg-gray-900 z-1"></div>
+            <div className="absolute inset-0.5 rounded-xl bg-gray-900 z-1"></div>
 
             {/* Top Left Corner Effect */}
             <div

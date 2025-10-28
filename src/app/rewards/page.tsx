@@ -19,13 +19,20 @@ import { useBalance } from "@/context/BalanceContext";
 import { RewardPlan, StatData } from "types"; // Adjust path as needed
 import { parseRewardAmount } from "utils/parseRewardAmount"; // Adjust path as needed
 
-export default function RewardPage() {
-  const { usdtBalance, addToBalance, claimedRewards, addClaimedReward } = useBalance();
+function RewardPage() {
+  const {
+    usdtBalance,
+    addToBalance,
+    claimedRewards = [],
+    addClaimedReward,
+  } = useBalance();
   const [selectedReward, setSelectedReward] = useState<RewardPlan | null>(null);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const [showConfetti, setShowConfetti] = useState<boolean>(false);
   const [message, setMessage] = useState<string>(""); // From original RewardPage
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
   const [rewardPlans, setRewardPlans] = useState<RewardPlan[]>([
     {
       id: 1,
@@ -35,8 +42,9 @@ export default function RewardPage() {
       rewardAmount: "200$",
       color: "from-blue-500 to-indigo-500",
       icon: <FaLaptop className="text-3xl text-white" />,
-      image: "https://i.pinimg.com/1200x/96/dd/c8/96ddc807d329e89f14616245ea7c2e52.jpg",
-      achieved: true,
+      image:
+        "https://i.pinimg.com/1200x/96/dd/c8/96ddc807d329e89f14616245ea7c2e52.jpg",
+      achieved: false,
     },
     {
       id: 2,
@@ -46,7 +54,8 @@ export default function RewardPage() {
       rewardAmount: "400$",
       color: "from-purple-500 to-pink-500",
       icon: <FaMobile className="text-3xl text-white" />,
-      image: "https://i.pinimg.com/736x/eb/8d/d2/eb8dd224fe917f6c331c25a7968f5107.jpg",
+      image:
+        "https://i.pinimg.com/736x/eb/8d/d2/eb8dd224fe917f6c331c25a7968f5107.jpg",
       achieved: false,
     },
     {
@@ -57,7 +66,8 @@ export default function RewardPage() {
       rewardAmount: "500$",
       color: "from-green-500 to-emerald-500",
       icon: <FaMotorcycle className="text-3xl text-white" />,
-      image: "https://i.pinimg.com/1200x/f1/e7/ec/f1e7ec2a68eeaef27976438a19a93cca.jpg",
+      image:
+        "https://i.pinimg.com/1200x/f1/e7/ec/f1e7ec2a68eeaef27976438a19a93cca.jpg",
       achieved: false,
     },
     {
@@ -68,7 +78,8 @@ export default function RewardPage() {
       rewardAmount: "2,000$",
       color: "from-red-500 to-orange-500",
       icon: <FaCar className="text-3xl text-white" />,
-      image: "https://i.pinimg.com/736x/ee/7e/63/ee7e63cb5796dea3620360475b753722.jpg",
+      image:
+        "https://i.pinimg.com/736x/ee/7e/63/ee7e63cb5796dea3620360475b753722.jpg",
       achieved: false,
     },
     {
@@ -79,7 +90,8 @@ export default function RewardPage() {
       rewardAmount: "N/A",
       color: "from-cyan-500 to-blue-500",
       icon: <FaCar className="text-3xl text-white" />,
-      image: "https://i.pinimg.com/736x/4d/63/e7/4d63e788bf1f48e8ad5b03419c47859b.jpg",
+      image:
+        "https://i.pinimg.com/736x/4d/63/e7/4d63e788bf1f48e8ad5b03419c47859b.jpg",
       achieved: false,
     },
     {
@@ -90,7 +102,8 @@ export default function RewardPage() {
       rewardAmount: "N/A",
       color: "from-cyan-500 to-blue-500",
       icon: <FaCar className="text-3xl text-white" />,
-      image: "https://i.pinimg.com/736x/28/85/92/288592f5e8d2abb19606f74b611d129b.jpg",
+      image:
+        "https://i.pinimg.com/736x/28/85/92/288592f5e8d2abb19606f74b611d129b.jpg",
       achieved: false,
     },
     {
@@ -101,10 +114,18 @@ export default function RewardPage() {
       rewardAmount: "N/A",
       color: "from-rose-500 to-red-500",
       icon: <FaHome className="text-3xl text-white" />,
-      image: "https://i.pinimg.com/736x/82/d1/d9/82d1d911e17c46ea377e5f0573a5105e.jpg",
+      image:
+        "https://i.pinimg.com/736x/82/d1/d9/82d1d911e17c46ea377e5f0573a5105e.jpg",
       achieved: false,
     },
   ]);
+
+  // Initialize loading state
+  useEffect(() => {
+    if (claimedRewards !== undefined) {
+      setIsLoading(false);
+    }
+  }, [claimedRewards]);
 
   const unlockNextReward = (currentRewardId: number) => {
     const currentIndex = rewardPlans.findIndex(
@@ -132,7 +153,10 @@ export default function RewardPage() {
   };
 
   const handleClaimNow = (plan: RewardPlan) => {
-    if (!plan.achieved || claimedRewards.includes(plan.id)) {
+    if (
+      !plan.achieved ||
+      (claimedRewards && claimedRewards.includes(plan.id))
+    ) {
       return;
     }
     setSelectedReward(plan);
@@ -150,7 +174,11 @@ export default function RewardPage() {
   };
 
   const handleClaimRewards = async () => {
-    if (!selectedReward || claimedRewards.includes(selectedReward.id)) {
+    if (
+      !selectedReward ||
+      !claimedRewards ||
+      claimedRewards.includes(selectedReward.id)
+    ) {
       return;
     }
     setIsProcessing(true);
@@ -161,7 +189,10 @@ export default function RewardPage() {
       const res = await fetch("/api/user/reward", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: "YOUR_USER_ID_HERE", rewardId: selectedReward.id }), // Add rewardId
+        body: JSON.stringify({
+          userId: "YOUR_USER_ID_HERE",
+          rewardId: selectedReward.id,
+        }), // Add rewardId
       });
 
       const data = await res.json();
@@ -238,6 +269,15 @@ export default function RewardPage() {
       textColor: "text-blue-200",
     },
   ];
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-900">
+        <div className="text-white text-xl">Loading rewards...</div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -398,14 +438,19 @@ export default function RewardPage() {
 
                 <button
                   onClick={() => handleClaimNow(plan)}
-                  disabled={!plan.achieved || claimedRewards.includes(plan.id)}
+                  disabled={
+                    !plan.achieved ||
+                    (claimedRewards && claimedRewards.includes(plan.id))
+                  }
                   className={`w-full py-3 px-4 rounded-xl font-bold transition-all duration-300 shadow-2xl flex items-center justify-center gap-2 ${
-                    plan.achieved && !claimedRewards.includes(plan.id)
+                    plan.achieved &&
+                    (!claimedRewards || !claimedRewards.includes(plan.id))
                       ? "bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 text-white transform hover:scale-105 cursor-pointer"
                       : "bg-gradient-to-r from-gray-600 to-gray-700 text-gray-400 cursor-not-allowed"
                   }`}
                 >
-                  {plan.achieved && !claimedRewards.includes(plan.id) ? (
+                  {plan.achieved &&
+                  (!claimedRewards || !claimedRewards.includes(plan.id)) ? (
                     <>
                       <FaGift className="group-hover:animate-bounce" />
                       Claim Now
@@ -413,7 +458,9 @@ export default function RewardPage() {
                   ) : (
                     <>
                       <FaLock />
-                      {claimedRewards.includes(plan.id) ? "Claimed" : "Locked"}
+                      {claimedRewards && claimedRewards.includes(plan.id)
+                        ? "Claimed"
+                        : "Locked"}
                     </>
                   )}
                 </button>
@@ -609,7 +656,11 @@ export default function RewardPage() {
                     <div className="flex flex-col sm:flex-row gap-4">
                       <button
                         onClick={handleClaimRewards}
-                        disabled={isProcessing || claimedRewards.includes(selectedReward.id)}
+                        disabled={
+                          isProcessing ||
+                          (claimedRewards &&
+                            claimedRewards.includes(selectedReward.id))
+                        }
                         className="flex-1 bg-gradient-to-r from-yellow-900 to-orange-700 hover:from-yellow-800 hover:to-orange-600 disabled:from-gray-500 disabled:to-gray-600 text-white py-4 px-6 cursor-pointer rounded-xl font-bold text-sm transition-all duration-300 transform hover:scale-105 disabled:scale-100 shadow-2xl flex items-center justify-center gap-2 disabled:cursor-not-allowed"
                       >
                         {isProcessing ? (
@@ -617,7 +668,8 @@ export default function RewardPage() {
                             <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                             Processing Claim...
                           </>
-                        ) : claimedRewards.includes(selectedReward.id) ? (
+                        ) : claimedRewards &&
+                          claimedRewards.includes(selectedReward.id) ? (
                           <>Already Claimed</>
                         ) : (
                           <>Confirm & Claim Reward</>
@@ -641,3 +693,5 @@ export default function RewardPage() {
     </div>
   );
 }
+
+export default RewardPage;
