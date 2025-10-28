@@ -111,12 +111,12 @@ function HomePage() {
       <div className="container mx-auto px-3 lg:px-6 py-6 relative z-10 space-y-6">
         {/* Launch Announcement / Countdown */}
         <div className="bg-black/50 border border-white/20 rounded-xl p-6 text-center backdrop-blur-md shadow-lg flex flex-col items-center justify-center space-y-3">
-          <p className="text-2xl font-extrabold text-yellow-400 uppercase tracking-wide">Big Surprise</p>
-          <p className="text-xl font-bold text-white">Big Opportunity We Launched In One Months</p>
+          <p className="text-2xl font-extrabold text-yellow-400 uppercase tracking-wide"></p>
+          <p className="text-xl font-bold text-white"></p>
           <p className="text-white font-mono text-2xl">
             {timeLeft.days}d : {timeLeft.hours}h : {timeLeft.minutes}m : {timeLeft.seconds}s
           </p>
-          <p className="text-gray-300 text-sm">Coming Soon In One Month</p>
+          <p className="text-gray-300 text-sm">Coming Soon </p>
         </div>
 
         <BalanceCard balance={totalBalance} />
