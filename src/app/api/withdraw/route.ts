@@ -1,16 +1,11 @@
-import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
-import User from "@/models/User";
 
 // 👇 Add `: Request` type annotation
 export async function GET(req: Request) {
   try {
     await connectDB();
 
-    const { searchParams } = new URL(req.url);
     const email = searchParams.get("email");
 
-    if (!email) {
       return NextResponse.json({ success: false, message: "Email required" });
     }
 

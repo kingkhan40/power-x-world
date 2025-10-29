@@ -188,38 +188,29 @@ const Register: React.FC = () => {
               />
               <InputComponents
                 name="confirmPassword"
-                type="password"
                 placeholder="Confirm Password"
                 required
                 value={formData.confirmPassword}
-                onChange={handleInputChange}
               />
-
               <button
                 type="submit"
                 disabled={loading}
-                className={`w-full bg-gradient-to-r from-blue-600 to-purple-600 via-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg ${
                   loading ? "opacity-70 cursor-not-allowed" : ""
                 }`}
               >
-                {loading ? "Sending Code..." : "Sign Up"}
               </button>
             </form>
           ) : (
-            /* Verification Form */
             <form className="space-y-5" onSubmit={handleCodeSubmit}>
-              <InputComponents
                 name="verificationCode"
                 type="text"
                 placeholder="Enter 6-digit Code"
                 required
-                value={verificationCode}
                 onChange={(e) => setVerificationCode(e.target.value)}
               />
 
               <button
                 type="submit"
-                disabled={loading}
                 className={`w-full bg-gradient-to-r from-blue-600 to-purple-600 via-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg ${
                   loading ? "opacity-70 cursor-not-allowed" : ""
                 }`}
@@ -232,29 +223,21 @@ const Register: React.FC = () => {
           {/* General message (below form) */}
           {message && !referralCode && (
             <p
-              className={`text-center mt-4 text-sm font-medium ${
                 message.includes("sent") ||
                 message.includes("verified") ||
                 message.includes("Redirecting")
                   ? "text-green-400"
                   : "text-red-400"
-              }`}
-            >
-              {message}
+              }`              {message}
             </p>
           )}
 
           <div className="mt-6 text-center text-gray-300 text-sm">
-            Already have an account?{" "}
-            <button
-              onClick={() => router.push("/login")}
-              className="text-blue-300 cursor-pointer hover:text-blue-500 hover:underline font-medium"
+            Already cursor-pointer hover:text-blue-500 hover:underline font-medium"
             >
               Sign in
             </button>
           </div>
-        </div>
-      </div>
     </div>
   );
 };

@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 
-export async function GET(req) {
   try {
     await connectDB();
 
@@ -10,13 +9,6 @@ export async function GET(req) {
     const email = searchParams.get("email");
 
     if (!email) {
-      return NextResponse.json({ success: false, message: "Email required" });
-    }
-
-    const user = await User.findOne({ email });
-
-    if (!user) {
-      return NextResponse.json({ success: false, message: "User not found" });
     }
 
     return NextResponse.json({
