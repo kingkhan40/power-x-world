@@ -9,14 +9,11 @@ export async function POST(req: Request) {
   try {
     await connectDB();
 
-    // Parse and log request body
-    const { name, email, password, referralCode: referredBy } = await req.json();
-    console.log("📥 Incoming data:", { name, email, password, referredBy });
+    const { name, email, password, referralCode: referralCodeFromClient } = await req.json();
 
-    // ✅ Validate required fields
     if (!name || !email || !password) {
       return NextResponse.json(
-        { success: false, message: "All fields required" },
+        { success: false, message: "All fields are required" },
         { status: 400 }
       );
     }
@@ -30,34 +27,55 @@ export async function POST(req: Request) {
       );
     }
 
+    // ✅ Find the user who referred (if any)
+    let referredByUser = null;
+    if (referralCodeFromClient) {
+      referredByUser = await User.findOne({
+        referralCode: { $regex: new RegExp(`^${referralCodeFromClient}$`, "i") },
+      });
+    }
+
     // ✅ Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // ✅ Create a unique, readable referral code (e.g., "talha-0ya6tB")
+    // ✅ Generate new referral code like saad-0ya6tB
     const cleanedName = name.trim().toLowerCase().replace(/\s+/g, "-");
     const randomPart = Math.random().toString(36).substring(2, 8);
     const newReferralCode = `${cleanedName}-${randomPart}`;
 
-    // ✅ Create unverified user
-    const user = await User.create({
+    // ✅ Create new unverified user
+    const newUser = await User.create({
       name,
       email,
       password: hashedPassword,
       referralCode: newReferralCode,
-      referredBy: referredBy || null,
+      referredBy: referredByUser ? referredByUser._id : null,
+      team: referredByUser ? referredByUser.name : null,
       isVerified: false,
+      wallet: 0,
+      totalTeam: 0,
+      teamMembers: [],
     });
 
-    // ✅ Generate a 6-digit email verification code
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    // ✅ If referred, add new user to referrer’s team
+    if (referredByUser) {
+      await User.findByIdAndUpdate(referredByUser._id, {
+        $push: { teamMembers: newUser._id },
+        $inc: { totalTeam: 1 },
+      });
+      console.log(`✅ ${newUser.name} added to ${referredByUser.name}'s team`);
+    }
+
+    // ✅ Generate 6-digit email verification code
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
     await VerificationCode.create({
       email,
-      code,
-      expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 min expiry
+      code: verificationCode,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 min
     });
 
-    // ✅ Configure email transport (Gmail)
+    // ✅ Configure email (Gmail)
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -66,22 +84,22 @@ export async function POST(req: Request) {
       },
     });
 
-    // ✅ Send verification email
+    // ✅ Send verification mail
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
       subject: "Verify Your Email",
       html: `
-        <div style="font-family:sans-serif">
+        <div style="font-family: Arial, sans-serif;">
           <h2>Welcome, ${name}!</h2>
           <p>Your verification code is:</p>
-          <h3 style="color:#007bff">${code}</h3>
+          <h3 style="color:#007bff;">${verificationCode}</h3>
           <p>This code expires in 10 minutes.</p>
         </div>
       `,
     });
 
-    // ✅ Return success with referral link
+    // ✅ Return success + user's own referral link
     return NextResponse.json({
       success: true,
       message: "Verification code sent to your email",

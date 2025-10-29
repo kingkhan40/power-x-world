@@ -6,21 +6,25 @@ export async function GET(req: Request) {
   try {
     await connectDB();
 
+    // Extract ?code= from URL
     const { searchParams } = new URL(req.url);
-    const ref = searchParams.get("ref");
+    const code = searchParams.get("code");
 
-    if (!ref) {
+    if (!code) {
       return NextResponse.json(
         { success: false, message: "Referral code missing" },
         { status: 400 }
       );
     }
 
-    const user = await User.findOne({ referralCode: ref }).select("name email referralCode");
+    // Find user by referral code (case-insensitive)
+    const user = await User.findOne({
+      referralCode: { $regex: new RegExp(`^${code}$`, "i") },
+    }).select("name email referralCode");
 
     if (!user) {
       return NextResponse.json(
-        { success: false, message: "Referrer not found" },
+        { success: false, message: "Invalid referral code" },
         { status: 404 }
       );
     }
@@ -28,12 +32,13 @@ export async function GET(req: Request) {
     return NextResponse.json({
       success: true,
       name: user.name,
+      email: user.email,
       referralCode: user.referralCode,
     });
-  } catch (error) {
-    console.error("Referrer API Error:", error);
+  } catch (err) {
+    console.error("❌ Referrer Fetch Error:", err);
     return NextResponse.json(
-      { success: false, message: "Error fetching referrer" },
+      { success: false, message: "Server error" },
       { status: 500 }
     );
   }
