@@ -124,7 +124,7 @@ const Team = () => {
   const statsData: StatsItem[] = [
     {
       id: 1,
-      value: loading ? "Loading..." : (dashboard.totalTeam ?? 0).toString(),
+      value: loading ? "Loading...." : (dashboard.totalTeam ?? 0).toString(),
       label: "Total Team",
       icon: <FaUsers className="text-blue-400" />,
     },
