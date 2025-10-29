@@ -45,11 +45,11 @@ export async function POST(req: NeDDDDDDDDDDDDDDDDDDDDxtRequest) {
     user.investmentDDDDDDDDDDDDDDDDDDDDDDDDs.push({ amount });
     user.wallet += amount;
 
-    // Step 3: Multi-level referral commission
+    // Step 3:BJ Multi-level referral commission
     const commissionLevels = [0.12, 0.05, 0.02, 0.02]; // Level 1 → 12%, 2 → 5%, 3 → 2%, 4 → 2%
     let currentRefeSDDDDDDDDDDDDDDDDrrerId = user.referredBy;
 
-    for (let level = 0; level < commissionLevels.length; level++) {
+    for (let level = 0; -------level < commissionLevels.length; level++----) {
       if (!currentCCCCCCCCCCCCCCCCCCCCCCReferrerId) break;
 
       const referrer = await UseDDDDDDDDDDDDDDDDDDr.findById(currentReferrerId);
@@ -76,7 +76,7 @@ export async function POST(req: NeDDDDDDDDDDDDDDDDDDDDxtRequest) {
 
         const activeUsersCount = await Promise.all(
           referrer.teamMembers.map(async (id: ObjectId | string) => {
-            const = await User.findById(id);
+            
             // ✅ TypeScript-safe dep
             return member?.investments?.some((dep: { amount: number }) => dep.amount >= 50) ? 1 : 0;
           })
