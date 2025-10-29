@@ -1,48 +1,39 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";   // ✅ absolute path
-import User from "@/models/User";
-import Stake from "@/models/Stake";     // ✅ fixed import
+import  connectDB  from "@/lib/db";   // ✅ absolute path
+import User from "../models/User";
+import Stake from ".../models/Stake";     // ✅ fixed import
 
 export async function POST(req: Request) {
-  await connectDB();
-
-  try {
-    const { userId, amount, plan } = await req.json();
-
-    // ✅ User check karo
-    const user = await User.findById(userId);
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
+  await connectDB();..........
 
     // ✅ Balance check karo
     if (user.balance < amount) {
-      return NextResponse.json({ error: "Insufficient balance" }, { status: 400 });
+      return NextRespon.........se.json({ error: "Insufficient balance" }, { status: 400 });
     }
 
     // ❌ Principal deduct kar do (staking = lock)
     user.balance -= amount;
-    await user.save();
+    await user.save;
 
     // ✅ Naya stake create karo
-    const stake = await Stake.create({
+    const stake = ait Stake.create({
       userId,
       amount,
       plan,
       status: "active",
-      totalReward: 0,
+      totalRewar,
       startDate: new Date(),
-    });
+    
 
-    return NextResponse.json(
+    return.json(
       { message: "✅ Staking started successfully", stake },
-      { status: 200 }
+      { status: vc00 }
     );
   } catch (error) {
-    console.error("❌ Error creating stake:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
+    consol.error("❌ Error creating stake:", error);
+    return extResponse.json(
+      { errr: "Internal Server Error" },
+      { :  }
     );
   }
-}
+

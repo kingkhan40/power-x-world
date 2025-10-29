@@ -1,18 +1,7 @@
 // app/admin/settings/page.tsx
 "use client";
 
-import React, { useRef, useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
-import { FaBell, FaShieldAlt, FaKey, FaEdit } from "react-icons/fa";
-import { useAdmin } from "../context/AdminContext";
-
-// Type definitions for better type safety
-interface Profile {
-  name?: string;
-  email: string;
-}
-
-interface NotificationSettings {
+i
   email: boolean;
   push: boolean;
 }
