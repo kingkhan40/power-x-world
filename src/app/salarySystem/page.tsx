@@ -181,11 +181,11 @@ const SalarySystem = () => {
                         <td className="py-3 px-4 text-blue-300 font-medium">
                           ${employee.weeklySalary.toLocaleString()}
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="py-3 px-4 ">
                           {completedLevels.includes(employee.id) ? (
                             <span className="text-green-400 font-semibold">✅ Completed</span>
                           ) : (
-                            <span className="text-yellow-400 font-semibold">⏳ Pending</span>
+                            <span className="text-yellow-400 font-semibold ">⏳ Pending</span>
                           )}
                         </td>
                       </tr>

@@ -1,3 +1,4 @@
+// components/TeamLevelDetail.tsx
 "use client";
 import { MdKeyboardArrowLeft } from "react-icons/md";
 import {
@@ -8,8 +9,10 @@ import {
   FaCalendar,
   FaLock,
   FaUnlock,
+  FaUserPlus,
+  FaMoneyBillWave,
 } from "react-icons/fa";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { teamLevels } from "@/data/teamLevel";
 
@@ -27,11 +30,11 @@ interface StatusItem {
   id: number;
   label: string;
   value: React.ReactNode;
+  icon: React.ReactNode;
 }
 
 const TeamLevelDetail = () => {
   const { id } = useParams();
-  const router = useRouter();
 
   // Find the specific level data based on levelId
   const levelData = teamLevels.find((level) => level.id === parseInt(id as string));
@@ -81,21 +84,31 @@ const TeamLevelDetail = () => {
           ></div>
         </div>
       ),
+      icon: <FaChartLine className="text-blue-400" />
     },
     {
       id: 2,
-      label: "Team Members",
-      value: <span className="text-white font-bold">0</span>,
+      label: "Required Invites",
+      value: <span className="text-white font-bold">{levelData?.invitePeople || "0"} People</span>,
+      icon: <FaUserPlus className="text-green-400" />
     },
     {
       id: 3,
-      label: "Activation Required",
-      value: <span className="text-yellow-300 font-bold">2 Members</span>,
+      label: "Required Invite Amount",
+      value: <span className="text-yellow-300 font-bold">${levelData?.inviteAmount || "0"}</span>,
+      icon: <FaMoneyBillWave className="text-yellow-400" />
     },
     {
       id: 4,
-      label: "Investment Required",
-      value: <span className="text-orange-300 font-bold">${levelData?.investAmount || "0"}</span>,
+      label: "Invite Commission",
+      value: <span className="text-purple-300 font-bold">{levelData?.inviteCommission || "0%"}</span>,
+      icon: <FaUserCheck className="text-purple-400" />
+    },
+    {
+      id: 5,
+      label: "Team Commission",
+      value: <span className="text-cyan-300 font-bold">{levelData?.teamCommission || "0%"}</span>,
+      icon: <FaUsers className="text-cyan-400" />
     }
   ];
 
@@ -195,13 +208,13 @@ const TeamLevelDetail = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           {/* Level Information Card */}
           <div className="lg:col-span-2">
-            <div className="bg-gradient-to-br from-white/15 to-white/10 backdrop-blur-2xl rounded-2xl p-4 lg:p-6 border border-white/30 shadow-2xl">
+            <div className=" backdrop-blur-2xl rounded-2xl p-4 lg:p-6 border border-white/30 shadow-2xl">
               <h2 className="lg:text-2xl text-lg font-bold text-white mb-4 lg:mb-6 flex items-center gap-3">
                 <FaUsers className="text-blue-400 lg:text-xl text-lg" />
                 Level Information
               </h2>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3  gap-3 lg:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
                 {levelInfoCards.map((card) => (
                   <div
                     key={card.id}
@@ -225,19 +238,26 @@ const TeamLevelDetail = () => {
           </div>
 
           {/* Status Card */}
-          <div className="bg-gradient-to-br from-white/15 to-white/10 backdrop-blur-2xl rounded-2xl p-4 lg:p-6 border border-white/30 shadow-2xl">
+          <div className=" backdrop-blur-2xl rounded-2xl p-4 lg:p-6 border border-white/30 shadow-2xl">
             <h2 className="lg:text-2xl text-lg font-bold text-white mb-4 lg:mb-6 flex items-center gap-3">
-              <FaChartLine className="text-green-400 lg:text-xl text-lg" />
-              Level Status
+              <FaChartLine className="text-green-400 lg:text-xl text-base" />
+              Level Requires & Commissions
             </h2>
 
-            <div className="space-y-3 lg:space-y-4">
+            <div className="space-y-4 lg:space-y-5">
               {statusItems.map((item) => (
-                <div key={item.id} className="flex items-center justify-between">
-                  <span className="text-blue-200 lg:text-sm text-xs">
-                    {item.label}
-                  </span>
-                  {item.value}
+                <div key={item.id} className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className="text-lg">
+                      {item.icon}
+                    </div>
+                    <span className="text-blue-200 lg:text-sm text-xs flex-1">
+                      {item.label}
+                    </span>
+                  </div>
+                  <div className="flex-shrink-0">
+                    {item.value}
+                  </div>
                 </div>
               ))}
             </div>
@@ -246,7 +266,7 @@ const TeamLevelDetail = () => {
 
         {/* Invite Details Section */}
         {levelData.inviteName && (
-          <div className="bg-gradient-to-br from-white/15 to-white/10 backdrop-blur-2xl rounded-2xl p-4 lg:p-6 border border-white/30 shadow-2xl mb-6">
+          <div className=" backdrop-blur-2xl rounded-2xl p-4 lg:p-6 border border-white/30 shadow-2xl mb-6">
             <h2 className="lg:text-2xl text-lg font-bold text-white mb-4 lg:mb-6 flex items-center gap-3">
               <FaUserCheck className="text-purple-400 lg:text-xl text-lg" />
               Invite Details
@@ -255,7 +275,7 @@ const TeamLevelDetail = () => {
             <div className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 backdrop-blur-sm rounded-xl p-4 lg:p-6 border border-purple-400/30">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
                 {/* Left Column - User Info */}
-                <div className="space-y-3 lg:space-y-4">
+                <div className=" flex items-center justify-between">
                   <div>
                     <h4 className="text-purple-200 lg:text-sm text-xs font-semibold mb-1">
                       Invited Member
@@ -269,8 +289,8 @@ const TeamLevelDetail = () => {
                     <h4 className="text-purple-200 lg:text-sm text-xs font-semibold mb-1">
                       Investment Amount
                     </h4>
-                    <p className="text-yellow-300 lg:text-xl text-lg font-bold">
-                      ${levelData.investAmount}
+                    <p className="text-yellow-300 text-end lg:text-xl text-lg font-bold">
+                      ${levelData.inviteAmount}
                     </p>
                   </div>
                 </div>
@@ -313,7 +333,7 @@ const TeamLevelDetail = () => {
         )}
 
         {/* Team Members Section */}
-        <div className="bg-gradient-to-br from-white/15 to-white/10 backdrop-blur-2xl rounded-2xl p-4 lg:p-6 border border-white/30 shadow-2xl">
+        <div className="bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-2xl rounded-2xl p-4 lg:p-6 border border-white/30 shadow-2xl">
           <h2 className="lg:text-2xl text-lg font-bold text-white mb-4 lg:mb-6 flex items-center gap-3">
             <FaUsers className="text-blue-400 lg:text-xl text-lg" />
             Team Members
