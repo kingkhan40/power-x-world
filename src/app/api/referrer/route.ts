@@ -1,31 +1,45 @@
-import { MongoClient } from 'mongodb';
+import { NextResponse } from "next/server";
+import { connectDB } from "@/lib/db";
+import User from "@/models/User";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    // Connect to MongoDB using env variable
-    const client = await MongoClient.connect(process.env.MONGODB_URI!);
-    const db = client.db(); // uses the database specified in URI
+    await connectDB();
 
-    // Fetch user by ID
-    const user = await db.collection('users').findOne({ userId: 'USR001234' });
+    // Extract ?code= from URL
+    const { searchParams } = new URL(req.url);
+    const code = searchParams.get("code");
 
-    if (!user) {
-      await client.close();
-      return new Response(JSON.stringify({ error: 'User not found' }), { status: 404 });
+    if (!code) {
+      return NextResponse.json(
+        { success: false, message: "Referral code missing" },
+        { status: 400 }
+      );
     }
 
-    await client.close();
+    // Find user by referral code (case-insensitive)
+    const user = await User.findOne({
+      referralCode: { $regex: new RegExp(`^${code}$`, "i") },
+    }).select("name email referralCode");
 
-    return new Response(JSON.stringify({ sponsorId: user.sponsorId || 'SPN002345' }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    if (!user) {
+      return NextResponse.json(
+        { success: false, message: "Invalid referral code" },
+        { status: 404 }
+      );
+    }
 
-  } catch (error) {
-    console.error('Error in /api/referrer:', error);
-    return new Response(JSON.stringify({ error: 'Failed to fetch sponsor ID' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
+    return NextResponse.json({
+      success: true,
+      name: user.name,
+      email: user.email,
+      referralCode: user.referralCode,
     });
+  } catch (err) {
+    console.error("❌ Referrer Fetch Error:", err);
+    return NextResponse.json(
+      { success: false, message: "Server error" },
+      { status: 500 }
+    );
   }
 }
