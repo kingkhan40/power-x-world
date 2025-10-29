@@ -7,8 +7,8 @@ export const metadata: Metadata = {
   description: "PowerXWorld Administration Panel",
 };
 
-// Default export must be a React component
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+// Default export must be a Rect component
+export default function AdminLapppppppppppppppppppyout({ children }: { children: React.ReactNode }) {
   return (
     <AdminProvider>
       <AdminClientLayout>{children}</AdminClientLayout>
