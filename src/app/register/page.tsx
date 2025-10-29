@@ -9,7 +9,6 @@ const Register: React.FC = () => {
 
   // State
   const [referralCode, setReferralCode] = useState<string | null>(null);
-  const [referrerName, setReferrerName] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [showCodeInput, setShowCodeInput] = useState(false);
@@ -22,24 +21,25 @@ const Register: React.FC = () => {
     confirmPassword: "",
   });
 
-  // Fetch referrer from URL + backend
+  // Fetch referrer from URL + backend (your exact version)
   useEffect(() => {
     const fetchReferrer = async () => {
-      const params = new URLSearchParams(window.location.search);
-      const ref = params.get("ref");
-      if (!ref) return;
+      const urlParams = new URLSearchParams(window.location.search);
+      const ref = urlParams.get("ref");
+      if (ref) {
+        setReferralCode(ref);
 
-      setReferralCode(ref);
-
-      try {
-        const res = await fetch(`/api/referrer?ref=${ref}`);
-        const data = await res.json();
-
-        if (data.success && data.name) {
-          setReferrerName(data.name);
+        try {
+          const res = await fetch(`/api/referrer?code=${ref}`);
+          const data = await res.json();
+          if (data.success && data.name) {
+            setMessage(`You were referred by ${data.name}`);
+          } else {
+            setMessage("Invalid referral link");
+          }
+        } catch (err) {
+          console.error("Error fetching referrer:", err);
         }
-      } catch (err) {
-        console.error("Error fetching referrer:", err);
       }
     };
 
@@ -152,15 +152,11 @@ const Register: React.FC = () => {
             </p>
           </div>
 
-          {/* Referral Badge */}
-          {referralCode && (
-            <div className="mb-5 p-3 bg-green-900/40 border border-green-500/60 rounded-lg text-center">
-              <p className="text-green-300 text-sm font-semibold">
-                {referrerName
-                  ? `Referred by: ${referrerName}`
-                  : `Referral Code: ${referralCode}`}
-              </p>
-            </div>
+          {/* New message-based referral display */}
+          {message && (
+            <p className="text-green-400 text-sm font-semibold text-center mb-5">
+              {message}
+            </p>
           )}
 
           {/* Registration Form */}
@@ -233,8 +229,8 @@ const Register: React.FC = () => {
             </form>
           )}
 
-          {/* Message */}
-          {message && (
+          {/* General message (below form) */}
+          {message && !referralCode && (
             <p
               className={`text-center mt-4 text-sm font-medium ${
                 message.includes("sent") ||
