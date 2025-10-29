@@ -1,31 +1,40 @@
-import { MongoClient } from 'mongodb';
+import { NextResponse } from "next/server";
+import { connectDB } from "@/lib/db";
+import User from "@/models/User";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    // Connect to MongoDB using env variable
-    const client = await MongoClient.connect(process.env.MONGODB_URI!);
-    const db = client.db(); // uses the database specified in URI
+    await connectDB();
 
-    // Fetch user by ID
-    const user = await db.collection('users').findOne({ userId: 'USR001234' });
+    const { searchParams } = new URL(req.url);
+    const ref = searchParams.get("ref");
 
-    if (!user) {
-      await client.close();
-      return new Response(JSON.stringify({ error: 'User not found' }), { status: 404 });
+    if (!ref) {
+      return NextResponse.json(
+        { success: false, message: "Referral code missing" },
+        { status: 400 }
+      );
     }
 
-    await client.close();
+    const user = await User.findOne({ referralCode: ref }).select("name email referralCode");
 
-    return new Response(JSON.stringify({ sponsorId: user.sponsorId || 'SPN002345' }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
+    if (!user) {
+      return NextResponse.json(
+        { success: false, message: "Referrer not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      name: user.name,
+      referralCode: user.referralCode,
     });
-
   } catch (error) {
-    console.error('Error in /api/referrer:', error);
-    return new Response(JSON.stringify({ error: 'Failed to fetch sponsor ID' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    console.error("Referrer API Error:", error);
+    return NextResponse.json(
+      { success: false, message: "Error fetching referrer" },
+      { status: 500 }
+    );
   }
 }
