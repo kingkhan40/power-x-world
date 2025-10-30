@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -11,24 +15,29 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-
     // ✅ React 18 JSX support
-    "jsx": "react-jsx",
-
+    "jsx": "preserve",
     // ✅ Include React types
-    "types": ["react", "react-dom", "node"],
-
+    "types": [
+      "react",
+      "react-dom",
+      "node"
+    ],
     "incremental": true,
     "forceConsistentCasingInFileNames": true,
-
     // ✅ Path aliases (for "@/assets" and others)
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@/assets/*": ["src/assets/*"],
-      "@server/*": ["server/*"]
+      "@/*": [
+        "src/*"
+      ],
+      "@/assets/*": [
+        "src/assets/*"
+      ],
+      "@server/*": [
+        "server/*"
+      ]
     },
-
     "plugins": [
       {
         "name": "next"
@@ -41,5 +50,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }

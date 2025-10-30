@@ -1,13 +1,9 @@
-const AsyncStorage = {
-  getItem: async (key: string): Promise<string | null> => {
-    return typeof window !== "undefined" ? localStorage.getItem(key) : null;
-  },
-  setItem: async (key: string, value: string): Promise<void> => {
-    if (typeof window !== "undefined") localStorage.setItem(key, value);
-  },
-  removeItem: async (key: string): Promise<void> => {
-    if (typeof window !== "undefined") localStorage.removeItem(key);
-  },
+// src/utils/asyncStorageShim.ts
+const asyncStorageShim = {
+  getItem: async (_key: string) => null,
+  setItem: async (_key: string, _value: string) => {},
+  removeItem: async (_key: string) => {},
+  clear: async () => {},
 };
 
-export default AsyncStorage;
+export default asyncStorageShim;
