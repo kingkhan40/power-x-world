@@ -3,7 +3,9 @@ import "./globals.css";
 import { Outfit } from "next/font/google";
 import ClientLayout from "@/components/ClientLayout";
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
-import { BalanceProvider } from "@/context/BalanceContext"; // ✅ context import
+
+import { BalanceProvider } from "@/context/BalanceContext";
+
 
 // ✅ Google Font
 const outfit = Outfit({

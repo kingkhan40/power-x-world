@@ -1,45 +1,36 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import { Investment } from "@/models/Investment";
 import User from "@/models/User";
+import Stake from "@/models/Stake";
 
 export async function GET() {
   try {
     await connectDB();
 
-    // 🔍 Get all active investments
-    const activeInvestments = await Investment.find({ status: "active" });
+    const activeStakes = await Stake.find({ isActive: true });
 
-    for (const inv of activeInvestments) {
-      // ✅ Calculate total earned
-      const threeXTarget = inv.amount * 3;
+    for (const stake of activeStakes) {
+      const totalTarget = stake.amount * 3; // 3x target
+      const rewardTillNow = stake.dailyReward;
 
-      if (inv.earned >= threeXTarget) {
-        // 🏁 Mark investment complete
-        inv.status = "completed";
-        await inv.save();
+      // agar stake ka reward 3x ho gaya
+      if (rewardTillNow >= totalTarget) {
+        // stake complete
+        stake.isActive = false;
+        await stake.save();
 
-        // 💰 Send reward (only profit, not principal)
-        const rewardAmount = threeXTarget - inv.amount;
-
-        const user = await User.findById(inv.user);
+        // user ko reward add kar do
+        const user = await User.findById(stake.userId);
         if (user) {
-          user.wallet = (user.wallet ?? 0) + rewardAmount;
+          user.wallet.usdtBalance += rewardTillNow;
           await user.save();
         }
-
-        console.log(
-          `✅ Reward completed for user: ${user?.email}, reward = ${rewardAmount}`
-        );
       }
     }
 
-    return NextResponse.json({
-      success: true,
-      message: "Reward check completed successfully.",
-    });
-  } catch (err: any) {
-    console.error("Error in reward endpoint:", err.message);
-    return NextResponse.json({ success: false, error: err.message });
+    return NextResponse.json({ message: "Reward check complete ✅" });
+  } catch (error) {
+    console.error("Reward Check Error:", error);
+    return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
   }
 }

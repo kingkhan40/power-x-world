@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 
-export async function GET(req) {
+export async function GET(req: Request) {
   try {
     await connectDB();
 
@@ -10,13 +10,13 @@ export async function GET(req) {
     const email = searchParams.get("email");
 
     if (!email) {
-      return NextResponse.json({ success: false, message: "Email required" });
+      return NextResponse.json({ success: false, message: "Email required" }, { status: 400 });
     }
 
     const user = await User.findOne({ email });
 
     if (!user) {
-      return NextResponse.json({ success: false, message: "User not found" });
+      return NextResponse.json({ success: false, message: "User not found" }, { status: 404 });
     }
 
     return NextResponse.json({
@@ -25,6 +25,9 @@ export async function GET(req) {
     });
   } catch (error) {
     console.error("Balance Fetch Error:", error);
-    return NextResponse.json({ success: false, message: "Server error" });
+    return NextResponse.json(
+      { success: false, message: "Server error" },
+      { status: 500 }
+    );
   }
 }
