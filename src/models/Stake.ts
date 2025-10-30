@@ -27,7 +27,7 @@ const StakeSchema = new Schema<IStake>(
   { timestamps: true }
 );
 
-// ✅ Avoid model overwrite in hot reload
+// ✅ Avoid model overwrite on hot reload (Next.js specific)
 const Stake: Model<IStake> =
   mongoose.models.Stake || mongoose.model<IStake>("Stake", StakeSchema);
 

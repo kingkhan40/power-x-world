@@ -4,53 +4,65 @@ import User from "@/models/User";
 import { Investment } from "@/models/Investment";
 
 export async function POST(req: Request) {
-  await connectDB();
-
   try {
-    const { wallet, amount } = await req.json();
+    await connectDB();
+    const { userId, amount } = await req.json();
 
-    // ✅ Validate user
-    const user = await User.findOne({ wallet });
+    if (!userId || !amount) {
+      return NextResponse.json(
+        { error: "Missing userId or amount" },
+        { status: 400 }
+      );
+    }
+
+    const user = await User.findById(userId);
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // ✅ Check existing active stake
-    const existing = await Investment.findOne({ wallet, status: "active" });
-    if (existing) {
+    // ✅ Check wallet balance
+    if (user.wallet < amount) {
       return NextResponse.json(
-        { error: "You already have an active stake!" },
+        { error: "Insufficient balance for staking!" },
         { status: 400 }
       );
     }
 
-    // ✅ Check balance
-    if (user.balance < amount) {
-      return NextResponse.json(
-        { error: "Insufficient balance" },
-        { status: 400 }
-      );
-    }
+    // ✅ Deduct stake amount
+    user.wallet -= amount;
 
-    // ✅ Deduct principal
-    user.balance -= amount;
-    await user.save();
+    // ✅ Determine interest rate based on amount
+    let rate = 0;
+    if (amount >= 5 && amount <= 500) rate = 1.5;
+    else if (amount >= 501 && amount <= 1000) rate = 1.6;
+    else if (amount >= 1001 && amount <= 2000) rate = 1.7;
+    else if (amount >= 2001 && amount <= 3000) rate = 1.8;
+    else if (amount >= 3001 && amount <= 5000) rate = 1.9;
+    else if (amount >= 5001) rate = 2.0;
 
-    // ✅ Create new investment
-    const investment = await Investment.create({
-      wallet,
+    // ✅ Create investment record
+    const stake = await Investment.create({
+      user: user._id,
       amount,
-      earned: 0,
-      status: "active",
-      startAt: new Date(),
+      rate,
+      totalEarned: 0,
+      isCompleted: false,
+      startDate: new Date(),
     });
 
+    // ✅ Save updated wallet
+    await user.save();
+
     return NextResponse.json(
-      { message: "✅ Stake created successfully", investment },
-      { status: 200 }
+      {
+        message: "Stake created successfully!",
+        wallet: user.wallet,
+        stake,
+      },
+      { status: 201 }
     );
   } catch (error) {
-    console.error("❌ Error creating stake:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    console.error("Error creating stake:", error);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

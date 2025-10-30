@@ -29,6 +29,8 @@ function HomePage() {
   const [rewardPayment, setRewardPayment] = useState<number>(0);
   const [otherPayments, setOtherPayments] = useState<number>(0);
   const [usdtBalance, setUsdtBalance] = useState<number>(0);
+  const [stakingAmount, setStakingAmount] = useState<number>(0);
+  const [message, setMessage] = useState<string>("");
 
   // Countdown timer
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
@@ -84,6 +86,36 @@ function HomePage() {
     setLoading(false);
   }, [router, setContextBalance]);
 
+  const handleStakeNow = async () => {
+    if (stakingAmount < 5) {
+      setMessage("Minimum staking amount is $5");
+      return;
+    }
+
+    const userId = localStorage.getItem("userId");
+    if (!userId) {
+      setMessage("User not found");
+      return;
+    }
+
+    const res = await fetch("/api/stake/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, amount: stakingAmount }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      setMessage(data.error || "Failed to stake");
+      return;
+    }
+
+    setMessage("✅ Stake created successfully!");
+    setBalance(data.walletBalance);
+    setContextBalance?.(data.walletBalance);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-black text-white">
@@ -93,7 +125,11 @@ function HomePage() {
   }
 
   const totalBalance =
-    (balance ?? 0) + (totalCommission ?? 0) + (rewardPayment ?? 0) + (otherPayments ?? 0) + (usdtBalance ?? 0);
+    (balance ?? 0) +
+    (totalCommission ?? 0) +
+    (rewardPayment ?? 0) +
+    (otherPayments ?? 0) +
+    (usdtBalance ?? 0);
 
   return (
     <div
@@ -109,7 +145,6 @@ function HomePage() {
       <div className="absolute inset-0 bg-black/70"></div>
 
       <div className="container mx-auto px-3 lg:px-6 py-6 relative z-10 space-y-6">
-        {/* Launch Announcement / Countdown */}
         <div className="bg-black/50 border border-white/20 rounded-xl p-6 text-center backdrop-blur-md shadow-lg flex flex-col items-center justify-center space-y-3">
           <p className="text-2xl font-extrabold text-yellow-400 uppercase tracking-wide"></p>
           <p className="text-xl font-bold text-white"></p>
@@ -124,7 +159,23 @@ function HomePage() {
         <IconGridNavigation />
         <BasicPlan />
 
-        {/* Deposit & Withdraw buttons removed */}
+        {/* Simple stake section (no UI change) */}
+        <div className="mt-4 text-center">
+          <input
+            type="number"
+            value={stakingAmount}
+            onChange={(e) => setStakingAmount(parseFloat(e.target.value))}
+            placeholder="Enter staking amount"
+            className="p-2 rounded text-black"
+          />
+          <button
+            onClick={handleStakeNow}
+            className="ml-2 px-4 py-2 bg-yellow-500 text-black font-bold rounded hover:bg-yellow-400"
+          >
+            Stake Now
+          </button>
+          {message && <p className="mt-2 text-sm text-yellow-300">{message}</p>}
+        </div>
       </div>
     </div>
   );

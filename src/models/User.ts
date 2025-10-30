@@ -39,6 +39,11 @@ export interface IUser extends Document {
   directBusiness?: number;
   rewardBalance?: number;
   currentRewardLevel?: number;
+
+  // 💵 Additional Payment Sources (for staking, withdrawals, etc.)
+  rewardPayment?: number;
+  totalCommission?: number;
+  otherPayments?: number;
 }
 
 const UserSchema = new Schema<IUser>(
@@ -84,8 +89,19 @@ const UserSchema = new Schema<IUser>(
     directBusiness: { type: Number, default: 0 },
     rewardBalance: { type: Number, default: 0 },
     currentRewardLevel: { type: Number, default: 1 },
+
+    // 💵 Additional Payment Fields
+    rewardPayment: { type: Number, default: 0 },
+    totalCommission: { type: Number, default: 0 },
+    otherPayments: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
 
-export default mongoose.models.User || mongoose.model<IUser>("User", UserSchema);
+/* -----------------------------------------
+ * 🧠 Export Model (Hot Reload Safe)
+ * ----------------------------------------- */
+export const User =
+  mongoose.models.User || mongoose.model<IUser>("User", UserSchema);
+
+export default User;

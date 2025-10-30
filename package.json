@@ -11,7 +11,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "socket": "node --loader ts-node/esm server/socket-server.ts"
+    "socket": "tsx server/socket-server.ts",
+    "cron": "tsx server/cron.ts"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
@@ -63,6 +64,7 @@
     "next": "^15.3.3",
     "next-auth": "^4.24.11",
     "node-cron": "^4.2.1",
+    "node-fetch": "^3.3.2",
     "nodemailer": "^6.10.1",
     "patch-package": "^8.0.0",
     "pino-pretty": "^13.1.2",
@@ -105,6 +107,7 @@
     "genkit-cli": "^1.14.1",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
+    "tsx": "^4.19.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }
