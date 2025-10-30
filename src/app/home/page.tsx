@@ -29,33 +29,6 @@ export default function HomePage() {
   const [totalCommission, setTotalCommission] = useState<number>(0);
   const [rewardPayment, setRewardPayment] = useState<number>(0);
   const [otherPayments, setOtherPayments] = useState<number>(0);
-  const [message, setMessage] = useState<string>("");
-
-  // Countdown timer
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-  const targetDate = new Date("2025-11-01T00:00:00Z").getTime();
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const now = new Date().getTime();
-      const distance = targetDate - now;
-
-      if (distance < 0) {
-        clearInterval(interval);
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-        return;
-      }
-
-      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-      setTimeLeft({ days, hours, minutes, seconds });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   // Fetch user & dashboard data
   useEffect(() => {
@@ -119,17 +92,6 @@ export default function HomePage() {
       <div className="absolute inset-0 bg-black/70"></div>
 
       <div className="container mx-auto px-3 lg:px-6 py-6 relative z-10 space-y-6">
-        {/* Countdown */}
-        <div className="bg-black/50 border border-white/20 rounded-xl p-6 text-center backdrop-blur-md shadow-lg flex flex-col items-center justify-center space-y-3 mb-6">
-          <p className="text-2xl font-extrabold text-yellow-400 uppercase tracking-wide">
-            Next Event
-          </p>
-          <p className="text-white font-mono text-2xl">
-            {timeLeft.days}d : {timeLeft.hours}h : {timeLeft.minutes}m : {timeLeft.seconds}s
-          </p>
-          <p className="text-gray-300 text-sm">Coming Soon</p>
-        </div>
-
         {/* Main Content */}
         <div className="space-y-4">
           <BalanceCard balance={totalBalance} />
