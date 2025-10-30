@@ -16,12 +16,15 @@ const nextConfig: NextConfig = {
   },
 
   webpack: (config) => {
+    // Ensure existing fallbacks are preserved
     config.resolve.fallback = {
       ...config.resolve.fallback,
+      // Alias @react-native-async-storage/async-storage to a shim
       "@react-native-async-storage/async-storage": path.resolve(
         "./src/utils/asyncStorageShim.ts"
       ),
     };
+
     return config;
   },
 };
