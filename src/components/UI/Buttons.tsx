@@ -1,19 +1,19 @@
-import React from "react";
+import React from 'react';
 
 interface ButtonsProps {
   text: string;
   onClick: (e: React.MouseEvent) => void;
-  type?: "button" | "submit" | "reset";
+  type?: 'button' | 'submit' | 'reset';
   className?: string;
   disabled?: boolean;
 }
 
-const Buttons: React.FC<ButtonsProps> = ({ 
-  text, 
-  onClick, 
-  type = "button",
-  className = "",
-  disabled = false
+const Buttons: React.FC<ButtonsProps> = ({
+  text,
+  onClick,
+  type = 'button',
+  className = '',
+  disabled = false,
 }) => {
   return (
     <button
