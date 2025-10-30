@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MdMenu, MdClose } from 'react-icons/md';
 import { useRouter, usePathname } from 'next/navigation';
-import Image from 'next/image';
 
 interface MenuItem {
   name: string;
@@ -16,15 +15,12 @@ const Sidebar = () => {
 
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(pathname === '/home');
   const [userName, setUserName] = useState<string>('Jobi');
-  const [profilePic, setProfilePic] = useState<string | null>(null);
 
-  // Fetch username and profile picture from localStorage
+  // Fetch username from localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const storedName = localStorage.getItem('userName');
-      const storedPic = localStorage.getItem('profilePic');
       setUserName(storedName || 'Jobi');
-      setProfilePic(storedPic || null);
     }
   }, []);
 
@@ -60,7 +56,6 @@ const Sidebar = () => {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('userName');
-    localStorage.removeItem('profilePic');
     router.push('/login');
     setIsMenuOpen(false);
   };
@@ -84,36 +79,17 @@ const Sidebar = () => {
           }}
         ></div>
 
-        {/* Left Section — Logo + Profile */}
+        {/* Left Section — Logo only */}
         <div
           onClick={handleLogoClick}
-          className="flex gap-2 items-center cursor-pointer"
+          className="flex flex-col cursor-pointer"
         >
-          <div className="h-14 w-14 rounded-full border-2 border-blue-200 p-1 overflow-hidden">
-            {profilePic ? (
-              <img
-                src={profilePic}
-                alt="Profile"
-                className="w-full h-full object-cover rounded-full"
-              />
-            ) : (
-              <Image
-                src="https://encrypted-tbn0.gstatic.com/images?q=tbn=USYei6Fq4n2Lqi637Q&s"
-                alt="Default Logo"
-                width={56}
-                height={56}
-                className="w-full h-full object-cover rounded-full"
-              />
-            )}
-          </div>
-          <div className="flex flex-col ml-2">
-            <h3 className="lg:text-3xl text-lg font-medium tracking-wider text-white font-mono">
-              {userName}
-            </h3>
-            <p className="md:text-xs transition-colors text-[13px] text-gray-200 duration-300">
-              PowerX International Platform
-            </p>
-          </div>
+          <h3 className="lg:text-3xl text-lg font-medium tracking-wider text-white font-mono">
+            {userName}
+          </h3>
+          <p className="md:text-xs transition-colors text-[13px] text-gray-200 duration-300">
+            PowerX International Platform
+          </p>
         </div>
 
         {/* Mobile Menu Button */}
