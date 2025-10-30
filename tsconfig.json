@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
+    "target": "ESNext",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
@@ -11,7 +11,13 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+
+    // ✅ React 18 JSX support
+    "jsx": "react-jsx",
+
+    // ✅ Include React types
+    "types": ["react", "react-dom", "node"],
+
     "incremental": true,
     "forceConsistentCasingInFileNames": true,
 
