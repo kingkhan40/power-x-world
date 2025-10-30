@@ -30,7 +30,7 @@ const IconGridNavigation = () => {
     {
       id: 2,
       name: "Deposit",
-      url: "",
+      url: "/deposit",
       icon: (
         <Image
           src="https://i.pinimg.com/736x/0d/9a/78/0d9a78522d383b6114b2b0b112494883.jpg"

@@ -1,5 +1,10 @@
 import expressPkg from "express";
 import http from "http";
+import { Server } from "socket.io";
+import cors from "cors";
+import dotenv from "dotenv";
+import cron from "node-cron";
+import axios from "axios";
 
 dotenv.config();
 
@@ -10,13 +15,15 @@ let io: Server | null = null;
 
 // ✅ Initialize Express app
 const app = express();
- jiocjih
+
 // ✅ Setup CORS
 app.use(
   cors({
     origin: process.env.CLIENT_URL || "https://powerxworld.uk",
     methods: ["GET", "POST"],
-    cred);
+    credentials: true,
+  })
+);
 
 app.use(json());
 

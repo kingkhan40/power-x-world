@@ -15,10 +15,11 @@
     "incremental": true,
     "forceConsistentCasingInFileNames": true,
 
-    // ✅ Base URL and path aliases merged
+    // ✅ Path aliases (for "@/assets" and others)
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
+      "@/assets/*": ["src/assets/*"],
       "@server/*": ["server/*"]
     },
 

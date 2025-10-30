@@ -1,6 +1,9 @@
 "use client";
 import Image from "next/image";
-import { tiktok, whatsapp } from "../assets";
+
+// ✅ Correct import path — points to src/assets/index.ts
+
+import { tiktok,whatsapp } from "@/app/assets";
 
 const Footer = () => {
   return (
@@ -13,11 +16,10 @@ const Footer = () => {
             "url('https://i.pinimg.com/736x/2e/e7/6e/2ee76e06f2852ed4f66b2b5576687066.jpg')",
         }}
       ></div>
+
       <div className="absolute inset-0 bg-black/60 bg-opacity-50 z-10"></div>
-      <div
-        className="bg-blue-600 w-full lg:w-fit lg:px-4 lg:my-2 text-center py-2 text-gray-100 font-bold relative z-20"
-        
-      >
+
+      <div className="bg-blue-600 w-full lg:w-fit lg:px-4 lg:my-2 text-center py-2 text-gray-100 font-bold relative z-20">
         Follow Official Account
       </div>
 
@@ -27,7 +29,7 @@ const Footer = () => {
             href="https://whatsapp.com/channel/0029VbAW7wpCMY0CSebHfW2k"
             target="_blank"
             rel="noopener noreferrer"
-            className=" bg-blue-600 w-full lg:w-fit lg:px-4 lg:my-2 flex items-center rounded-md  mx-1 hover:scale-110 transition-transform"
+            className="bg-blue-600 w-full lg:w-fit lg:px-4 lg:my-2 flex items-center rounded-md mx-1 hover:scale-110 transition-transform"
             data-aos="fade-up"
           >
             <Image
@@ -39,11 +41,12 @@ const Footer = () => {
             />
             <p className="text-white font-bold">Join Now</p>
           </a>
+
           <a
             href="https://www.tiktok.com/@powerxworld"
             target="_blank"
             rel="noopener noreferrer"
-            className=" bg-blue-600 w-full lg:w-fit lg:px-4 lg:my-2 flex items-center rounded-md  mx-1 hover:scale-110 transition-transform"
+            className="bg-blue-600 w-full lg:w-fit lg:px-4 lg:my-2 flex items-center rounded-md mx-1 hover:scale-110 transition-transform"
             data-aos="fade-down"
           >
             <Image

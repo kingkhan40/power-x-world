@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
-import { xLogo } from "../assets";
+
+import { xLogo } from "@/app/assets";
 
 interface NavLink {
   name: string;

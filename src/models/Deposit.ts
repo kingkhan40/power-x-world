@@ -1,6 +1,5 @@
 import mongoose, { Schema, models, model } from "mongoose";
 
-// TypeScript interface for Deposit
 export interface IDeposit {
   wallet: string;
   amount: number;
@@ -9,8 +8,6 @@ export interface IDeposit {
   chain?: string;
   confirmed?: boolean;
   meta?: Record<string, any>;
-  createdAt?: Date;
-  updatedAt?: Date;
 }
 
 const DepositSchema = new Schema<IDeposit>(
@@ -26,6 +23,6 @@ const DepositSchema = new Schema<IDeposit>(
   { timestamps: true }
 );
 
-// Export the model with proper typing
+// 👇 Add this export
 export const Deposit =
   models.Deposit || model<IDeposit>("Deposit", DepositSchema);

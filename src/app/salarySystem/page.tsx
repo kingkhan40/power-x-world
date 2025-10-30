@@ -75,14 +75,14 @@ const SalarySystem = () => {
   const statsData: StatData[] = [
     {
       id: 1,
-      title: "Total Earning",
+      title: "Total Investment",
       value: `$${totalInvestment.toLocaleString()}`,
       color: "from-green-900 to-emerald-800",
       icon: <FaMoneyBillWave className="text-2xl" />,
     },
     {
       id: 2,
-      title: "Total Salary",
+      title: "Earned Salary",
       value: `$${earnedSalary.toLocaleString()}`,
       color: "from-blue-700 to-cyan-800",
       icon: <FaUserTie className="text-2xl" />,
@@ -155,7 +155,7 @@ const SalarySystem = () => {
             <div className="lg:p-6 p-3 rounded-xl bg-gradient-to-br from-gray-800/50 to-gray-900/30 border border-white/20 backdrop-blur-sm">
               <h3 className="text-white text-xl font-semibold mb-4 flex items-center gap-2">
                 <FaUserTie className="text-blue-400" />
-                Salary & Reward Levels
+                Investment & Reward Levels
               </h3>
 
               <div className="overflow-x-auto">
@@ -181,11 +181,11 @@ const SalarySystem = () => {
                         <td className="py-3 px-4 text-blue-300 font-medium">
                           ${employee.weeklySalary.toLocaleString()}
                         </td>
-                        <td className="py-3 px-4 ">
+                        <td className="py-3 px-4">
                           {completedLevels.includes(employee.id) ? (
                             <span className="text-green-400 font-semibold">✅ Completed</span>
                           ) : (
-                            <span className="text-yellow-400 font-semibold ">⏳ Pending</span>
+                            <span className="text-yellow-400 font-semibold">⏳ Pending</span>
                           )}
                         </td>
                       </tr>

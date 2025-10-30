@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
-import Stake from "@/models/Stake";
+import { Investment } from "@/models/Investment";
 
 /**
- * ✅ Get reward percent according to staking amount
+ * ✅ Reward percent according to staking amount
  */
 function getRewardPercent(amount: number): number {
   if (amount >= 5 && amount <= 500) return 1.5;
@@ -20,32 +20,43 @@ export async function GET() {
   await connectDB();
 
   try {
-    const activeStakes = await Stake.find({ status: "active" });
+    const activeInvestments = await Investment.find({ status: "active" });
 
-    for (const stake of activeStakes) {
-      const user = await User.findById(stake.userId);
+    for (const inv of activeInvestments) {
+      const user = await User.findOne({ wallet: inv.wallet });
       if (!user) continue;
 
-      const rewardPercent = getRewardPercent(stake.amount);
-      if (rewardPercent === 0) continue; // invalid stake amount
+      // ✅ Get correct reward percent based on stake amount
+      const rewardPercent = getRewardPercent(inv.amount);
+      if (rewardPercent === 0) continue;
 
-      const reward = (stake.amount * rewardPercent) / 100;
+      // ✅ Calculate reward for this cycle
+      const reward = (inv.amount * rewardPercent) / 100;
 
-      // ✅ Add only reward — NEVER principal
-      user.balance += reward;
-      stake.totalReward += reward;
+      // ✅ Add reward to investment’s earned
+      inv.earned += reward;
 
-      await user.save();
-      await stake.save();
+      // ✅ Check if total earned reached 3x of staked amount
+      if (inv.earned >= inv.amount * 3) {
+        // Credit reward (only reward, principal not returned)
+        user.balance += inv.earned;
+        await user.save();
+
+        inv.status = "completed";
+        await inv.save();
+
+        console.log(`✅ ${inv.wallet} reached 3x — reward ${inv.earned} credited.`);
+      } else {
+        await inv.save();
+      }
     }
 
     return NextResponse.json(
-      { message: "🎉 Daily rewards distributed successfully!" },
+      { message: "🎉 Reward calculation executed successfully" },
       { status: 200 }
     );
-
   } catch (error) {
-    console.error("❌ Reward distribution failed:", error);
+    console.error("❌ Reward update failed:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

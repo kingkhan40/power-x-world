@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation";
 import Buttons from "./UI/Buttons";
 import GradientRotatingCircle from "./GradientRotatingCircle";
+import { powerXCoin } from "../assets";
 
 interface User {
   id: number;

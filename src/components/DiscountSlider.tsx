@@ -6,35 +6,21 @@ import Image from "next/image";
 import "swiper/css";
 import "swiper/css/pagination";
 
-// Remove the individual imports and use direct paths or fix the asset imports
-import slide1 from "../assets/slide (1).png";
-import slide2 from "../assets/slide (2).png";
-import slide3 from "../assets/slide (3).png";
-import slide4 from "../assets/slide (4).png";
+// ✅ Centralized imports from assets/index.ts
+
+import { slide1, slide2, slide3, slide4  } from "@/app/assets";
 
 interface Slide {
   id: number;
-  image: any; // Use 'any' type for imported images or use StaticImageData
+  image: any; // Use 'any' type for imported images or StaticImageData
 }
 
 const DiscountSlider = () => {
   const slideContent: Slide[] = [
-    {
-      id: 1,
-      image: slide1,
-    },
-    {
-      id: 2,
-      image: slide2,
-    },
-    {
-      id: 3,
-      image: slide3,
-    },
-    {
-      id: 4,
-      image: slide4,
-    },
+    { id: 1, image: slide1 },
+    { id: 2, image: slide2 },
+    { id: 3, image: slide3 },
+    { id: 4, image: slide4 },
   ];
 
   return (
@@ -42,18 +28,20 @@ const DiscountSlider = () => {
       {/* Static Background Container */}
       <div className="w-full h-[270px] lg:h-80 rounded-xl px-1 overflow-hidden relative">
         {/* Gradient Background - Static */}
-        <div 
+        <div
           className="absolute inset-0 z-0"
           style={{
-            background: "linear-gradient(135deg, #0a192f 0%, #162135 50%, #103323 75%, #000000 100%)",
+            background:
+              "linear-gradient(135deg, #0a192f 0%, #162135 50%, #103323 75%, #000000 100%)",
           }}
         ></div>
-        
+
         {/* Top Left Animated Circle - Static */}
         <div
           className="absolute -top-12 -left-12 w-24 h-24 rounded-full z-10 animate-spin"
           style={{
-            background: "linear-gradient(45deg, #7d9efb, #a83bf8, #ff6b6b, #51cf66)",
+            background:
+              "linear-gradient(45deg, #7d9efb, #a83bf8, #ff6b6b, #51cf66)",
             animationDuration: "9000ms",
             filter: "blur(12px)",
             opacity: "0.6",
@@ -64,7 +52,8 @@ const DiscountSlider = () => {
         <div
           className="absolute -bottom-12 -right-12 w-28 h-28 rounded-full z-10 animate-spin"
           style={{
-            background: "linear-gradient(135deg, #a83bf8, #7d9efb, #51cf66, #ff6b6b)",
+            background:
+              "linear-gradient(135deg, #a83bf8, #7d9efb, #51cf66, #ff6b6b)",
             animationDuration: "4000ms",
             filter: "blur(10px)",
             opacity: "0.4",
@@ -75,7 +64,8 @@ const DiscountSlider = () => {
         <div
           className="absolute top-1/4 -right-8 w-16 h-16 rounded-full z-10 animate-spin"
           style={{
-            background: "linear-gradient(225deg, #ff6b6b, #51cf66, #7d9efb)",
+            background:
+              "linear-gradient(225deg, #ff6b6b, #51cf66, #7d9efb)",
             animationDuration: "5000ms",
             filter: "blur(8px)",
             opacity: "0.3",
@@ -85,7 +75,8 @@ const DiscountSlider = () => {
         <div
           className="absolute bottom-1/4 -left-8 w-14 h-14 rounded-full z-10 animate-spin"
           style={{
-            background: "linear-gradient(315deg, #51cf66, #ff6b6b, #a83bf8)",
+            background:
+              "linear-gradient(315deg, #51cf66, #ff6b6b, #a83bf8)",
             animationDuration: "6000ms",
             filter: "blur(10px)",
             opacity: "0.3",

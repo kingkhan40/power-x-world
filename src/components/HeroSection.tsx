@@ -27,7 +27,7 @@ const HeroSection = () => {
         <div className="p-5 rounded-2xl relative overflow-hidden bg-gray-900 border border-gray-800 shadow-2xl max-w-4xl w-full">
           {/* Animated Rotating Border */}
           <div
-            className="absolute -inset-0.5 rounded-2xl animate-spin opacity-70"
+            className="absolute -inset-2 rounded-2xl animate-spin opacity-70"
             style={{
               background:
                 "conic-gradient(from 0deg, #7d9efb, #a83bf8, #ff6b6b, #51cf66, #7d9efb)",
@@ -37,7 +37,7 @@ const HeroSection = () => {
           ></div>
           
           {/* Background for content */}
-          <div className="absolute inset-0.5 rounded-2xl bg-gray-900 z-1"></div>
+          <div className="absolute inset-1 rounded-2xl bg-gray-900 z-1"></div>
 
           {/* Top Left Corner Effect */}
           <div

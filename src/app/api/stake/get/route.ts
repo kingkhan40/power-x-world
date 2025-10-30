@@ -1,69 +1,56 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
+import { Investment } from "@/models/Investment";
 
-interface Investment {
-  amount: number;
-  isActive?: boolean;
-  earnedBalance?: number;
-}
+export async function POST(req: Request) {
+  await connectDB();
 
-interface UserType {
-  name: string;
-  email: string;
-  wallet: string;
-  usdtBalance: number;
-  rewardBalance: number;
-  investments: Investment[];
-}
-
-export async function GET(req: Request) {
   try {
-    await connectDB();
-    const { searchParams } = new URL(req.url);
-    const userId = searchParams.get("userId");
+    const { wallet, amount } = await req.json();
 
-    if (!userId) {
+    // ✅ Validate user
+    const user = await User.findOne({ wallet });
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // ✅ Check existing active stake
+    const existing = await Investment.findOne({ wallet, status: "active" });
+    if (existing) {
       return NextResponse.json(
-        { success: false, message: "Missing userId" },
+        { error: "You already have an active stake!" },
         { status: 400 }
       );
     }
 
-    const user = (await User.findById(userId)
-      .select("name email wallet rewardBalance investments usdtBalance")
-      .lean()) as UserType | null;
-
-    if (!user) {
+    // ✅ Check balance
+    if (user.balance < amount) {
       return NextResponse.json(
-        { success: false, message: "User not found" },
-        { status: 404 }
+        { error: "Insufficient balance" },
+        { status: 400 }
       );
     }
 
-    // ✅ Calculate total investment amount
-    const totalInvestment = (user.investments || []).reduce(
-      (sum, inv) => sum + (inv.amount || 0),
-      0
-    );
+    // ✅ Deduct principal
+    user.balance -= amount;
+    await user.save();
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        name: user.name,
-        email: user.email,
-        wallet: user.wallet ?? "",
-        usdtBalance: user.usdtBalance ?? 0,
-        rewardBalance: user.rewardBalance ?? 0,
-        totalInvestment,
-        investments: user.investments || [],
-      },
+    // ✅ Create new investment
+    const investment = await Investment.create({
+      wallet,
+      amount,
+      earned: 0,
+      status: "active",
+      startAt: new Date(),
     });
-  } catch (error: any) {
-    console.error("❌ Error in /stake/get:", error);
+
     return NextResponse.json(
-      { success: false, message: "Internal server error", error: error.message },
-      { status: 500 }
+      { message: "✅ Stake created successfully", investment },
+      { status: 200 }
     );
+  } catch (error) {
+    console.error("❌ Error creating stake:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

@@ -1,6 +1,6 @@
 import Image from "next/image";
-import { logo } from "../../assets";
 
+import { logo } from "@/app/assets";
 const Loader = () => {
   return (
     <div className="flex-col gap-4 w-full flex items-center justify-center">
