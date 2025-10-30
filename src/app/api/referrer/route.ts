@@ -1,31 +1,67 @@
-import { MongoClient } from 'mongodb';
+// app/api/referrer/route.ts
+import { MongoClient, ObjectId } from 'mongodb';
+import { NextResponse } from 'next/server';
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const userId = searchParams.get('userId');
+
+  let client: MongoClient | null = null;
+
   try {
-    // Connect to MongoDB using env variable
-    const client = await MongoClient.connect(process.env.MONGODB_URI!);
-    const db = client.db(); // uses the database specified in URI
+    client = await MongoClient.connect(process.env.MONGODB_URI!);
+    const db = client.db(); // Uses DB name from URI
 
-    // Fetch user by ID
-    const user = await db.collection('users').findOne({ userId: 'USR001234' });
+    // === FEATURE 1: Return all users referred by `userId` ===
+    if (userId) {
+      if (!userId.trim()) {
+        return NextResponse.json(
+          { message: 'User ID is required' },
+          { status: 400 }
+        );
+      }
 
-    if (!user) {
-      await client.close();
-      return new Response(JSON.stringify({ error: 'User not found' }), { status: 404 });
+      const referredBy = ObjectId.isValid(userId) ? new ObjectId(userId) : userId;
+
+      const referredUsers = await db
+        .collection('users')
+        .find({ referredBy })
+        .toArray();
+
+      return NextResponse.json({ referredUsers }, { status: 200 });
     }
 
-    await client.close();
+    // === FEATURE 2: Hard-coded lookup for USR001234 (fallback sponsor) ===
+    const targetUser = await db
+      .collection('users')
+      .findOne({ userId: 'USR001234' });
 
-    return new Response(JSON.stringify({ sponsorId: user.sponsorId || 'SPN002345' }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    if (!targetUser) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
 
+    const sponsorId = targetUser.sponsorId || 'SPN002345';
+
+    return NextResponse.json(
+      { sponsorId },
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   } catch (error) {
     console.error('Error in /api/referrer:', error);
-    return new Response(JSON.stringify({ error: 'Failed to fetch sponsor ID' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return NextResponse.json(
+      { error: 'Failed to process request' },
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+  } finally {
+    await client?.close();
   }
 }
