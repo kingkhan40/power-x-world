@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search, Copy, User } from "lucide-react";
+import { Search, Copy, User, Users, Award } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 interface User {
@@ -11,14 +11,20 @@ interface User {
   email: string;
   role: string;
   isActive: boolean;
-  referredBy: string | null; // This is the referrer's user ID
-  referralCode: string; // Added this for search functionality
+  referredBy: string | null;
+  referralCode: string;
+  createdAt: string;
 }
 
 const Page = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [referrerMap, setReferrerMap] = useState<{[key: string]: string}>({}); // Store referrer names
+  const [referrerMap, setReferrerMap] = useState<{[key: string]: string}>({});
+  const [myReferrals, setMyReferrals] = useState<User[]>([]);
+  const [activeTab, setActiveTab] = useState<"all" | "myReferrals">("all");
+
+  // Your admin user ID - you might want to get this from auth context
+  const adminUserId = "your-admin-user-id"; // Replace with actual admin ID
 
   /* -----------------------------------------
    * ✅ Fetch All Users
@@ -35,6 +41,13 @@ const Page = () => {
         referrerData[user._id] = user.name;
       });
       setReferrerMap(referrerData);
+
+      // Filter users that you referred (where referredBy matches your admin ID)
+      const myReferredUsers = data.users.filter((user: User) => 
+        user.referredBy === adminUserId
+      );
+      setMyReferrals(myReferredUsers);
+
     } catch (error) {
       console.error("Error fetching users:", error);
       toast.error("Failed to load users");
@@ -50,30 +63,36 @@ const Page = () => {
    * ----------------------------------------- */
   const copyReferralCode = (code: string) => {
     navigator.clipboard.writeText(code);
-    toast.success("Referral code copied!");
+    toast.success("Copied to clipboard!");
   };
 
   /* -----------------------------------------
    * 🔍 Get Referrer Name
    * ----------------------------------------- */
   const getReferrerName = (referredById: string | null) => {
-    if (!referredById) return "No Referrer";
+    if (!referredById) return "Direct Signup";
     return referrerMap[referredById] || "Unknown User";
   };
 
   /* -----------------------------------------
    * 🔍 Search Filter
    * ----------------------------------------- */
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (user.referralCode && user.referralCode.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (user.referredBy && getReferrerName(user.referredBy).toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredUsers = activeTab === "all" 
+    ? users.filter(
+        (user) =>
+          user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (user.referralCode && user.referralCode.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (user.referredBy && getReferrerName(user.referredBy).toLowerCase().includes(searchTerm.toLowerCase()))
+      )
+    : myReferrals.filter(
+        (user) =>
+          user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          user.email.toLowerCase().includes(searchTerm.toLowerCase())
+      );
 
   /* -----------------------------------------
-   * ⚙️ Toggle User Active/Inactive (Instant UI Update)
+   * ⚙️ Toggle User Active/Inactive
    * ----------------------------------------- */
   const toggleUserStatus = async (userId: string, newStatus: boolean) => {
     try {
@@ -85,12 +104,17 @@ const Page = () => {
 
       if (res.ok) {
         toast.success(
-          `User has been ${newStatus ? "activated" : "deactivated"} successfully`
+          `User ${newStatus ? "activated" : "deactivated"} successfully`
         );
 
-        // ✅ Update local UI instantly without reloading or refetching
         setUsers((prevUsers) =>
           prevUsers.map((user) =>
+            user._id === userId ? { ...user, isActive: newStatus } : user
+          )
+        );
+
+        setMyReferrals((prevReferrals) =>
+          prevReferrals.map((user) =>
             user._id === userId ? { ...user, isActive: newStatus } : user
           )
         );
@@ -104,8 +128,11 @@ const Page = () => {
   };
 
   /* -----------------------------------------
-   * 💻 UI
+   * 📊 Stats Calculation
    * ----------------------------------------- */
+  const totalMyReferrals = myReferrals.length;
+  const activeMyReferrals = myReferrals.filter(user => user.isActive).length;
+
   return (
     <div className="min-h-screen p-4">
       <motion.div
@@ -129,6 +156,66 @@ const Page = () => {
           </div>
         </div>
 
+        {/* 📊 Stats & Tabs */}
+        <div className="mb-6">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className="bg-gray-700 rounded-lg p-4 border border-gray-600">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-400 text-sm">Total Users</p>
+                  <p className="text-2xl font-bold text-white">{users.length}</p>
+                </div>
+                <Users className="text-blue-400" size={24} />
+              </div>
+            </div>
+
+            <div className="bg-gray-700 rounded-lg p-4 border border-gray-600">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-400 text-sm">My Referrals</p>
+                  <p className="text-2xl font-bold text-green-400">{totalMyReferrals}</p>
+                </div>
+                <Award className="text-green-400" size={24} />
+              </div>
+            </div>
+
+            <div className="bg-gray-700 rounded-lg p-4 border border-gray-600">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-400 text-sm">Active Referrals</p>
+                  <p className="text-2xl font-bold text-cyan-400">{activeMyReferrals}</p>
+                </div>
+                <User className="text-cyan-400" size={24} />
+              </div>
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex space-x-4 border-b border-gray-700">
+            <button
+              onClick={() => setActiveTab("all")}
+              className={`pb-2 px-4 font-medium transition-colors duration-200 ${
+                activeTab === "all"
+                  ? "text-blue-400 border-b-2 border-blue-400"
+                  : "text-gray-400 hover:text-gray-300"
+              }`}
+            >
+              All Users ({users.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("myReferrals")}
+              className={`pb-2 px-4 font-medium transition-colors duration-200 ${
+                activeTab === "myReferrals"
+                  ? "text-green-400 border-b-2 border-green-400"
+                  : "text-gray-400 hover:text-gray-300"
+              }`}
+            >
+              My Referrals ({totalMyReferrals})
+            </button>
+          </div>
+        </div>
+
         {/* 🧾 Users Table */}
         <div className="overflow-x-auto rounded-lg border border-gray-700">
           <table className="min-w-full divide-y divide-gray-700">
@@ -147,7 +234,7 @@ const Page = () => {
                   Referral Code
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300 uppercase tracking-wider">
-                  Role
+                  Join Date
                 </th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300 uppercase tracking-wider">
                   Status
@@ -170,13 +257,22 @@ const Page = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10">
-                        <div className="h-10 w-10 rounded-full bg-gradient-to-r from-purple-500 to-blue-600 flex items-center justify-center text-white font-semibold shadow-lg">
+                        <div className={`h-10 w-10 rounded-full flex items-center justify-center text-white font-semibold shadow-lg ${
+                          user.referredBy === adminUserId 
+                            ? "bg-gradient-to-r from-green-500 to-emerald-600" 
+                            : "bg-gradient-to-r from-purple-500 to-blue-600"
+                        }`}>
                           {user.name.charAt(0).toUpperCase()}
                         </div>
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-100">
                           {user.name}
+                          {user.referredBy === adminUserId && (
+                            <span className="ml-2 text-xs bg-green-600 text-white px-2 py-1 rounded-full">
+                              My Referral
+                            </span>
+                          )}
                         </div>
                         <div className="text-xs text-gray-400">
                           ID: {user._id.slice(-6)}
@@ -189,25 +285,27 @@ const Page = () => {
                     {user.email}
                   </td>
 
-                  {/* 👥 Referred By - Shows actual referrer name */}
+                  {/* 👥 Referred By */}
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center space-x-2">
                       {user.referredBy ? (
                         <>
-                          <User size={14} className="text-green-400" />
-                          <span className="text-sm text-green-300">
+                          <User size={14} className={
+                            user.referredBy === adminUserId 
+                              ? "text-green-400" 
+                              : "text-blue-400"
+                          } />
+                          <span className={`text-sm ${
+                            user.referredBy === adminUserId 
+                              ? "text-green-300" 
+                              : "text-gray-300"
+                          }`}>
                             {getReferrerName(user.referredBy)}
+                            {user.referredBy === adminUserId && " (You)"}
                           </span>
-                          <button
-                            onClick={() => copyReferralCode(user.referredBy!)}
-                            className="text-gray-400 hover:text-green-300 transition-colors duration-200 p-1 hover:bg-green-900 hover:bg-opacity-20 rounded"
-                            title="Copy referrer ID"
-                          >
-                            <Copy size={12} />
-                          </button>
                         </>
                       ) : (
-                        <span className="text-sm text-gray-400 italic">No Referrer</span>
+                        <span className="text-sm text-gray-400 italic">Direct Signup</span>
                       )}
                     </div>
                   </td>
@@ -228,16 +326,9 @@ const Page = () => {
                     </div>
                   </td>
 
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        user.role === "Admin"
-                          ? "bg-purple-800 text-purple-100"
-                          : "bg-blue-800 text-blue-100"
-                      }`}
-                    >
-                      {user.role}
-                    </span>
+                  {/* 📅 Join Date */}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                    {new Date(user.createdAt).toLocaleDateString()}
                   </td>
 
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -285,18 +376,28 @@ const Page = () => {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
-            <div className="text-gray-400 text-lg">No users found</div>
+            <div className="text-gray-400 text-lg">
+              {activeTab === "myReferrals" 
+                ? "You haven't referred any users yet" 
+                : "No users found"}
+            </div>
             <div className="text-gray-500 text-sm mt-2">
-              Try adjusting your search terms
+              {activeTab === "myReferrals" 
+                ? "Share your referral link to get started!" 
+                : "Try adjusting your search terms"}
             </div>
           </motion.div>
         )}
 
         {/* 📊 Footer Info */}
         <div className="mt-6 flex justify-between items-center text-sm text-gray-400">
-          <div>Showing {filteredUsers.length} users</div>
+          <div>
+            Showing {filteredUsers.length} {activeTab === "myReferrals" ? "referrals" : "users"}
+          </div>
           <div className="text-xs bg-gray-700 px-3 py-1 rounded-full">
-            Total Users: {users.length}
+            {activeTab === "myReferrals" 
+              ? `Your Referrals: ${totalMyReferrals}` 
+              : `Total Users: ${users.length}`}
           </div>
         </div>
       </motion.div>

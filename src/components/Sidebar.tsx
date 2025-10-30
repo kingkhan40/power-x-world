@@ -201,12 +201,12 @@
 
 // export default Sidebar;
 
-"use client";
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { MdMenu, MdClose } from "react-icons/md";
-import { useRouter, usePathname } from "next/navigation";
-import Image from "next/image";
+'use client';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { MdMenu, MdClose } from 'react-icons/md';
+import { useRouter, usePathname } from 'next/navigation';
+import Image from 'next/image';
 
 interface MenuItem {
   name: string;
@@ -217,72 +217,71 @@ const Sidebar = () => {
   const router = useRouter();
   const pathname = usePathname();
   // Initialize isMenuOpen to true for homepage
-  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(pathname === "/home");
-  const [userName, setUserName] = useState<string>("Jobi");
+  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(pathname === '/home');
+  const [userName, setUserName] = useState<string>('Jobi');
 
   // Fetch username from localStorage on client-side
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedName = localStorage.getItem("userName");
-      setUserName(storedName || "Jobi");
+    if (typeof window !== 'undefined') {
+      const storedName = localStorage.getItem('userName');
+      setUserName(storedName || 'Jobi');
     }
   }, []);
 
   // Ensure menu is open on homepage
   useEffect(() => {
-    if (pathname === "/home") {
+    if (pathname === '/home') {
       setIsMenuOpen(true);
     }
   }, [pathname]);
 
   const menuItems: MenuItem[] = [
-    { name: "Team", path: "/team" },
-    { name: "Self Investment", path: "/selfInvestment" },
-    { name: "Rewards", path: "/rewards" },
-    { name: "Profile Records", path: "/profileRecords" },
-    { name: "Salary System", path: "/salarySystem" },
-    { name: "Deposit History", path: "/depositHistory" },
-    { name: "Withdrawal History", path: "/withdrawalHistory" },
-    { name: "Transactions History", path: "/transactionsHistory" },
-    { name: "Change Passwords", path: "/change-password" },
-    { name: "Contact Us", path: "/contactUs" },
+    { name: 'Team', path: '/team' },
+    { name: 'Self Investment', path: '/selfInvestment' },
+    { name: 'Rewards', path: '/rewards' },
+    { name: 'Our Team', path: '/team-detail' },
+    { name: 'Profile Records', path: '/profileRecords' },
+    { name: 'Salary System', path: '/salarySystem' },
+    { name: 'Deposit History', path: '/depositHistory' },
+    { name: 'Withdrawal History', path: '/withdrawalHistory' },
+    { name: 'Transactions History', path: '/transactionsHistory' },
+    { name: 'Change Passwords', path: '/change-password' },
+    { name: 'Contact Us', path: '/contactUs' },
   ];
 
   const handleNavigation = (item: MenuItem) => {
     if (item.path) {
       router.push(item.path);
       // Only close menu if not on homepage and on mobile
-      if (pathname !== "/home" && window.innerWidth < 768) {
+      if (pathname !== '/home' && window.innerWidth < 768) {
         setIsMenuOpen(false);
       }
     }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userName");
-    router.push("/login");
+    localStorage.removeItem('token');
+    localStorage.removeItem('userName');
+    router.push('/login');
     setIsMenuOpen(false);
   };
 
   const handleLogoClick = () => {
-    router.push("/home");
+    router.push('/home');
     setIsMenuOpen(true); // Keep menu open on homepage
   };
 
   return (
     <div className="sticky top-0 z-40">
-      <nav
-        className="flex items-center justify-between px-4 bg-gray-900 md:px-16 lg:px-24 xl:px-32 py-2 transition-all duration-300 relative"
-      >
+      <nav className="flex items-center justify-between px-4 bg-gray-900 md:px-16 lg:px-24 xl:px-32 py-2 transition-all duration-300 relative">
         {/* Bottom Gradient Border */}
         <div
           className="absolute bottom-0 left-0 w-full h-0.5"
           style={{
             background:
-              "linear-gradient(90deg, #3b82f6, #10b981, #ef4444, #8b5cf6, #f59e0b)",
-            backgroundSize: "300% 200%",
-            animation: "gradientFlow 12s linear infinite",
+              'linear-gradient(90deg, #3b82f6, #10b981, #ef4444, #8b5cf6, #f59e0b)',
+            backgroundSize: '300% 200%',
+            animation: 'gradientFlow 12s linear infinite',
           }}
         ></div>
 
@@ -308,7 +307,6 @@ const Sidebar = () => {
           </div>
         </div>
 
-        
         <motion.div
           className="fixed bottom-4 right-2 z-50 cursor-pointer"
           whileHover={{ scale: 1.1 }}
@@ -319,11 +317,11 @@ const Sidebar = () => {
             className="w-10 h-10 rounded-full flex items-center justify-center shadow-2xl"
             style={{
               background:
-                "linear-gradient(45deg, #3b82f6, #10b981, #ef4444, #8b5cf6)",
+                'linear-gradient(45deg, #3b82f6, #10b981, #ef4444, #8b5cf6)',
             }}
           >
             <motion.div
-              key={isMenuOpen ? "close" : "menu"}
+              key={isMenuOpen ? 'close' : 'menu'}
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ duration: 0.3 }}
@@ -342,7 +340,7 @@ const Sidebar = () => {
               initial={{ opacity: 0, scale: 0.5, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.5, y: 20 }}
-              transition={{ duration: 0.3, type: "spring", stiffness: 200 }}
+              transition={{ duration: 0.3, type: 'spring', stiffness: 200 }}
             >
               <div className="bg-gray-900/95 backdrop-blur-lg rounded-2xl py-1.5 px-4 shadow-2xl border border-gray-700 min-w-[220px] max-h-[88vh] overflow-y-auto">
                 {/* Menu Header */}
@@ -352,7 +350,7 @@ const Sidebar = () => {
                     className="w-16 h-1 mx-auto rounded-full mb-2"
                     style={{
                       background:
-                        "linear-gradient(90deg, #3b82f6, #10b981, #ef4444)",
+                        'linear-gradient(90deg, #3b82f6, #10b981, #ef4444)',
                     }}
                   ></div>
                 </div>
@@ -374,7 +372,7 @@ const Sidebar = () => {
                           className="w-3 h-3 rounded-full transition-transform duration-200 group-hover:scale-150"
                           style={{
                             background:
-                              "linear-gradient(45deg, #3b82f6, #10b981, #ef4444, #8b5cf6)",
+                              'linear-gradient(45deg, #3b82f6, #10b981, #ef4444, #8b5cf6)',
                           }}
                         ></div>
                         <span className="font-medium text-sm text-gray-200 group-hover:text-white">
