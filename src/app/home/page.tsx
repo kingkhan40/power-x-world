@@ -29,7 +29,6 @@ export default function HomePage() {
   const [totalCommission, setTotalCommission] = useState<number>(0);
   const [rewardPayment, setRewardPayment] = useState<number>(0);
   const [otherPayments, setOtherPayments] = useState<number>(0);
-  const [stakingAmount, setStakingAmount] = useState<number>(0);
   const [message, setMessage] = useState<string>("");
 
   // Countdown timer
@@ -92,37 +91,6 @@ export default function HomePage() {
     setLoading(false);
   }, [router, setContextBalance]);
 
-  // Stake functionality
-  const handleStakeNow = async () => {
-    if (stakingAmount < 5) {
-      setMessage("Minimum staking amount is $5");
-      return;
-    }
-
-    const userId = localStorage.getItem("userId");
-    if (!userId) {
-      setMessage("User not found");
-      return;
-    }
-
-    const res = await fetch("/api/stake/create", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, amount: stakingAmount }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      setMessage(data.error || "Failed to stake");
-      return;
-    }
-
-    setMessage("✅ Stake created successfully!");
-    setBalance(data.walletBalance);
-    setContextBalance?.(data.walletBalance);
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-black text-white">
@@ -168,24 +136,6 @@ export default function HomePage() {
           <InvestmentInfo userEmail={user?.email ?? ""} />
           <IconGridNavigation />
           <BasicPlan />
-        </div>
-
-        {/* Staking Section */}
-        <div className="mt-6 text-center">
-          <input
-            type="number"
-            value={stakingAmount}
-            onChange={(e) => setStakingAmount(parseFloat(e.target.value))}
-            placeholder="Enter staking amount"
-            className="p-2 rounded text-black"
-          />
-          <button
-            onClick={handleStakeNow}
-            className="ml-2 px-4 py-2 bg-yellow-500 text-black font-bold rounded hover:bg-yellow-400"
-          >
-            Stake Now
-          </button>
-          {message && <p className="mt-2 text-sm text-yellow-300">{message}</p>}
         </div>
       </div>
     </div>
