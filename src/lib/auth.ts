@@ -1,26 +1,17 @@
-import { type NextAuthOptions } from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
+// lib/auth.ts
+import jwt from 'jsonwebtoken';
 
-export const authOptions: NextAuthOptions = {
-  providers: [
-    CredentialsProvider({
-      name: "Credentials",
-      credentials: {
-        email: { label: "Email", type: "text" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
-        // For now, mock authentication (replace later with real DB check)
-        if (credentials.email === "admin@test.com" && credentials.password === "123456") {
-          return { id: "1", name: "Admin", email: credentials.email };
-        }
+export interface AuthUser {
+  id: string;
+  email: string;
+}
 
-        return null;
-      },
-    }),
-  ],
-  session: { strategy: "jwt" },
-  secret: process.env.NEXTAUTH_SECRET,
-};
+export function verifyToken(token: string): AuthUser | null {
+  try {
+    return jwt.verify(token, JWT_SECRET) as AuthUser;
+  } catch {
+    return null;
+  }
+}
