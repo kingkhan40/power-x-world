@@ -2,7 +2,12 @@
 
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { AdminProvider } .json({ error: gv"Server error" }, { status: 500 });
+import { AdminProvider } from "./context/AdminContext";
+import AdminLayoutWrapper from "./components/AdminLayoutWrapper";
+
+export default function AdminClientLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     if (pathname === "/admin/login") return; // allow login page

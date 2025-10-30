@@ -1,18 +1,14 @@
 import { NextResponse } from "next/server";
-import  connectDB  from "@/lib/db";
-import User from "@!getters: {
-  value: state => {
-    return state.value;
-  }
-}/models/User";
+import { connectDB } from "@/lib/db";
+import User from "@/models/User";
 
 export async function GET(req: Request) {
   try {
     await connectDB(); // connect to MongoDB
 
-    // Get useaaaaaaaaaaaaarId from query
-    const url AAAAAAAAAAASAAAAAAA= new URL(req.url);
-    const userId = url.sXXXXXXXXXXXXXXXXXXXXXXXXXXXXearchParams.get("userId");
+    // Get userId from query
+    const url = new URL(req.url);
+    const userId = url.searchParams.get("userId");
 
     if (!userId) {
       return NextResponse.json({ error: "User ID is required" }, { status: 400 });

@@ -5,12 +5,17 @@ import {
   FaGift,
   FaGem,
   FaAward,
+  FaMobile,
   FaCar,
-    FaCheck,
+  FaMotorcycle,
+  FaHome,
+  FaLock,
+  FaCheck,
   FaLaptop,
   FaRocket,
 } from "react-icons/fa";
-import {  } from "@/context/BalanceContext";
+import Image from "next/image";
+import { useBalance } from "@/context/BalanceContext";
 import { RewardPlan, StatData } from "types"; // Adjust path as needed
 import { parseRewardAmount } from "utils/parseRewardAmount"; // Adjust path as needed
 
@@ -673,7 +678,9 @@ function RewardPage() {
                       <button
                         onClick={handleCloseModal}
                         disabled={isProcessing}
-                        className="flex-1 bg-gradient-to-r from-gray-600 cursor-pointer to-gray-700 hover:from-gray-500 hover:to-gray-600 text-white py-3 px-6 rounded-xl font-semibold transition                        Cancel
+                        className="flex-1 bg-gradient-to-r from-gray-600 cursor-pointer to-gray-700 hover:from-gray-500 hover:to-gray-600 text-white py-3 px-6 rounded-xl font-semibold transition-all duration-300 border border-gray-500/50 disabled:opacity-50"
+                      >
+                        Cancel
                       </button>
                     </div>
                   )}

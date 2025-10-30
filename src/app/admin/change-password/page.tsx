@@ -4,6 +4,17 @@ import React, { useState, ChangeEvent, FormEvent } from "react";
 import {
   FaLock,
   FaEye,
+  FaEyeSlash,
+  FaCheck,
+  FaTimes,
+  FaShieldAlt,
+} from "react-icons/fa";
+
+interface PasswordCriteria {
+  length: boolean;
+  uppercase: boolean;
+  lowercase: boolean;
+  number: boolean;
   special: boolean;
 }
 
@@ -19,14 +30,19 @@ interface PasswordStrength {
 }
 
 const ChangePassword = () => {
+  const [email, setEmail] = useState<string>(""); // ✅ added email for API call
   const [currentPassword, setCurrentPassword] = useState<string>("");
+  const [newPassword, setNewPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [showCurrentPassword, setShowCurrentPassword] = useState<boolean>(false);
   const [showNewPassword, setShowNewPassword] = useState<boolean>(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [message, setMessage] = useState<Message>({ type: "", text: "" });
 
   const [passwordCriteria, setPasswordCriteria] = useState<PasswordCriteria>({
+    length: false,
+    uppercase: false,
     lowercase: false,
     number: false,
     special: false,
@@ -37,6 +53,7 @@ const ChangePassword = () => {
       length: password.length >= 8,
       uppercase: /[A-Z]/.test(password),
       lowercase: /[a-z]/.test(password),
+      number: /[0-9]/.test(password),
       special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
     });
   };
@@ -44,7 +61,7 @@ const ChangePassword = () => {
   const handleNewPasswordChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setNewPassword(value);
-    (value);
+    checkPasswordStrength(value);
   };
 
   // 🔹 Step 4 Integration: Connect to API
@@ -54,14 +71,14 @@ const ChangePassword = () => {
     setMessage({ type: "", text: "" });
 
     // Validation
-    if (!email || ! || !newPassword || !confirmPassword) {
+    if (!email || !currentPassword || !newPassword || !confirmPassword) {
       setMessage({ type: "error", text: "Please fill in all fields" });
       setIsSubmitting(false);
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setMessage({ : "error", cxxcxxxzxzxzxzxzzzxtext: "Newsss passwords do not match" });
+      setMessage({ type: "error", text: "New passwords do not match" });
       setIsSubmitting(false);
       return;
     }
@@ -72,11 +89,11 @@ const ChangePassword = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, newPassword, currentPassword }),
       });
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
       const data = await res.json();
 
       if (!res.ok) {
-        setMesccccccccccccccccccccccsage({
+        setMessage({
           type: "error",
           text: data.message || "Password update failed",
         });

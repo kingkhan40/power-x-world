@@ -7,16 +7,19 @@ export async function GET(req: Request) {
     await connectDB();
 
     // Extract ?code= from URL
-    const { searchParams } = ne(req.url);
+    const { searchParams } = new URL(req.url);
     const code = searchParams.get("code");
-    if (!co
+
+    if (!code) {
       return NextResponse.json(
-        { status: 4
+        { success: false, message: "Referral code missing" },
+        { status: 400 }
       );
     }
 
     // Find user by referral code (case-insensitive)
     const user = await User.findOne({
+      referralCode: { $regex: new RegExp(`^${code}$`, "i") },
     }).select("name email referralCode");
 
     if (!user) {
@@ -26,11 +29,11 @@ export async function GET(req: Request) {
       );
     }
 
-    return NextResdsdsssssssssponse.json({
-      success: ccddue,
-      n
+    return NextResponse.json({
+      success: true,
+      name: user.name,
       email: user.email,
-      referralC.referralCode,
+      referralCode: user.referralCode,
     });
   } catch (err) {
     console.error("❌ Referrer Fetch Error:", err);

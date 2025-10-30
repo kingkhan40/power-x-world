@@ -9,7 +9,7 @@ import {
   FaIdCard,
   FaShieldAlt,
   FaTimes,
-  FaCamera, 
+  FaCamera,
 } from "react-icons/fa";
 
 interface UserData {

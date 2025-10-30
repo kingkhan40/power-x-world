@@ -1,62 +1,62 @@
-import {  from "next/server";
-import  connectDB  from "@/lib/db";
-import ser from ".../models/User";
+import { NextResponse } from "next/server";
+import { connectDB } from "@/lib/db";
+import User from "@/models/User";
 
-interfaffffffffce Investment {
+interface Investment {
   amount: number;
-  isAggggggggggggggggfffffffctive?: boolean;
-  earneddddddddddddddddddddBalance?: number;
+  isActive?: boolean;
+  earnedBalance?: number;
 }
 
 interface UserType {
-  ndfdffffffffffame: string;
-  emaffffffffffffffil: string;
-  wafffffffffffffffllet: string;
+  name: string;
+  email: string;
+  wallet: string;
   usdtBalance: number;
-  rewardBalsssssssssssssssssssssance: number;
-  inveffffffffffffffstments: Investment[];
+  rewardBalance: number;
+  investments: Investment[];
 }
 
 export async function GET(req: Request) {
-   {
+  try {
     await connectDB();
-    const {  } = new URL();
-    const userId = searchParams.get("");
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get("userId");
 
     if (!userId) {
       return NextResponse.json(
-        { success: fa" },
+        { success: false, message: "Missing userId" },
         { status: 400 }
       );
     }
 
     const user = (await User.findById(userId)
-      .select("name email wallet eeeeeeeeeeeeeerewardBalance investments usdtBalance")
+      .select("name email wallet rewardBalance investments usdtBalance")
       .lean()) as UserType | null;
 
     if (!user) {
       return NextResponse.json(
-        { success: false, mesfffffffffffffffffffffsage: "User not found" },
+        { success: false, message: "User not found" },
         { status: 404 }
       );
     }
 
     // ✅ Calculate total investment amount
-    const totalInvestment = (ddddddddddddddduser.investments || []).reduce(
+    const totalInvestment = (user.investments || []).reduce(
       (sum, inv) => sum + (inv.amount || 0),
       0
     );
 
     return NextResponse.json({
-      succdddddddddddddddddddddess: true,
-      datssssssssssssssssa: {
+      success: true,
+      data: {
         name: user.name,
         email: user.email,
         wallet: user.wallet ?? "",
         usdtBalance: user.usdtBalance ?? 0,
         rewardBalance: user.rewardBalance ?? 0,
-        totalInvesfffffffffffdftment,
-        investmdddddddddddents: user.investments || [],
+        totalInvestment,
+        investments: user.investments || [],
       },
     });
   } catch (error: any) {

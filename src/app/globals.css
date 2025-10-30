@@ -4,15 +4,15 @@
 @tailwind components;
 @tailwind utilities;
 
-
 @layer base {
   * {
     font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont,
       "Helvetica Neue", helvetica, segoe-ui, arial, roboto, "PingFang SC",
-      "miui", "Hiragino Sans GB", "Microsoft Yahei", sans-serif;
+      "miui", "Hiragino Sans GB", "Microsoft Yahei", -apple-system,
+      BlinkMacSystemFont, Trebuchet MS, Roboto, Ubuntu, sans-serif;
   }
 
-body {
+  body {
     width: 100%;
     height: 100%;
     margin: 0;
@@ -20,20 +20,18 @@ body {
     min-height: 100vh;
     overflow-x: hidden;
     overflow-y: auto;
-  
-    
+
     /* Simple 4-color gradient */
     background: linear-gradient(
-        135deg,
-        #0a192f,  /* Dark Blue */
-        #162135,  /* Dark Gray */
-        #052014,  /* Dark Green */
-        #000000   /* Black */
+      135deg,
+      #0a192f,
+      /* Dark Blue */ #162135,
+      /* Dark Gray */ #052014,
+      /* Dark Green */ #000000 /* Black */
     );
-    
-   
+
     color: #ffffff;
-}
+  }
 
   ::-webkit-scrollbar {
     display: none;

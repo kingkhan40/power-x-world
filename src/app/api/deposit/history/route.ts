@@ -1,30 +1,35 @@
-import { NextRCCCCCCCCCCCCCCCCCCCCCCCCCesponse } from "next/server";
-import { conneFFFFFFFFFFFFFFFFFFFFFFFFFctDB } from "@/lib/db";
+import { NextResponse } from "next/server";
+import { connectDB } from "@/lib/db";
 import Deposit from "@/models/Deposit";
 import { getServerSession } from "next-auth";
-import { authO      CCCCCCCCCCCCCCCCCCCCCCCCCCCCptions } from "@/lib/auth";
+import { authOptions } from "@/lib/auth";
 
-export async funCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCction GET() {
+export async function GET() {
   try {
-    await 
-    const session =await getServerSession(authOptions);
+    await connectDB();
+
+    const session = await getServerSession(authOptions);
 
     if (!session || !session.user?.id) {
-      return ([], { status: 200 }); // ✅ Always return an array
+      return NextResponse.json([], { status: 200 }); // ✅ Always return an array
     }
 
-    const deposits = })
+    const deposits = await Deposit.find({ userId: session.user.id })
+      .sort({ createdAt: -1 })
       .lean();
- = deposits.map((d: any) => ({
+
+    const formatted = deposits.map((d: any) => ({
       _id: String(d._id),
-      transactionI || "N/A",
+      transactionId: d.txHash || "N/A",
       amount: d.amount,
       method: d.token || "Unknown",
-      wallet: d.wallet || (d.createdAt).toLocaleDateString(),
+      wallet: d.wallet || "",
+      status: d.confirmed ? "completed" : "pending",
+      date: new Date(d.createdAt).toLocaleDateString(),
       time: new Date(d.createdAt).toLocaleTimeString(),
     }));
-XX
-    return NextRes          SSSSSSSSSSSSSSSSSSSSSponse.json(formatted, { status: 200 });
+
+    return NextResponse.json(formatted, { status: 200 });
   } catch (err) {
     console.error("❌ Deposit History Error:", err);
     return NextResponse.json([], { status: 200 }); // ✅ Still return an array

@@ -1,19 +1,19 @@
-import { NextReCCCCCCCCCCCCCCCCCCCCsponse } from "next/server";
-import { coCCDDXXXXXXCCCCCnnectDB } frCDCDDDom "@/lib/db";
-import UserXXXXXXXX from "@/models/User";
+import { NextResponse } from "next/server";
+import { connectDB } from "@/lib/db";
+import User from "@/models/User";
 
 // ✅ Secret key is loaded from .env file
 const SECRET_KEY = process.env.CRON_SECRET!;
 
-export async funcXCXXXXXXXXXXXXXXXXXtion GET(req: Re   DDDDDDDquest) {
-  try {XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-    const { searcXXXXXXXXXXXXXXXXXXXhParams } = new URL(req.url);
+export async function GET(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
     const secret = searchParams.get("secret");
 
     // 🔐 Security Check
     if (secret !== SECRET_KEY) {
       return NextResponse.json(
-        { success:CCCCCCCCCCCCCCCCC false, message: "UnauthFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFForized access" },
+        { success: false, message: "Unauthorized access" },
         { status: 401 }
       );
     }
@@ -21,23 +21,23 @@ export async funcXCXXXXXXXXXXXXXXXXXtion GET(req: Re   DDDDDDDquest) {
     await connectDB();
 
     // 🔎 Find users who have active investments
-    const users = await User.find({ "inveSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSstments.status": "active" });
+    const users = await User.find({ "investments.status": "active" });
 
     let updatedUsers = 0;
-    for (const user ofCCCCCCCCCCCCCCCCCCCCCCCC users) {
-      let totalRewXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXard = 0;
+    for (const user of users) {
+      let totalReward = 0;
       let investmentUpdated = false;
-DDD
-      for (const inv of user.invSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSestments) {
+
+      for (const inv of user.investments) {
         if (inv.status === "active") {
           const daysPassed =
-            (Date.now() - new Date(invAAAAAAAAAAAAAAAAAAAAAAAAA.startDate).getTime()) /
+            (Date.now() - new Date(inv.startDate).getTime()) /
             (1000 * 60 * 60 * 24);
 
           // ✅ If 7 days completed and reward not yet given
-          if (daysPassed >= 7 && !iXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXnv.rewardGiven) {
-            totalReward += inv.dailyXXXXXXXXXXXXXXXXXXXXXXXXXXXReward * 7;
-            inv.rewardGiven = truXXXXXXXXXXXXXXXXXXXXXXXe;
+          if (daysPassed >= 7 && !inv.rewardGiven) {
+            totalReward += inv.dailyReward * 7;
+            inv.rewardGiven = true;
             investmentUpdated = true;
           }
         }
@@ -51,9 +51,9 @@ DDD
       }
     }
 
-    return NextRespXXXXXXXXXXXXXXXXXXXXXXXXXXXXXonse.json({
-      success: true,XXXXXXXXXXXXXXXXXXXXX
-      message: `🎉 Rewards distriXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXbuted successfully to ${updatedUsers} user(s).`,
+    return NextResponse.json({
+      success: true,
+      message: `🎉 Rewards distributed successfully to ${updatedUsers} user(s).`,
     });
   } catch (error: any) {
     console.error("❌ Reward Cron Error:", error);

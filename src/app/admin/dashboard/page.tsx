@@ -211,7 +211,8 @@ export default function AdminDashboardPage() {
                 />
                 <Line
                   type="monotone"
-                  "
+                  dataKey="users"
+                  stroke="#8B5CF6"
                   strokeWidth={2}
                   dot={{ fill: "#8B5CF6", strokeWidth: 2, r: 4 }}
                   activeDot={{ r: 8, fill: "#8B5CF6" }}

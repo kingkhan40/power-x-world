@@ -1,9 +1,14 @@
 "use client";
-impor    rom "react";;
+import { useState } from "react";
+import { motion } from "framer-motion";
 import { 
   TrendingUp, 
   Users, 
-  ShoppingBag,  
+  ShoppingBag, 
+  DollarSign, 
+  Eye, 
+  ArrowDownRight, 
+  ArrowUpRight 
 } from "lucide-react";
 import { 
   PieChart, 
