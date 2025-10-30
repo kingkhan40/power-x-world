@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { Deposit } from "@/models/Deposit";
-import { Investment } from "@/models/Investment";
+import Investment from "@/models/Investment";
 import { Withdrawal } from "@/models/Withdrawal";
 import { calculateDailyRate } from "@/lib/staking";
 
