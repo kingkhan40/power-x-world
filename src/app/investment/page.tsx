@@ -48,7 +48,7 @@ const Investment = () => {
       min: "$5",
       max: "Unlimited",
       profit: "1.5% to 9% daily",
-      image: "/coin (5).jpg", // Replace with actual path
+      image: "/coin (5).jpg",
       minAmount: 5,
       maxAmount: 10000000,
       minProfit: 1.5,
@@ -63,7 +63,6 @@ const Investment = () => {
     },
   ];
 
-  // Stats data stored in variable
   const statsData: StatData[] = [
     {
       id: 1,
@@ -98,29 +97,58 @@ const Investment = () => {
   const handleAmountChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setStakingAmount(value);
-
-    if (value && !isNaN(parseFloat(value))) {
-      setShowProfitRange(true);
-    } else {
-      setShowProfitRange(false);
-    }
+    setShowProfitRange(!!(value && !isNaN(parseFloat(value))));
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  // ✅ Updated handleSubmit with backend integration
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!selectedPlan) return;
 
-    const investmentData = {
-      plan: selectedPlan.name,
-      amount: parseFloat(stakingAmount),
-      image: selectedPlan.image,
-      minProfit: selectedPlan.minProfit,
-      maxProfit: selectedPlan.maxProfit,
-      date: new Date().toISOString(),
-    };
+    try {
+      const userId = localStorage.getItem("userId"); // 👈 make sure userId is stored after login
+      if (!userId) {
+        alert("User not logged in!");
+        return;
+      }
 
-    localStorage.setItem("investmentData", JSON.stringify(investmentData));
-    router.push("/selfInvestment");
+      const amount = parseFloat(stakingAmount);
+      if (isNaN(amount) || amount < selectedPlan.minAmount) {
+        alert(`Minimum stake amount is $${selectedPlan.minAmount}`);
+        return;
+      }
+
+      // ✅ Call backend stake API
+      const response = await fetch("/api/stake", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, amount }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        alert(result.message || "Failed to start staking");
+        return;
+      }
+
+      // ✅ Save staking data locally for display
+      const investmentData = {
+        plan: selectedPlan.name,
+        amount,
+        image: selectedPlan.image,
+        minProfit: selectedPlan.minProfit,
+        maxProfit: selectedPlan.maxProfit,
+        date: new Date().toISOString(),
+      };
+
+      localStorage.setItem("investmentData", JSON.stringify(investmentData));
+      alert("✅ Staking started successfully!");
+      router.push("/selfInvestment");
+    } catch (error) {
+      console.error("Stake Error:", error);
+      alert("❌ Something went wrong while starting staking.");
+    }
   };
 
   return (
@@ -136,11 +164,8 @@ const Investment = () => {
           backgroundAttachment: "fixed",
         }}
       >
-        {/* Background Overlay */}
         <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
-
         <div className="container mx-auto max-w-6xl relative z-10">
-          {/* Header Section */}
           <div className="text-center mb-8">
             <h1 className="lg:text-4xl text-3xl mb-4">
               🚀
@@ -154,14 +179,13 @@ const Investment = () => {
             </p>
           </div>
 
-          {/* Staking Plan Card */}
+          {/* Plan Card */}
           <div className="grid grid-cols-1 gap-8 mb-8">
             {stakingPlans.map((plan) => (
               <div
                 key={plan.id}
                 className="p-6 rounded-2xl relative overflow-hidden bg-gray-900 border border-gray-800 shadow-2xl group"
               >
-                {/* Rotating Border Animation */}
                 <div
                   className="absolute -inset-2 rounded-2xl animate-spin opacity-70"
                   style={{
@@ -173,71 +197,11 @@ const Investment = () => {
                 ></div>
                 <div className="absolute inset-0.5 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 z-1"></div>
 
-                {/* Animated Gradient Circles Inside */}
-                {/* Top Left - Blue & Green Mix */}
-                <div
-                  className="absolute -top-6 -left-6 w-20 h-20 rounded-full z-10"
-                  style={{
-                    background:
-                      "linear-gradient(45deg, #3b82f6, #10b981, #3b82f6)",
-                    filter: "blur(8px)",
-                    opacity: "0.7",
-                  }}
-                ></div>
-
-                {/* Bottom Right - Red & Indigo Mix */}
-                <div
-                  className="absolute -bottom-6 -right-6 w-16 h-16 rounded-full z-10"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #ef4444, #8b5cf6, #ef4444)",
-                    filter: "blur(10px)",
-                    opacity: "0.5",
-                  }}
-                ></div>
-
-                {/* Top Right - All Colors Mix */}
-                <div
-                  className="absolute top-1/2 -right-8 w-16 h-16 rounded-full z-10"
-                  style={{
-                    background:
-                      "linear-gradient(225deg, #3b82f6, #10b981, #ef4444, #8b5cf6)",
-                    filter: "blur(8px)",
-                    opacity: "0.4",
-                  }}
-                ></div>
-
-                {/* Bottom Left - Another Mix */}
-                <div
-                  className="absolute -bottom-4 -left-4 w-12 h-12 rounded-full z-10"
-                  style={{
-                    background:
-                      "linear-gradient(315deg, #10b981, #8b5cf6, #3b82f6)",
-                    filter: "blur(6px)",
-                    opacity: "0.3",
-                  }}
-                ></div>
-
-                {/* Center - Floating Circle */}
-                <div
-                  className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 rounded-full z-10"
-                  style={{
-                    background:
-                      "linear-gradient(180deg, #7d9efb, #a83bf8, #ff6b6b)",
-                    filter: "blur(12px)",
-                    opacity: "0.2",
-                    animation: "float 6s ease-in-out infinite",
-                  }}
-                ></div>
-
-                {/* Content */}
                 <div className="relative z-20">
                   <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-                    {/* Left Section - Plan Info */}
                     <div className="flex-1">
                       <div className="flex items-center gap-4 mb-4">
                         <div className="relative">
-                          {/* Outer Rotating Border */}
                           <div
                             className="absolute -inset-1 rounded-full animate-spin opacity-90"
                             style={{
@@ -247,8 +211,6 @@ const Investment = () => {
                               zIndex: 0,
                             }}
                           ></div>
-
-                          {/* Image Container */}
                           <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-white/30 bg-gray-800 backdrop-blur-sm z-20">
                             <Image
                               src={plan.image}
@@ -270,7 +232,6 @@ const Investment = () => {
                         </div>
                       </div>
 
-                      {/* Investment Range */}
                       <div className="grid grid-cols-2 gap-4 mb-4">
                         <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 backdrop-blur-sm rounded-xl p-4 border border-blue-400/30">
                           <div className="text-blue-200 text-sm mb-1">
@@ -290,7 +251,6 @@ const Investment = () => {
                         </div>
                       </div>
 
-                      {/* Profit Info */}
                       <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-sm rounded-xl p-4 border border-purple-400/30 mb-4">
                         <div className="text-purple-200 text-sm mb-1">
                           Daily Profit
@@ -303,7 +263,6 @@ const Investment = () => {
                         </div>
                       </div>
 
-                      {/* Features */}
                       <div className="flex flex-wrap gap-2">
                         {plan.features.map((feature, index) => (
                           <span
@@ -316,7 +275,6 @@ const Investment = () => {
                       </div>
                     </div>
 
-                    {/* Right Section - Action Button */}
                     <div className="lg:w-48 w-full">
                       <button
                         onClick={() => handleStakeNow(plan)}
@@ -332,7 +290,7 @@ const Investment = () => {
             ))}
           </div>
 
-          {/* Stats Overview - Using map from variable */}
+          {/* Stats Overview */}
           <div className="grid grid-cols-2 gap-3">
             {statsData.map((stat) => (
               <div
@@ -350,18 +308,15 @@ const Investment = () => {
         </div>
       </div>
 
-      {/* Premium Modal */}
+      {/* Modal */}
       {selectedPlan && (
         <>
-          {/* Backdrop */}
           <div
             className="fixed inset-0 bg-black/60 backdrop-blur-lg z-40"
             onClick={handleCloseModal}
           />
 
-          {/* Modal */}
           <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-b from-gray-900 to-gray-800 rounded-t-3xl animate-slide-up shadow-2xl z-50 max-h-[85vh] overflow-y-auto border-t border-white/20">
-            {/* Modal Header */}
             <div className="bg-gradient-to-r from-blue-500 to-purple-500 py-8 px-6 rounded-t-3xl">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
@@ -369,8 +324,8 @@ const Investment = () => {
                     <Image
                       src={selectedPlan.image}
                       alt={selectedPlan.name}
-                      width={80} // w-20 = 5rem = 80px
-                      height={80} // h-20 = 5rem = 80px
+                      width={80}
+                      height={80}
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -392,10 +347,8 @@ const Investment = () => {
               </div>
             </div>
 
-            {/* Modal Content */}
             <div className="p-6">
               <form onSubmit={handleSubmit}>
-                {/* Investment Range */}
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 backdrop-blur-sm rounded-xl p-4 border border-blue-400/30">
                     <div className="text-blue-200 text-sm mb-1">Minimum</div>
@@ -411,7 +364,6 @@ const Investment = () => {
                   </div>
                 </div>
 
-                {/* Amount Input */}
                 <div className="relative mb-6">
                   <div className="text-white text-lg font-semibold mb-4 flex items-center gap-2">
                     <FaDollarSign className="text-green-400" />
@@ -435,7 +387,6 @@ const Investment = () => {
                   </div>
                 </div>
 
-                {/* Profit Calculation */}
                 {showProfitRange && (
                   <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-sm rounded-xl p-5 border border-green-400/30 mb-6">
                     <div className="text-green-300 text-lg font-bold mb-3 text-center">
@@ -478,7 +429,6 @@ const Investment = () => {
                   </div>
                 )}
 
-                {/* Submit Button */}
                 <button
                   type="submit"
                   className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 text-white py-4 px-6 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-2xl flex items-center justify-center gap-2"
