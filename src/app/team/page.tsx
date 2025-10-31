@@ -129,16 +129,22 @@ const Team = () => {
       icon: <FaUsers className="text-blue-400" />,
     },
     {
-      id: 3,
+      id: 2,
       value: `${loading ? "..." : dashboard.activeUsers ?? 0} Users`,
       label: "Active With $50+",
       icon: <FaUserCheck className="text-purple-400" />,
     },
     {
-      id: 4,
+      id: 3,
       value: loading ? "..." : `Level ${dashboard.level ?? 0}`,
       label: "Invest Levels",
       icon: <FaLayerGroup className="text-yellow-400" />,
+    },
+     {
+      id: 4,
+      value: "$8585",
+      label: "Total Business",
+      icon: <FaChartLine className="text-green-400" />,
     },
   ];
 

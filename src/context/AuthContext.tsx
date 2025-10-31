@@ -389,7 +389,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   // Check Password Strength
   const checkPasswordStrength = (password: string): void => {
     setPasswordCriteria({
-      length: password.length >= 8,
+      length: password.length >= 6,
       uppercase: /[A-Z]/.test(password),
       lowercase: /[a-z]/.test(password),
       number: /[0-9]/.test(password),

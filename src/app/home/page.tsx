@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import BalanceCard from "@/components/BalanceCard";
-import BasicPlan from "@/components/BasicPlan";
-import IconGridNavigation from "@/components/IconGridNavigation";
-import InvestmentInfo from "@/components/InvestmentInfo";
-import { useBalance } from "@/context/BalanceContext";
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import BalanceCard from '@/components/BalanceCard';
+import BasicPlan from '@/components/BasicPlan';
+import IconGridNavigation from '@/components/IconGridNavigation';
+import InvestmentInfo from '@/components/InvestmentInfo';
+import { useBalance } from '@/context/BalanceContext';
 
 type DashboardData = {
   level?: number;
@@ -18,11 +18,16 @@ type DashboardData = {
   otherPayments?: number;
 };
 
-export default function HomePage() {
+function HomePage() {
   const router = useRouter();
-  const { balance: contextBalance, setBalance: setContextBalance } = useBalance();
+  const { balance: contextBalance, setBalance: setContextBalance } =
+    useBalance();
 
-  const [user, setUser] = useState<{ name?: string; email?: string; wallet?: string } | null>(null);
+  const [user, setUser] = useState<{
+    name?: string;
+    email?: string;
+    wallet?: string;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [dashboard, setDashboard] = useState<DashboardData>({});
   const [balance, setBalance] = useState<number>(0);
@@ -32,24 +37,28 @@ export default function HomePage() {
 
   // Fetch user & dashboard data
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const userEmail = localStorage.getItem("userEmail");
-    const userName = localStorage.getItem("userName");
-    const userWallet = localStorage.getItem("userWallet");
-    const userId = localStorage.getItem("userId");
+    const token = localStorage.getItem('token');
+    const userEmail = localStorage.getItem('userEmail');
+    const userName = localStorage.getItem('userName');
+    const userWallet = localStorage.getItem('userWallet');
+    const userId = localStorage.getItem('userId');
 
     if (!token) {
-      router.replace("/login");
+      router.replace('/login');
       return;
     }
 
-    setUser({ name: userName || "User", email: userEmail || "", wallet: userWallet || "" });
+    setUser({
+      name: userName || 'User',
+      email: userEmail || '',
+      wallet: userWallet || '',
+    });
 
     // Fetch dashboard info
     if (userId) {
       fetch(`/api/user/dashboard?userId=${userId}`)
-        .then(res => res.json())
-        .then(data => {
+        .then((res) => res.json())
+        .then((data) => {
           setDashboard(data);
           const mainBalance = data.wallet ?? 0;
           setBalance(mainBalance);
@@ -84,9 +93,9 @@ export default function HomePage() {
       style={{
         backgroundImage:
           "url('https://i.pinimg.com/736x/21/e7/a7/21e7a74605dc7bc6b548b7ecb00cf900.jpg')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
       }}
     >
       <div className="absolute inset-0 bg-black/70"></div>
@@ -95,7 +104,7 @@ export default function HomePage() {
         {/* Main Content */}
         <div className="space-y-4">
           <BalanceCard balance={totalBalance} />
-          <InvestmentInfo userEmail={user?.email ?? ""} />
+          <InvestmentInfo userEmail={user?.email ?? ''} />
           <IconGridNavigation />
           <BasicPlan />
         </div>
@@ -103,3 +112,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+export default HomePage;

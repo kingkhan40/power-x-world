@@ -35,9 +35,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Check password length
-    if (newPassword.length < 8) {
+    if (newPassword.length < 6) {
       return NextResponse.json(
-        { success: false, message: "New password must be at least 8 characters long" },
+        { success: false, message: "New password must be at least 6 characters long" },
         { status: 400 }
       );
     }
