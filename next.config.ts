@@ -16,12 +16,11 @@ const nextConfig: NextConfig = {
   },
 
   webpack: (config) => {
-    // Ensure existing fallbacks are preserved
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      // Alias @react-native-async-storage/async-storage to a shim
+    // Prevent MetaMask async-storage issue on web builds
+    config.resolve.alias = {
+      ...config.resolve.alias,
       "@react-native-async-storage/async-storage": path.resolve(
-        "./src/utils/asyncStorageShim.ts"
+        "./src/utils/mockAsyncStorage.ts"
       ),
     };
 
