@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MdMenu, MdClose } from 'react-icons/md';
 import { useRouter, usePathname } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 
 interface MenuItem {
   name: string;
@@ -12,17 +13,16 @@ interface MenuItem {
 const Sidebar = () => {
   const router = useRouter();
   const pathname = usePathname();
+  const { user, logout, fetchUserProfile } = useAuth(); // ✅ Add fetchUserProfile
 
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(pathname === '/home');
-  const [userName, setUserName] = useState<string>('Jobi');
 
-  // Fetch username from localStorage
+  // Auto-fetch profile when sidebar opens
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedName = localStorage.getItem('userName');
-      setUserName(storedName || 'Jobi');
+    if (isMenuOpen && user?.userId) {
+      fetchUserProfile();
     }
-  }, []);
+  }, [isMenuOpen, user?.userId]);
 
   useEffect(() => {
     if (pathname === '/home') {
@@ -54,9 +54,7 @@ const Sidebar = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userName');
-    router.push('/login');
+    logout();
     setIsMenuOpen(false);
   };
 
@@ -79,19 +77,31 @@ const Sidebar = () => {
           }}
         ></div>
 
-        {/* Left Section — Logo only */}
-        <div
-          onClick={handleLogoClick}
-          className="flex flex-col cursor-pointer"
-        >
-          <h3 className="lg:text-3xl text-lg font-medium tracking-wider text-white font-mono">
-            {userName}
-          </h3>
-          <p className="md:text-xs transition-colors text-[13px] text-gray-200 duration-300">
-            PowerX International Platform
-          </p>
+        {/* Left Section — Logo with Profile */}
+        <div onClick={handleLogoClick} className="flex items-center gap-3 cursor-pointer">
+          {/* Profile Picture */}
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center border-2 border-white/30 shadow-lg overflow-hidden">
+            {user?.profilePic ? (
+              <img src={user.profilePic} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-white font-bold text-sm">
+                {user?.userName?.charAt(0).toUpperCase() || 'U'}
+              </span>
+            )}
+          </div>
+          
+          {/* User Info */}
+          <div className="flex flex-col">
+            <h3 className="lg:text-xl text-lg font-medium tracking-wider text-white font-mono">
+              {user?.userName || 'User'}
+            </h3>
+            <p className="md:text-xs transition-colors text-[10px] text-gray-200 duration-300">
+              PowerX International
+            </p>
+          </div>
         </div>
 
+        {/* Rest of the sidebar code remains the same */}
         {/* Mobile Menu Button */}
         <motion.div
           className="fixed bottom-4 right-2 z-50 cursor-pointer"
@@ -139,6 +149,35 @@ const Sidebar = () => {
                     }}
                   ></div>
                 </div>
+
+                {/* User Info Section */}
+                {user && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-3 p-2 bg-gray-800/50 rounded-lg"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center border border-white/30 overflow-hidden">
+                        {user.profilePic ? (
+                          <img src={user.profilePic} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-white text-xs font-bold">
+                            {user.userName?.charAt(0).toUpperCase() || 'U'}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white text-sm font-semibold truncate">
+                          {user.userName}
+                        </p>
+                        <p className="text-gray-400 text-xs truncate">
+                          {user.userEmail}
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
 
                 <div className="space-y-0.5">
                   {menuItems.map((item, index) => (

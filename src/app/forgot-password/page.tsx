@@ -2,16 +2,33 @@
 
 import { FaArrowLeft } from "react-icons/fa6";
 import InputComponents from "@/components/UI/InputComponents";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from '@/context/AuthContext'; // ✅ Import AuthContext
 
 const ForgotPassword = () => {
+  const { 
+    sendOtp, 
+    resetPassword, 
+    forgotPasswordLoading, 
+    forgotPasswordMessage, 
+    otpSent, 
+    resetPasswordSuccess,
+    clearForgotPasswordState 
+  } = useAuth(); // ✅ Use AuthContext
+  
   const [email, setEmail] = useState<string>("");
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
   const [newPassword, setNewPassword] = useState<string>("");
-  const [otpSent, setOtpSent] = useState<boolean>(false);
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
   const router = useRouter();
+
+  // Clear state when component unmounts
+  useEffect(() => {
+    return () => {
+      clearForgotPasswordState();
+    };
+  }, []);
 
   // Initialize refs array for OTP boxes
   if (otpRefs.current.length !== otp.length) {
@@ -21,30 +38,7 @@ const ForgotPassword = () => {
   // ✅ Step 1: Send OTP to Email
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!email || !/\S+@\S+\.\S+/.test(email)) {
-      alert("Please enter a valid email address");
-      return;
-    }
-
-    try {
-      const res = await fetch("/api/auth/forgot-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        alert("✅ OTP sent to your email (check spam if not found)");
-        setOtpSent(true);
-      } else {
-        alert(data.error || "Failed to send OTP");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Something went wrong!");
-    }
+    await sendOtp(email);
   };
 
   // ✅ Step 2: Handle OTP Input
@@ -79,36 +73,8 @@ const ForgotPassword = () => {
   // ✅ Step 3: Verify OTP + Change Password
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     const enteredOtp = otp.join("");
-    if (enteredOtp.length !== 6) {
-      alert("Please enter the complete 6-digit OTP");
-      return;
-    }
-
-    if (!newPassword) {
-      alert("Please enter a new password");
-      return;
-    }
-
-    try {
-      const res = await fetch("/api/auth/reset-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp: enteredOtp, newPassword }),
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        alert("🎉 Password reset successful!");
-        router.push("/login");
-      } else {
-        alert(data.error || "Failed to reset password");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Server error");
-    }
+    await resetPassword(email, enteredOtp, newPassword);
   };
 
   const handleBack = () => {
@@ -135,6 +101,22 @@ const ForgotPassword = () => {
             Enter your account email address to reset your password.
           </p>
 
+          {/* Message Display */}
+          {forgotPasswordMessage.text && (
+            <div
+              className={`p-4 rounded-xl border backdrop-blur-sm mb-4 ${
+                forgotPasswordMessage.type === "success"
+                  ? "bg-green-500/20 border-green-400/30 text-green-400"
+                  : "bg-red-500/20 border-red-400/30 text-red-400"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                {forgotPasswordMessage.type === "success" ? "✅" : "❌"}
+                {forgotPasswordMessage.text}
+              </div>
+            </div>
+          )}
+
           {/* Email Input Form */}
           {!otpSent && (
             <form onSubmit={handleEmailSubmit} className="space-y-6 mb-6">
@@ -149,15 +131,16 @@ const ForgotPassword = () => {
 
               <button
                 type="submit"
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 via-green-700 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
+                disabled={forgotPasswordLoading}
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 via-green-700 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                Send OTP
+                {forgotPasswordLoading ? "Sending OTP..." : "Send OTP"}
               </button>
             </form>
           )}
 
           {/* OTP + Password Form */}
-          {otpSent && (
+          {otpSent && !resetPasswordSuccess && (
             <form onSubmit={handlePasswordSubmit} className="space-y-6">
               <div className="flex justify-center space-x-2 mb-4">
                 {otp.map((digit, index) => (
@@ -189,9 +172,10 @@ const ForgotPassword = () => {
 
               <button
                 type="submit"
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 via-green-700 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
+                disabled={forgotPasswordLoading}
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 via-green-700 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                Reset Password
+                {forgotPasswordLoading ? "Resetting Password..." : "Reset Password"}
               </button>
             </form>
           )}

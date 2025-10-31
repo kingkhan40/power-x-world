@@ -1,6 +1,6 @@
-  "use client";
+"use client";
 
-import React, { useState, ChangeEvent, FormEvent } from "react";
+import React, { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import {
   FaLock,
   FaEye,
@@ -8,27 +8,19 @@ import {
   FaCheck,
   FaTimes,
 } from "react-icons/fa";
-
-interface PasswordCriteria {
-  length: boolean;
-  uppercase: boolean;
-  lowercase: boolean;
-  number: boolean;
-  special: boolean;
-}
-
-interface Message {
-  type: "success" | "error" | "";
-  text: string;
-}
-
-interface PasswordStrength {
-  strength: string;
-  color: string;
-  width: string;
-}
+import { useAuth } from '@/context/AuthContext'; // ✅ Import AuthContext
 
 const ChangePassword = () => {
+  const { 
+    changePassword, 
+    changePasswordLoading, 
+    changePasswordMessage, 
+    passwordCriteria,
+    passwordStrength,
+    checkPasswordStrength,
+    clearChangePasswordState 
+  } = useAuth(); // ✅ Use AuthContext
+  
   const [email, setEmail] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -36,125 +28,30 @@ const ChangePassword = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState<Message>({ type: "", text: "" });
 
-  const [passwordCriteria, setPasswordCriteria] = useState<PasswordCriteria>({
-    length: false,
-    uppercase: false,
-    lowercase: false,
-    number: false,
-    special: false,
-  });
-
-  const checkPasswordStrength = (password: string) => {
-    setPasswordCriteria({
-      length: password.length >= 8,
-      uppercase: /[A-Z]/.test(password),
-      lowercase: /[a-z]/.test(password),
-      number: /[0-9]/.test(password),
-      special: /[!@#$%^&*(),.?":{}|<>]/.test(password),
-    });
-  };
+  // Clear state when component unmounts
+  useEffect(() => {
+    return () => {
+      clearChangePasswordState();
+    };
+  }, []);
 
   const handleNewPasswordChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setNewPassword(value);
-    checkPasswordStrength(value);
+    checkPasswordStrength(value); // ✅ Use context function
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    setMessage({ type: "", text: "" });
-
-    if (!email || !currentPassword || !newPassword || !confirmPassword) {
-      setMessage({ type: "error", text: "Please fill in all fields" });
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      setMessage({ type: "error", text: "New passwords do not match" });
-      setIsSubmitting(false);
-      return;
-    }
-
-    try {
-      // 👇 Make sure API path matches your backend route
-      const res = await fetch("/api/change-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, currentPassword, newPassword }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        setMessage({
-          type: "error",
-          text: data.message || "Password update failed",
-        });
-        setIsSubmitting(false);
-        return;
-      }
-
-      setMessage({
-        type: "success",
-        text: "✅ Password changed successfully!",
-      });
-
-      // Clear form
-      setEmail("");
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-      setPasswordCriteria({
-        length: false,
-        uppercase: false,
-        lowercase: false,
-        number: false,
-        special: false,
-      });
-    } catch (err) {
-      console.error("Error:", err);
-      setMessage({
-        type: "error",
-        text: "❌ Something went wrong. Try again later.",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    
+    await changePassword({
+      email,
+      currentPassword,
+      newPassword,
+      confirmPassword
+    });
   };
-
-  const getPasswordStrength = (): PasswordStrength => {
-    const criteriaMet = Object.values(passwordCriteria).filter(Boolean).length;
-    if (criteriaMet === 5)
-      return {
-        strength: "Strong",
-        color: "from-green-500 to-emerald-500",
-        width: "100%",
-      };
-    if (criteriaMet >= 3)
-      return {
-        strength: "Good",
-        color: "from-blue-500 to-cyan-500",
-        width: "75%",
-      };
-    if (criteriaMet >= 2)
-      return {
-        strength: "Fair",
-        color: "from-yellow-500 to-orange-500",
-        width: "50%",
-      };
-    return {
-      strength: "Weak",
-      color: "from-red-500 to-pink-500",
-      width: "25%",
-    };
-  };
-
-  const passwordStrength = getPasswordStrength();
 
   return (
     <div
@@ -286,17 +183,17 @@ const ChangePassword = () => {
             </div>
 
             {/* Message */}
-            {message.text && (
+            {changePasswordMessage.text && (
               <div
                 className={`p-4 rounded-xl border backdrop-blur-sm ${
-                  message.type === "success"
+                  changePasswordMessage.type === "success"
                     ? "bg-green-500/20 border-green-400/30 text-green-400"
                     : "bg-red-500/20 border-red-400/30 text-red-400"
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  {message.type === "success" ? <FaCheck /> : <FaTimes />}
-                  {message.text}
+                  {changePasswordMessage.type === "success" ? <FaCheck /> : <FaTimes />}
+                  {changePasswordMessage.text}
                 </div>
               </div>
             )}
@@ -304,10 +201,10 @@ const ChangePassword = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 text-white py-4 px-6 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-2"
+              disabled={changePasswordLoading}
+              className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 text-white py-4 px-6 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? (
+              {changePasswordLoading ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   Updating Password...

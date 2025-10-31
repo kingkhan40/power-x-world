@@ -5,13 +5,12 @@ import {
   FaUser,
   FaEnvelope,
   FaComment,
-  FaPhone,
-  FaMapMarkerAlt,
   FaClock,
   FaPaperPlane,
   FaCheck,
   FaTimes,
 } from "react-icons/fa";
+import { useAuth } from '@/context/AuthContext'; // ✅ Import AuthContext
 
 interface FormData {
   name: string;
@@ -19,32 +18,14 @@ interface FormData {
   message: string;
 }
 
-interface Message {
-  type: "success" | "error" | "";
-  text: string;
-}
-
-interface ContactInfo {
-  icon: React.ReactNode;
-  title: string;
-  details: string;
-  description: string;
-  color: string;
-}
-
-interface FAQItem {
-  question: string;
-  answer: string;
-}
-
 const ContactUs = () => {
+  const { sendContactMessage, contactLoading, contactMessage } = useAuth(); // ✅ Use AuthContext
+  
   const [formData, setFormData] = useState<FormData>({
     name: "",
     email: "",
     message: "",
   });
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [message, setMessage] = useState<Message>({ type: "", text: "" });
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -55,106 +36,17 @@ const ContactUs = () => {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    setMessage({ type: "", text: "" });
-
-    // Validation
-    if (!formData.name || !formData.email || !formData.message) {
-      setMessage({ type: "error", text: "Please fill in all fields" });
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      setMessage({ type: "error", text: "Please enter a valid email address" });
-      setIsSubmitting(false);
-      return;
-    }
-
+    
     try {
-      const response = await fetch("/api/send-email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        setMessage({
-          type: "success",
-          text: "Thank you! Your message has been sent successfully. We will get back to you soon.",
-        });
+      await sendContactMessage(formData);
+      // ✅ Clear form only on success
+      if (contactMessage.type === "success") {
         setFormData({ name: "", email: "", message: "" });
-      } else {
-        setMessage({
-          type: "error",
-          text: "Failed to send the message. Please try again later.",
-        });
       }
     } catch (error) {
-      setMessage({
-        type: "error",
-        text: "An error occurred. Please try again later.",
-      });
-    } finally {
-      setIsSubmitting(false);
+      // Error handled in context
     }
   };
-
-  const contactInfo: ContactInfo[] = [
-    {
-      icon: <FaPhone className="text-2xl" />,
-      title: "Phone",
-      details: "+1 (555) 123-4567",
-      description: "Mon to Fri 9am to 6pm",
-      color: "from-blue-500 to-cyan-500",
-    },
-    {
-      icon: <FaEnvelope className="text-2xl" />,
-      title: "Email",
-      details: "support@cryptowealth.com",
-      description: "Send us your query anytime!",
-      color: "from-purple-500 to-pink-500",
-    },
-    {
-      icon: <FaMapMarkerAlt className="text-2xl" />,
-      title: "Address",
-      details: "123 Crypto Street, Digital City",
-      description: "DC 10001, United States",
-      color: "from-green-500 to-emerald-500",
-    },
-    {
-      icon: <FaClock className="text-2xl" />,
-      title: "Working Hours",
-      details: "24/7 Customer Support",
-      description: "We're here to help you anytime",
-      color: "from-yellow-500 to-orange-500",
-    },
-  ];
-
-  const faqItems: FAQItem[] = [
-    {
-      question: "How quickly do you respond to inquiries?",
-      answer:
-        "We typically respond within 1-2 hours during business hours and within 24 hours maximum.",
-    },
-    {
-      question: "Do you provide 24/7 customer support?",
-      answer:
-        "Yes, we have round-the-clock customer support for all our premium members.",
-    },
-    {
-      question: "What information should I include in my message?",
-      answer:
-        "Please include your account details, specific issue, and any relevant transaction IDs for faster resolution.",
-    },
-    {
-      question: "Can I contact you for investment advice?",
-      answer:
-        "While we provide platform support, for personalized investment advice we recommend consulting with our financial experts.",
-    },
-  ];
 
   return (
     <div
@@ -284,17 +176,17 @@ const ContactUs = () => {
               </div>
 
               {/* Message Display */}
-              {message.text && (
+              {contactMessage.text && (
                 <div
                   className={`p-4 rounded-xl border backdrop-blur-sm ${
-                    message.type === "success"
+                    contactMessage.type === "success"
                       ? "bg-green-500/20 border-green-400/30 text-green-400"
                       : "bg-red-500/20 border-red-400/30 text-red-400"
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    {message.type === "success" ? <FaCheck /> : <FaTimes />}
-                    {message.text}
+                    {contactMessage.type === "success" ? <FaCheck /> : <FaTimes />}
+                    {contactMessage.text}
                   </div>
                 </div>
               )}
@@ -302,10 +194,10 @@ const ContactUs = () => {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={contactLoading}
                 className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-400 hover:to-purple-400 disabled:from-gray-500 disabled:to-gray-600 text-white py-4 px-6 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 disabled:scale-100 shadow-2xl flex items-center justify-center gap-2 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? (
+                {contactLoading ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     Sending Message...
