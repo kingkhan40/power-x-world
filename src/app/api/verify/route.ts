@@ -1,73 +1,44 @@
-// /app/api/verify/route.ts
-import { MongoClient } from "mongodb";
 import { NextResponse } from "next/server";
+import { connectDB } from "@/lib/db";
+import User from "@/models/User";
+import VerificationCode from "@/models/VerificationCode";
 
-const client = new MongoClient(process.env.MONGODB_URI || "");
-
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    const { email, code } = await request.json();
+    await connectDB();
+    const { email, code } = await req.json();
 
-    // Validate input
-    if (!email || !code) {
-      return NextResponse.json(
-        { message: "Email and code are required" },
-        { status: 400 }
-      );
-    }
+    if (!email || !code)
+      return NextResponse.json({ success: false, message: "Email and code required" }, { status: 400 });
 
-    await client.connect();
-    const db = client.db("your_database");
-    const codesCollection = db.collection("verification_codes");
-    const pendingUsersCollection = db.collection("pending_users");
-    const usersCollection = db.collection("users");
+    const record = await VerificationCode.findOne({ email, code });
+    if (!record)
+      return NextResponse.json({ success: false, message: "Invalid or expired code" }, { status: 400 });
 
-    // Find verification code
-    const verification = await codesCollection.findOne({ email, code });
-    if (!verification) {
-      return NextResponse.json(
-        { message: "Invalid or expired code" },
-        { status: 400 }
-      );
-    }
+    if (record.expiresAt < new Date())
+      return NextResponse.json({ success: false, message: "Code expired" }, { status: 400 });
 
-    // Check if code is expired
-    if (new Date() > verification.expiresAt) {
-      await codesCollection.deleteOne({ email, code });
-      return NextResponse.json({ message: "Code expired" }, { status: 400 });
-    }
+    // Verify user
+    const user = await User.findOneAndUpdate(
+      { email },
+      { isVerified: true },
+      { new: true }
+    );
 
-    // Find pending user
-    const pendingUser = await pendingUsersCollection.findOne({ email });
-    if (!pendingUser) {
-      return NextResponse.json(
-        { message: "No pending user found" },
-        { status: 400 }
-      );
-    }
+    if (!user)
+      return NextResponse.json({ success: false, message: "User not found" }, { status: 404 });
 
-    // Move user to main users collection
-    await usersCollection.insertOne({
-      name: pendingUser.name,
-      email: pendingUser.email,
-      password: pendingUser.password,
-      referralCode: pendingUser.referralCode || null,
-      createdAt: new Date(),
-    });
-
-    // Clean up
-    await codesCollection.deleteOne({ email, code });
-    await pendingUsersCollection.deleteOne({ email });
+    // Remove used code
+    await VerificationCode.deleteOne({ _id: record._id });
 
     return NextResponse.json({
       success: true,
-      message: "Email verified and account created",
-      user: { name: pendingUser.name, email: pendingUser.email },
+      message: "Email verified successfully!",
+      user,
     });
-  } catch (error) {
-    console.error("Verification error:", error);
-    return NextResponse.json({ message: "Server error" }, { status: 500 });
-  } finally {
-    await client.close();
+  } catch (err) {
+    console.error("Verify Error:", err);
+    return NextResponse.json({ success: false, message: "Error verifying user" }, { status: 500 });
   }
 }
+        

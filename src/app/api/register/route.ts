@@ -1,152 +1,120 @@
 // app/api/register/route.ts
 import { NextResponse } from "next/server";
-import { MongoClient } from "mongodb";
-import nodemailer from "nodemailer";
 import bcrypt from "bcryptjs";
+import nodemailer from "nodemailer";
+import { connectDB } from "@/lib/db";
+import User from "@/models/User";
+import VerificationCode from "@/models/VerificationCode";
 
-const MONGODB_URI = process.env.MONGODB_URI || "";
-const DATABASE_NAME = "powerxworld";
-
-let cachedClient: MongoClient | null = null;
-let cachedDb: any = null;
-
-async function connectDB() {
-  if (cachedClient && cachedDb) return { client: cachedClient, db: cachedDb };
-
-  try {
-    const client = new MongoClient(MONGODB_URI);
-    await client.connect();
-    const db = client.db(DATABASE_NAME);
-
-    cachedClient = client;
-    cachedDb = db;
-    return { client, db };
-  } catch (error) {
-    console.error("Database connection error:", error);
-    throw new Error("Failed to connect to database");
-  }
-}
-
-// Nodemailer transporter with better error handling
-const createTransporter = () => {
-  return nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
-};
-
-// POST /api/register
 export async function POST(req: Request) {
   try {
-    const { name, email, password, referralCode } = await req.json();
+    await connectDB();
 
-    console.log("Registration attempt:", { name, email, referralCode });
+    const { name, email, password, referralCode: referralCodeFromClient } = await req.json();
 
     if (!name || !email || !password) {
-      return NextResponse.json({ message: "All fields are required" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: "All fields are required" },
+        { status: 400 }
+      );
     }
 
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json({ message: "Invalid email format" }, { status: 400 });
-    }
-
-    // Password validation
-    if (password.length < 6) {
-      return NextResponse.json({ message: "Password must be at least 6 characters" }, { status: 400 });
-    }
-
-    const { db } = await connectDB();
-    const usersCollection = db.collection("users");
-    const codesCollection = db.collection("verification_codes");
-    const pendingUsersCollection = db.collection("pending_users");
-
-    console.log("Database connected, checking existing users...");
-
-    // Check if email already exists in users or pending_users
-    const existingUser = await usersCollection.findOne({ email });
-    const pendingUser = await pendingUsersCollection.findOne({ email });
-
+    // ✅ Check if user already exists
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return NextResponse.json({ message: "Email already registered" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: "Email already registered" },
+        { status: 400 }
+      );
     }
 
-    if (pendingUser) {
-      return NextResponse.json({ message: "Verification already sent to this email" }, { status: 400 });
+    // ✅ Find the user who referred (if any)
+    let referredByUser = null;
+    if (referralCodeFromClient) {
+      referredByUser = await User.findOne({
+        referralCode: { $regex: new RegExp(`^${referralCodeFromClient}$`, "i") },
+      });
     }
 
-    // Generate verification code
+    // ✅ Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // ✅ Generate new referral code like saad-0ya6tB
+    const cleanedName = name.trim().toLowerCase().replace(/\s+/g, "-");
+    const randomPart = Math.random().toString(36).substring(2, 8);
+    const newReferralCode = `${cleanedName}-${randomPart}`;
+
+    // ✅ Create new unverified user
+    const newUser = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      referralCode: newReferralCode,
+      referredBy: referredByUser ? referredByUser._id : null,
+      team: referredByUser ? referredByUser.name : null,
+      isVerified: false,
+      wallet: 0,
+      totalTeam: 0,
+      teamMembers: [],
+    });
+
+    // ✅ If referred, add new user to referrer’s team
+    if (referredByUser) {
+      await User.findByIdAndUpdate(referredByUser._id, {
+        $push: { teamMembers: newUser._id },
+        $inc: { totalTeam: 1 },
+      });
+      console.log(`✅ ${newUser.name} added to ${referredByUser.name}'s team`);
+    }
+
+    // ✅ Generate 6-digit email verification code
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
     console.log("Generated verification code for:", email);
 
-    // Store verification code
-    await codesCollection.insertOne({
+    await VerificationCode.create({
       email,
       code: verificationCode,
-      expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
-      createdAt: new Date(),
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000), // 10 min
+    });
+
+    // ✅ Configure email (Gmail)
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
     });
 
     console.log("Verification code stored");
 
-    // Send email
-    try {
-      const transporter = createTransporter();
-      
-      await transporter.sendMail({
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: "Verify Your Email - PowerX World",
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #333;">Welcome to PowerX World!</h2>
-            <p>Your verification code is:</p>
-            <h1 style="background: #f4f4f4; padding: 20px; text-align: center; font-size: 32px; letter-spacing: 5px;">
-              ${verificationCode}
-            </h1>
-            <p>This code will expire in 10 minutes.</p>
-            <p>If you didn't request this, please ignore this email.</p>
-          </div>
-        `,
-      });
-      console.log("Verification email sent to:", email);
-    } catch (emailError) {
-      console.error("Email sending error:", emailError);
-      // Don't fail registration if email fails, just log it
-    }
-
-    // Store user temporarily
-    const hashedPassword = await bcrypt.hash(password, 12);
-    
-    await pendingUsersCollection.insertOne({
-      name: name.trim(),
-      email: email.toLowerCase(),
-      password: hashedPassword,
-      referralCode: referralCode || null,
-      createdAt: new Date(),
+    // ✅ Send verification mail
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Verify Your Email",
+      html: `
+        <div style="font-family: Arial, sans-serif;">
+          <h2>Welcome, ${name}!</h2>
+          <p>Your verification code is:</p>
+          <h3 style="color:#007bff;">${verificationCode}</h3>
+          <p>This code expires in 10 minutes.</p>
+        </div>
+      `,
     });
 
-    console.log("User stored in pending_users");
-
-    return NextResponse.json({ 
-      success: true, 
-      message: "Verification code sent to your email" 
-    }, { status: 200 });
-
-  } catch (error) {
-    console.error("Registration error:", error);
-    
-    // More specific error messages
-    if (error instanceof Error) {
-      if (error.message.includes("connect")) {
-        return NextResponse.json({ message: "Database connection failed" }, { status: 500 });
-      }
-    }
-    
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+    // ✅ Return success + user's own referral link
+    return NextResponse.json({
+      success: true,
+      message: "Verification code sent to your email",
+      referralLink: `https://www.powerxworld.uk/register?ref=${newReferralCode}`,
+    });
+  } catch (err) {
+    console.error("❌ Register Error:", err);
+    return NextResponse.json(
+      { success: false, message: "Error registering user" },
+      { status: 500 }
+    );
   }
 }
+ 
