@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     }
 
     await client.connect();
-    const db = client.db("your_database");
+    const db = client.db("powerxworld");
     const codesCollection = db.collection("verification_codes");
     const pendingUsersCollection = db.collection("pending_users");
     const usersCollection = db.collection("users");
