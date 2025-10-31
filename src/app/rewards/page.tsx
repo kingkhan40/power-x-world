@@ -6,7 +6,7 @@ import {
   FaGem,
   FaAward,
   FaMobile,
-  FaCar,
+  FaCar,                                                                                          
   FaMotorcycle,
   FaHome,
   FaLock,
