@@ -1,21 +1,21 @@
 'use client';
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
+  FaArrowDown,
+  FaArrowUp,
+  FaChartLine,
+  FaGift,
+  FaExchangeAlt,
   FaHistory,
-  FaMoneyBillWave,
   FaClock,
   FaCheck,
   FaTimes,
-  FaChartLine,
-  FaGift,
-  FaArrowUp,
-  FaArrowDown,
-  FaExchangeAlt,
+  FaMoneyBillWave,
 } from "react-icons/fa";
 
 interface Transaction {
-  id: number;
+  _id: string;
   transactionId: string;
   amount: number;
   type: "deposit" | "withdrawal" | "investment" | "reward" | "transfer";
@@ -36,118 +36,69 @@ interface Tab {
 }
 
 const TransactionsHistory = () => {
+  const [transactionsData, setTransactionsData] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
-  const [dateFilter, setDateFilter] = useState<string>("all");
 
-  // Transactions history data
-  const transactionsData: Transaction[] = [
-    {
-      id: 1,
-      transactionId: "TXN001234",
-      amount: 500.0,
-      type: "deposit",
-      method: "USDT",
-      date: "2024-01-15",
-      time: "14:30:45",
-      status: "completed",
-      wallet: "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
-      color: "from-green-500 to-emerald-500",
-      icon: <FaArrowDown className="text-white" />,
-    },
-    {
-      id: 2,
-      transactionId: "TXN001235",
-      amount: 150.0,
-      type: "withdrawal",
-      method: "USDT",
-      date: "2024-01-14",
-      time: "10:15:22",
-      status: "processing",
-      wallet: "CH9300762011623852957",
-      color: "from-blue-500 to-cyan-500",
-      icon: <FaArrowUp className="text-white" />,
-    },
-    {
-      id: 3,
-      transactionId: "TXN001236",
-      amount: 300.0,
-      type: "investment",
-      method: "USDT",
-      date: "2024-01-13",
-      time: "16:45:33",
-      status: "completed",
-      wallet: "Staking Plan #001",
-      color: "from-purple-500 to-pink-500",
-      icon: <FaChartLine className="text-white" />,
-    },
-    {
-      id: 4,
-      transactionId: "TXN001237",
-      amount: 75.5,
-      type: "reward",
-      method: "USDT",
-      date: "2024-01-12",
-      time: "09:20:15",
-      status: "completed",
-      wallet: "Reward System",
-      color: "from-yellow-500 to-orange-500",
-      icon: <FaGift className="text-white" />,
-    },
-    {
-      id: 5,
-      transactionId: "TXN001238",
-      amount: 200.0,
-      type: "withdrawal",
-      method: "USDT",
-      date: "2024-01-11",
-      time: "11:30:08",
-      status: "failed",
-      wallet: "TYVJvqLuW4BMvM2E4E1E1E1E1E1E1E1E1E1E1",
-      color: "from-red-500 to-pink-500",
-      icon: <FaArrowUp className="text-white" />,
-    },
-    {
-      id: 6,
-      transactionId: "TXN001239",
-      amount: 1000.0,
-      type: "deposit",
-      method: "USDT",
-      date: "2024-01-10",
-      time: "13:25:47",
-      status: "completed",
-      wallet: "0x742d35Cc6634C0532925a3b8D4B5A1F6B6C5D7E8",
-      color: "from-indigo-500 to-purple-500",
-      icon: <FaArrowDown className="text-white" />,
-    },
-    {
-      id: 7,
-      transactionId: "TXN001240",
-      amount: 250.0,
-      type: "transfer",
-      method: "USDT",
-      date: "2024-01-09",
-      time: "15:40:12",
-      status: "completed",
-      wallet: "User: John Doe",
-      color: "from-teal-500 to-cyan-500",
-      icon: <FaExchangeAlt className="text-white" />,
-    },
-    {
-      id: 8,
-      transactionId: "TXN001241",
-      amount: 50.0,
-      type: "reward",
-      method: "USDT",
-      date: "2024-01-08",
-      time: "08:15:33",
-      status: "completed",
-      wallet: "Referral System",
-      color: "from-yellow-500 to-amber-500",
-      icon: <FaGift className="text-white" />,
-    },
-  ];
+  // 🧭 Fetch data from API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch("/api/transactions");
+        const data = await res.json();
+        
+        // Transform API data to include UI properties
+        const transformedData = data.map((transaction: any) => ({
+          ...transaction,
+          color: getTransactionColor(transaction.type),
+          icon: getTransactionIcon(transaction.type),
+        }));
+        
+        setTransactionsData(transformedData);
+      } catch (err) {
+        console.error("Error fetching transactions:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // Helper functions to assign colors and icons based on transaction type
+  const getTransactionColor = (type: string): string => {
+    switch (type) {
+      case "deposit":
+        return "from-green-500 to-emerald-500";
+      case "withdrawal":
+        return "from-blue-500 to-cyan-500";
+      case "investment":
+        return "from-purple-500 to-pink-500";
+      case "reward":
+        return "from-yellow-500 to-orange-500";
+      case "transfer":
+        return "from-teal-500 to-cyan-500";
+      default:
+        return "from-gray-500 to-gray-600";
+    }
+  };
+
+  const getTransactionIcon = (type: string): JSX.Element => {
+    switch (type) {
+      case "deposit":
+        return <FaArrowDown className="text-white" />;
+      case "withdrawal":
+        return <FaArrowUp className="text-white" />;
+      case "investment":
+        return <FaChartLine className="text-white" />;
+      case "reward":
+        return <FaGift className="text-white" />;
+      case "transfer":
+        return <FaExchangeAlt className="text-white" />;
+      default:
+        return <FaHistory className="text-white" />;
+    }
+  };
 
   const tabs: Tab[] = [
     {
@@ -180,19 +131,32 @@ const TransactionsHistory = () => {
       icon: <FaGift />,
       count: transactionsData.filter((t) => t.type === "reward").length,
     },
+    {
+      id: "transfer",
+      label: "Transfers",
+      icon: <FaExchangeAlt />,
+      count: transactionsData.filter((t) => t.type === "transfer").length,
+    },
   ];
 
-  // Filter transactions based on active tab and filters
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen text-white">
+        Loading transactions...
+      </div>
+    );
+  }
+
+  // Filter transactions based on active tab and search
   const filteredTransactions = transactionsData.filter((transaction) => {
     const matchesTab = activeTab === "all" || transaction.type === activeTab;
-    const matchesType = typeFilter === "all" || transaction.type === typeFilter;
     const matchesSearch =
-      transaction.transactionId
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      transaction.method.toLowerCase().includes(searchTerm.toLowerCase());
+      searchTerm === "" ||
+      transaction.transactionId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      transaction.method.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      transaction.wallet.toLowerCase().includes(searchTerm.toLowerCase());
 
-    return matchesTab && matchesType && matchesSearch;
+    return matchesTab && matchesSearch;
   });
 
   const getStatusColor = (status: "completed" | "processing" | "failed"): string => {
@@ -273,6 +237,22 @@ const TransactionsHistory = () => {
           </p>
         </div>
 
+        {/* Search Bar */}
+        <div className="mb-6 flex justify-center">
+          <div className="relative w-full max-w-md">
+            <input
+              type="text"
+              placeholder="Search by Transaction ID, Method, or Wallet..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-4 py-3 pl-10 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/60 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            />
+            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60">
+              <FaHistory />
+            </div>
+          </div>
+        </div>
+
         {/* Main Content Card */}
         <div className="lg:p-6 p-3 rounded-2xl relative overflow-hidden bg-gray-900 border border-gray-800 shadow-2xl">
           {/* Rotating Border Animation */}
@@ -347,7 +327,7 @@ const TransactionsHistory = () => {
             <div className="space-y-3 lg:space-y-4">
               {filteredTransactions.map((transaction) => (
                 <div
-                  key={transaction.id}
+                  key={transaction._id}
                   className="p-4 lg:p-6 rounded-xl bg-gradient-to-r from-gray-800/50 to-gray-900/30 border border-white/20 backdrop-blur-sm hover:border-white/40 transition-all duration-300 group"
                 >
                   {/* Mobile Layout */}
@@ -475,6 +455,7 @@ const TransactionsHistory = () => {
                 </div>
               ))}
             </div>
+            
             {/* Empty State */}
             {filteredTransactions.length === 0 && (
               <div className="text-center py-8 lg:py-12">
