@@ -70,7 +70,7 @@ const ClientLayout = ({ children }: { children: React.ReactNode }) => {
 
   if (initialLoad || isLoading) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-transparent z-50">
+      <div className="">
         <Loader />
       </div>
     );

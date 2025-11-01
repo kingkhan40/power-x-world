@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState, useEffect, ChangeEvent } from "react";
+import { useState, useEffect, ChangeEvent } from 'react';
 import {
   FaCopy,
   FaCheck,
@@ -8,39 +8,41 @@ import {
   FaCoins,
   FaBolt,
   FaGem,
-} from "react-icons/fa";
+  FaArrowLeft,
+} from 'react-icons/fa';
 import {
   WagmiProvider,
   useAccount,
   useDisconnect,
   useWriteContract,
-} from "wagmi";
-import { bsc } from "wagmi/chains";
-import { createWeb3Modal, defaultWagmiConfig } from "@web3modal/wagmi/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { parseUnits } from "viem";
+} from 'wagmi';
+import { bsc } from 'wagmi/chains';
+import { createWeb3Modal, defaultWagmiConfig } from '@web3modal/wagmi/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { parseUnits } from 'viem';
+import { useRouter } from 'next/navigation';
 
-const projectId = "4ed88d6c567e9799d509e8050f3f73c4";
+const projectId = '4ed88d6c567e9799d509e8050f3f73c4';
 const chains = [bsc] as const;
 
 const wagmiConfig = defaultWagmiConfig({
   projectId,
   chains,
   metadata: {
-    name: "KRM Wallet",
+    name: 'KRM Wallet',
     description:
-      "Deposit USDT via MetaMask / TrustWallet / SafePal / TokenPocket",
-    url: "http://localhost:3000",
-    icons: ["https://yourwebsite.com/icon.png"],
+      'Deposit USDT via MetaMask / TrustWallet / SafePal / TokenPocket',
+    url: 'http://localhost:3000',
+    icons: ['https://yourwebsite.com/icon.png'],
   },
 });
 
-if (typeof window !== "undefined" && !(window as any).web3ModalInitialized) {
+if (typeof window !== 'undefined' && !(window as any).web3ModalInitialized) {
   createWeb3Modal({
     wagmiConfig,
     projectId,
     enableAnalytics: false,
-    themeMode: "dark",
+    themeMode: 'dark',
   });
   (window as any).web3ModalInitialized = true;
 }
@@ -48,22 +50,23 @@ if (typeof window !== "undefined" && !(window as any).web3ModalInitialized) {
 const queryClient = new QueryClient();
 
 function DepositInner() {
-  const [depositAmount, setDepositAmount] = useState("");
+  const [depositAmount, setDepositAmount] = useState('');
   const [copied, setCopied] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<string>("connectWallet");
+  const [activeTab, setActiveTab] = useState<string>('connectWallet');
+  const router = useRouter();
 
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
   const { writeContractAsync } = useWriteContract();
 
-  const adminWallet = "0x6E84f52A49F290833928e651a86FF64e5851f422";
+  const adminWallet = '0x6E84f52A49F290833928e651a86FF64e5851f422';
 
   // Auto switch to deposit tab when wallet connects
   useEffect(() => {
     if (isConnected) {
-      setActiveTab("deposit");
+      setActiveTab('deposit');
     }
   }, [isConnected]);
 
@@ -92,24 +95,24 @@ function DepositInner() {
   const netAmount = calculateNetAmount(depositAmount);
 
   const handleDeposit = async () => {
-    if (!isConnected) return alert("⚠️ Connect your wallet first!");
+    if (!isConnected) return alert('⚠️ Connect your wallet first!');
     if (!depositAmount || parseFloat(depositAmount) <= 0)
-      return alert("⚠️ Enter valid amount!");
+      return alert('⚠️ Enter valid amount!');
 
     try {
       setIsLoading(true);
 
-      const usdtContract = "0x55d398326f99059fF775485246999027B3197955";
+      const usdtContract = '0x55d398326f99059fF775485246999027B3197955';
       const usdtABI = [
         {
-          name: "transfer",
-          type: "function",
-          stateMutability: "nonpayable",
+          name: 'transfer',
+          type: 'function',
+          stateMutability: 'nonpayable',
           inputs: [
-            { name: "_to", type: "address" },
-            { name: "_value", type: "uint256" },
+            { name: '_to', type: 'address' },
+            { name: '_value', type: 'uint256' },
           ],
-          outputs: [{ name: "", type: "bool" }],
+          outputs: [{ name: '', type: 'bool' }],
         },
       ];
 
@@ -118,30 +121,30 @@ function DepositInner() {
       const txHash = await writeContractAsync({
         address: usdtContract as `0x${string}`,
         abi: usdtABI,
-        functionName: "transfer",
+        functionName: 'transfer',
         args: [adminWallet as `0x${string}`, amountInWei],
       });
 
       setTxHash(txHash as string);
-      alert("✅ Deposit sent! Confirm in your wallet.");
+      alert('✅ Deposit sent! Confirm in your wallet.');
 
       // Save to MongoDB
-      await fetch("/api/deposit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      await fetch('/api/deposit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           wallet: address,
           amount: depositAmount,
-          token: "USDT (BEP20)",
+          token: 'USDT (BEP20)',
           txHash,
-          chain: "BNB Smart Chain",
+          chain: 'BNB Smart Chain',
         }),
       });
 
-      setDepositAmount("");
+      setDepositAmount('');
     } catch (error) {
-      console.error("Deposit failed:", error);
-      alert("❌ Deposit failed, try again.");
+      console.error('Deposit failed:', error);
+      alert('❌ Deposit failed, try again.');
     } finally {
       setIsLoading(false);
     }
@@ -153,12 +156,18 @@ function DepositInner() {
       style={{
         backgroundImage:
           "url('https://i.pinimg.com/1200x/d3/41/1d/d3411d9ca4a908d779248dc1dce86822.jpg')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-        backgroundAttachment: "fixed",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed',
       }}
     >
+      <button
+        onClick={() => router.back()}
+        className="absolute top-2 left-3 z-20 flex items-center justify-center w-8 h-8 bg-gradient-to-r from-purple-500/80 to-pink-500/80 backdrop-blur-sm rounded-full border border-white/30 shadow-2xl hover:from-purple-400 hover:to-pink-400 transform hover:scale-110 transition-all duration-300 cursor-pointer group"
+      >
+        <FaArrowLeft className="text-white text-base group-hover:animate-pulse" />
+      </button>
       {/* Background Overlay */}
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
 
@@ -168,7 +177,7 @@ function DepositInner() {
           <h1 className="lg:text-4xl text-3xl mb-4">
             💰
             <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
-              {" "}
+              {' '}
               Deposit & Grow
             </span>
           </h1>
@@ -185,8 +194,8 @@ function DepositInner() {
             className="absolute -inset-2 rounded-2xl animate-spin opacity-70"
             style={{
               background:
-                "conic-gradient(from 0deg, #7d9efb, #a83bf8, #ff6b6b, #51cf66, #7d9efb)",
-              animationDuration: "9000ms",
+                'conic-gradient(from 0deg, #7d9efb, #a83bf8, #ff6b6b, #51cf66, #7d9efb)',
+              animationDuration: '9000ms',
               zIndex: 0,
             }}
           ></div>
@@ -196,30 +205,30 @@ function DepositInner() {
           <div
             className="absolute -top-12 -left-12 w-24 h-24 rounded-full z-10 animate-spin"
             style={{
-              background: "linear-gradient(45deg, #7d9efb, #a83bf8)",
-              animationDuration: "9000ms",
-              filter: "blur(12px)",
-              opacity: "0.6",
+              background: 'linear-gradient(45deg, #7d9efb, #a83bf8)',
+              animationDuration: '9000ms',
+              filter: 'blur(12px)',
+              opacity: '0.6',
             }}
           ></div>
 
           <div
             className="absolute -bottom-12 -right-12 w-28 h-28 rounded-full z-10 animate-spin"
             style={{
-              background: "linear-gradient(135deg, #a83bf8, #7d9efb)",
-              animationDuration: "4000ms",
-              filter: "blur(10px)",
-              opacity: "0.4",
+              background: 'linear-gradient(135deg, #a83bf8, #7d9efb)',
+              animationDuration: '4000ms',
+              filter: 'blur(10px)',
+              opacity: '0.4',
             }}
           ></div>
 
           <div
             className="absolute top-1/2 -right-8 w-16 h-16 rounded-full z-10 animate-spin"
             style={{
-              background: "linear-gradient(225deg, #7d9efb, #a83bf8)",
-              animationDuration: "5000ms",
-              filter: "blur(8px)",
-              opacity: "0.3",
+              background: 'linear-gradient(225deg, #7d9efb, #a83bf8)',
+              animationDuration: '5000ms',
+              filter: 'blur(8px)',
+              opacity: '0.3',
             }}
           ></div>
 
@@ -233,9 +242,9 @@ function DepositInner() {
                   Secure Deposit Process
                 </h2>
                 <p className="text-blue-200 text-sm">
-                  {activeTab === "connectWallet"
-                    ? "Connect your wallet to start"
-                    : "Make your deposit securely"}
+                  {activeTab === 'connectWallet'
+                    ? 'Connect your wallet to start'
+                    : 'Make your deposit securely'}
                 </p>
               </div>
             </div>
@@ -243,23 +252,23 @@ function DepositInner() {
             {/* Tab Navigation */}
             <div className="flex border-b border-white/20">
               <button
-                onClick={() => setActiveTab("connectWallet")}
+                onClick={() => setActiveTab('connectWallet')}
                 className={`flex-1 py-4 font-semibold transition-all duration-300 ${
-                  activeTab === "connectWallet"
-                    ? "bg-blue-600 text-white"
-                    : "text-gray-300 hover:bg-white/5"
+                  activeTab === 'connectWallet'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-300 hover:bg-white/5'
                 }`}
               >
                 Step 1: Connect Wallet
               </button>
               <button
-                onClick={() => isConnected && setActiveTab("deposit")}
+                onClick={() => isConnected && setActiveTab('deposit')}
                 className={`flex-1 py-4 font-semibold transition-all duration-300 ${
-                  activeTab === "deposit"
-                    ? "bg-green-600 text-white"
+                  activeTab === 'deposit'
+                    ? 'bg-green-600 text-white'
                     : isConnected
-                    ? "text-gray-300 hover:bg-white/5"
-                    : "text-gray-500 cursor-not-allowed"
+                    ? 'text-gray-300 hover:bg-white/5'
+                    : 'text-gray-500 cursor-not-allowed'
                 }`}
                 disabled={!isConnected}
               >
@@ -269,7 +278,7 @@ function DepositInner() {
 
             {/* Tab Content */}
             <div className="p-6">
-              {activeTab === "connectWallet" && (
+              {activeTab === 'connectWallet' && (
                 <div className="text-center">
                   <div className="mb-6">
                     <h3 className="text-xl font-bold text-white mb-2">
@@ -293,7 +302,7 @@ function DepositInner() {
                         Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
                       </p>
                       <button
-                        onClick={() => setActiveTab("deposit")}
+                        onClick={() => setActiveTab('deposit')}
                         className="bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-xl font-bold transition-colors"
                       >
                         Proceed to Deposit
@@ -303,7 +312,7 @@ function DepositInner() {
                 </div>
               )}
 
-              {activeTab === "deposit" && (
+              {activeTab === 'deposit' && (
                 <div>
                   {!isConnected ? (
                     <div className="text-center py-8">
@@ -311,7 +320,7 @@ function DepositInner() {
                         Please connect your wallet first
                       </p>
                       <button
-                        onClick={() => setActiveTab("connectWallet")}
+                        onClick={() => setActiveTab('connectWallet')}
                         className="bg-gradient-to-br from-blue-500/70 to-purple-500/70 via-cyan-600/70 hover:bg-blue-700 text-white py-3 px-8 rounded-xl font-bold transition-colors"
                       >
                         Connect Wallet
@@ -343,9 +352,13 @@ function DepositInner() {
                       <div className="bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/30 rounded-2xl p-4 mb-6 backdrop-blur-sm">
                         <div className="flex items-center gap-3 text-center">
                           <div className="text-orange-200 text-sm leading-relaxed">
-                            <span className="font-bold">🚨<strong> CRITICAL NOTICE:</strong> </span>
-                            Please ensure you only send <strong>USDT (BEP-20)</strong> to this
-                            address. Sending other cryptocurrencies may cause irreversible loss.
+                            <span className="font-bold">
+                              🚨<strong> CRITICAL NOTICE:</strong>{' '}
+                            </span>
+                            Please ensure you only send{' '}
+                            <strong>USDT (BEP-20)</strong> to this address.
+                            Sending other cryptocurrencies may cause
+                            irreversible loss.
                           </div>
                         </div>
                       </div>
@@ -420,8 +433,8 @@ function DepositInner() {
                             onClick={copyToClipboard}
                             className={`absolute right-3 top-1/2 transform -translate-y-1/2 p-2 rounded-xl transition-all duration-300 group ${
                               copied
-                                ? "bg-green-500 text-white shadow-lg scale-110"
-                                : "bg-gradient-to-r from-blue-500/30 to-purple-500/30 text-blue-300 hover:from-blue-500 hover:to-purple-500 hover:text-white hover:scale-110"
+                                ? 'bg-green-500 text-white shadow-lg scale-110'
+                                : 'bg-gradient-to-r from-blue-500/30 to-purple-500/30 text-blue-300 hover:from-blue-500 hover:to-purple-500 hover:text-white hover:scale-110'
                             }`}
                           >
                             {copied ? (
@@ -457,7 +470,7 @@ function DepositInner() {
                           </div>
                         ) : (
                           `Deposit $${
-                            depositAmount || "0"
+                            depositAmount || '0'
                           } (Net: $${netAmount})`
                         )}
                       </button>
@@ -486,8 +499,8 @@ function DepositInner() {
               className="absolute -inset-2 rounded-2xl animate-spin opacity-60"
               style={{
                 background:
-                  "conic-gradient(from 0deg, #7d9efb, #a83bf8, #ff6b6b, #51cf66, #7d9efb)",
-                animationDuration: "8000ms",
+                  'conic-gradient(from 0deg, #7d9efb, #a83bf8, #ff6b6b, #51cf66, #7d9efb)',
+                animationDuration: '8000ms',
                 zIndex: 0,
               }}
             ></div>
@@ -507,8 +520,8 @@ function DepositInner() {
               className="absolute -inset-0.5 rounded-2xl animate-spin opacity-50"
               style={{
                 background:
-                  "conic-gradient(from 0deg, #a83bf8, #ff6b6b, #51cf66, #7d9efb, #a83bf8)",
-                animationDuration: "8000ms",
+                  'conic-gradient(from 0deg, #a83bf8, #ff6b6b, #51cf66, #7d9efb, #a83bf8)',
+                animationDuration: '8000ms',
                 zIndex: 0,
               }}
             ></div>
@@ -531,8 +544,8 @@ function DepositInner() {
                 className="absolute -inset-2 rounded-2xl animate-spin opacity-70"
                 style={{
                   background:
-                    "conic-gradient(from 0deg, #7d9efb, #a83bf8, #ff6b6b, #51cf66, #7d9efb)",
-                  animationDuration: "9000ms",
+                    'conic-gradient(from 0deg, #7d9efb, #a83bf8, #ff6b6b, #51cf66, #7d9efb)',
+                  animationDuration: '9000ms',
                   zIndex: 0,
                 }}
               ></div>

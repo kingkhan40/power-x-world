@@ -96,7 +96,7 @@ const Sidebar = () => {
               {user?.userName || 'User'}
             </h3>
             <p className="md:text-xs transition-colors text-[10px] text-gray-200 duration-300">
-              PowerX International
+              PowerX International Platform
             </p>
           </div>
         </div>

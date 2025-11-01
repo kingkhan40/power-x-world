@@ -1,19 +1,31 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { FaCoins, FaDollarSign, FaLock, FaExchangeAlt, FaShieldAlt, FaRocket } from 'react-icons/fa';
+import {
+  FaCoins,
+  FaDollarSign,
+  FaLock,
+  FaExchangeAlt,
+  FaShieldAlt,
+  FaRocket,
+  FaArrowLeft, // Added back arrow icon
+} from 'react-icons/fa';
 import { useBalance } from '@/context/BalanceContext';
+import { useRouter } from 'next/navigation'; // Added for navigation
+import Loader from '@/components/UI/Loader';
 
 function WithdrawPage() {
+  const router = useRouter(); // Initialize router
   const { balance, setBalance } = useBalance();
   const [walletAddress, setWalletAddress] = useState('');
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
 
-  const email = typeof window !== 'undefined' ? localStorage.getItem('userEmail') : null;
+  const email =
+    typeof window !== 'undefined' ? localStorage.getItem('userEmail') : null;
 
-  // ✅ Fetch balance if not already set in context
+
   useEffect(() => {
     const fetchBalance = async () => {
       if (!email) return;
@@ -79,14 +91,7 @@ function WithdrawPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen text-white bg-black">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-lg">Loading balance...</p>
-        </div>
-      </div>
-    );
+    return <Loader />;
   }
 
   return (
@@ -109,42 +114,50 @@ function WithdrawPage() {
       <div
         className="absolute -top-12 -left-12 w-24 h-24 rounded-full z-10 animate-spin"
         style={{
-          background: "linear-gradient(45deg, #7d9efb, #a83bf8)",
-          animationDuration: "9000ms",
-          filter: "blur(12px)",
-          opacity: "0.6",
+          background: 'linear-gradient(45deg, #7d9efb, #a83bf8)',
+          animationDuration: '9000ms',
+          filter: 'blur(12px)',
+          opacity: '0.6',
         }}
       ></div>
 
       <div
         className="absolute -bottom-12 -right-12 w-28 h-28 rounded-full z-10 animate-spin"
         style={{
-          background: "linear-gradient(135deg, #a83bf8, #7d9efb)",
-          animationDuration: "4000ms",
-          filter: "blur(10px)",
-          opacity: "0.4",
+          background: 'linear-gradient(135deg, #a83bf8, #7d9efb)',
+          animationDuration: '4000ms',
+          filter: 'blur(10px)',
+          opacity: '0.4',
         }}
       ></div>
 
       <div
         className="absolute top-1/2 -right-8 w-16 h-16 rounded-full z-10 animate-spin"
         style={{
-          background: "linear-gradient(225deg, #7d9efb, #a83bf8)",
-          animationDuration: "5000ms",
-          filter: "blur(8px)",
-          opacity: "0.3",
+          background: 'linear-gradient(225deg, #7d9efb, #a83bf8)',
+          animationDuration: '5000ms',
+          filter: 'blur(8px)',
+          opacity: '0.3',
         }}
       ></div>
 
       <div
         className="absolute top-1/4 -left-8 w-20 h-20 rounded-full z-10 animate-spin"
         style={{
-          background: "linear-gradient(315deg, #ff6b6b, #51cf66)",
-          animationDuration: "7000ms",
-          filter: "blur(9px)",
-          opacity: "0.5",
+          background: 'linear-gradient(315deg, #ff6b6b, #51cf66)',
+          animationDuration: '7000ms',
+          filter: 'blur(9px)',
+          opacity: '0.5',
         }}
       ></div>
+
+      {/* Back Arrow Button - Top Left Corner */}
+      <button
+        onClick={() => router.back()}
+        className="absolute top-2 left-3 z-20 flex items-center justify-center w-8 h-8 bg-gradient-to-r from-purple-500/80 to-pink-500/80 backdrop-blur-sm rounded-full border border-white/30 shadow-2xl hover:from-purple-400 hover:to-pink-400 transform hover:scale-110 transition-all duration-300 cursor-pointer group"
+      >
+        <FaArrowLeft className="text-white text-base group-hover:animate-pulse" />
+      </button>
 
       <div className="container p-1 mx-auto max-w-2xl relative z-10">
         {/* Header Section */}
@@ -168,19 +181,19 @@ function WithdrawPage() {
             className="absolute -inset-1 rounded-2xl animate-spin opacity-70"
             style={{
               background:
-                "conic-gradient(from 0deg, #7d9efb, #a83bf8, #ff6b6b, #51cf66, #7d9efb)",
-              animationDuration: "9000ms",
+                'conic-gradient(from 0deg, #7d9efb, #a83bf8, #ff6b6b, #51cf66, #7d9efb)',
+              animationDuration: '9000ms',
               zIndex: 0,
             }}
           ></div>
-          
+
           {/* 🔥 Secondary Rotating Border */}
           <div
             className="absolute -inset-2 rounded-2xl animate-spin opacity-50"
             style={{
               background:
-                "conic-gradient(from 180deg, #51cf66, #ff6b6b, #a83bf8, #7d9efb, #51cf66)",
-              animationDuration: "12000ms",
+                'conic-gradient(from 180deg, #51cf66, #ff6b6b, #a83bf8, #7d9efb, #51cf66)',
+              animationDuration: '12000ms',
               zIndex: 0,
             }}
           ></div>
@@ -191,20 +204,20 @@ function WithdrawPage() {
           <div
             className="absolute top-4 right-4 w-12 h-12 rounded-full z-10 animate-spin"
             style={{
-              background: "linear-gradient(45deg, #7d9efb, #a83bf8)",
-              animationDuration: "8000ms",
-              filter: "blur(6px)",
-              opacity: "0.4",
+              background: 'linear-gradient(45deg, #7d9efb, #a83bf8)',
+              animationDuration: '8000ms',
+              filter: 'blur(6px)',
+              opacity: '0.4',
             }}
           ></div>
 
           <div
             className="absolute bottom-4 left-4 w-10 h-10 rounded-full z-10 animate-spin"
             style={{
-              background: "linear-gradient(135deg, #a83bf8, #7d9efb)",
-              animationDuration: "6000ms",
-              filter: "blur(5px)",
-              opacity: "0.3",
+              background: 'linear-gradient(135deg, #a83bf8, #7d9efb)',
+              animationDuration: '6000ms',
+              filter: 'blur(5px)',
+              opacity: '0.3',
             }}
           ></div>
 
@@ -238,7 +251,7 @@ function WithdrawPage() {
                 <div className="flex flex-col bg-gradient-to-r from-cyan-950 to-indigo-950 rounded-xl items-center w-full p-2 border border-white/10">
                   <div className="flex items-center gap-2 mb-2">
                     <FaExchangeAlt className="text-green-400 text-xl" />
-                    <h3 className="text-lg font-bold text-green-400">1.5%</h3>
+                    <h3 className="text-lg font-bold text-green-400">5%</h3>
                   </div>
                   <p className="text-sm text-gray-300">Withdrawal Fee</p>
                 </div>
@@ -288,10 +301,10 @@ function WithdrawPage() {
                     USDT
                   </span>
                 </div>
-                
+
                 {/* Amount Info */}
                 <div className="flex justify-between text-xs text-gray-400 mt-2">
-                  <span>Minimum: $10.00</span>
+                  <span>Minimum: $5.00</span>
                   <span>Maximum: ${balance.toFixed(2)}</span>
                 </div>
               </div>
@@ -306,16 +319,20 @@ function WithdrawPage() {
                   <div className="space-y-1 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-300">Amount:</span>
-                      <span className="text-white">${Number(amount).toFixed(2)}</span>
+                      <span className="text-white">
+                        ${Number(amount).toFixed(2)}
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-300">Fee (1.5%):</span>
-                      <span className="text-red-400">-${(Number(amount) * 0.015).toFixed(2)}</span>
+                      <span className="text-gray-300">Fee (5%):</span>
+                      <span className="text-red-400">
+                        -${(Number(amount) * 0.05).toFixed(2)}
+                      </span>
                     </div>
                     <div className="flex justify-between border-t border-white/20 pt-1">
                       <span className="text-gray-300">You'll Receive:</span>
                       <span className="text-green-400 font-semibold">
-                        ${(Number(amount) * 0.985).toFixed(2)}
+                        ${(Number(amount) * 0.95).toFixed(2)}
                       </span>
                     </div>
                   </div>
@@ -325,12 +342,18 @@ function WithdrawPage() {
               {/* Submit Button */}
               <button
                 onClick={handleWithdraw}
-                disabled={!walletAddress || !amount || Number(amount) <= 0 || Number(amount) > balance || processing}
+                disabled={
+                  !walletAddress ||
+                  !amount ||
+                  Number(amount) <= 0 ||
+                  Number(amount) > balance ||
+                  processing
+                }
                 className="w-full bg-gradient-to-r from-blue-500 to-purple-600 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none relative overflow-hidden group"
               >
                 {/* Button Shine Effect */}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 transform translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-                
+
                 <span className="relative z-10 flex items-center justify-center gap-2">
                   {processing ? (
                     <>
@@ -340,12 +363,11 @@ function WithdrawPage() {
                   ) : (
                     <>
                       <FaExchangeAlt />
-                      {!walletAddress || !amount || Number(amount) <= 0 
-                        ? 'Fill All Fields' 
+                      {!walletAddress || !amount || Number(amount) <= 0
+                        ? 'Fill All Fields'
                         : Number(amount) > balance
                         ? 'Insufficient Balance'
-                        : 'Confirm Withdrawal'
-                      }
+                        : 'Confirm Withdrawal'}
                     </>
                   )}
                 </span>
@@ -358,29 +380,14 @@ function WithdrawPage() {
                   <span className="text-yellow-200">Secure Transaction</span>
                 </div>
                 <p className="text-xs text-yellow-100/70 mt-1">
-                  Your withdrawal will be processed within 2-4 hours. Contact support for urgent requests.
+                  Your withdrawal will be processed within 2-4 hours. Contact
+                  support for urgent requests.
                 </p>
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Custom CSS for Smooth Animations */}
-      <style jsx>{`
-        @keyframes spin {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
-        }
-        
-        .animate-spin {
-          animation: spin linear infinite;
-        }
-      `}</style>
     </div>
   );
 }

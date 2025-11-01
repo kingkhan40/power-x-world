@@ -92,45 +92,45 @@ const ProfileRecords = () => {
       setIsEditModalOpen(false);
       setProfileImage(null);
     } catch (err) {
-      // Error handled in context
+      console.log(error)
     }
   };
 
-  // === 6 BOXES – BACKEND FIELDS ===
-  const personalInfo: PersonalInfoItem[] = user
-    ? [
-        {
-          icon: <FaUser className="text-blue-400" />,
-          label: 'My Self Invest',
-          value: `$${user.wallet?.toFixed(2) || '0.00'}`,
-        },
-        {
-          icon: <FaEnvelope className="text-purple-400" />,
-          label: 'Profit Record',
-          value: `$${user.rewardBalance?.toFixed(2) || '0.00'}`,
-        },
-        {
-          icon: <FaCalendar className="text-yellow-400" />,
-          label: 'My Total Deposit',
-          value: (user.totalTeam || 0).toString(),
-        },
-        {
-          icon: <FaIdCard className="text-indigo-400" />,
-          label: 'My Withdrawals',
-          value: (user.activeUsers || 0).toString(),
-        },
-        {
-          icon: <FaShieldAlt className="text-green-400" />,
-          label: 'Team Commission',
-          value: (user.investments?.length || 0).toString(),
-        },
-        {
-          icon: <FaUser className="text-blue-400" />,
-          label: 'Direct Commission',
-          value: user.userName || 'User',
-        },
-      ]
-    : [];
+
+const personalInfo: PersonalInfoItem[] = user
+  ? [
+      {
+        icon: <FaUser className="text-blue-400" />,
+        label: 'My Self Invest',
+        value: `$${user.selfBusiness?.toFixed(2) || '0.00'}`,
+      },
+      {
+        icon: <FaEnvelope className="text-purple-400" />,
+        label: 'Profit Record',
+        value: `$${user.rewardBalance?.toFixed(2) || '0.00'}`,
+      },
+      {
+        icon: <FaCalendar className="text-yellow-400" />,
+        label: 'My Total Deposit',
+        value: `$${user.usdtBalance?.toFixed(2) || '0.00'}`,
+      },
+      {
+        icon: <FaIdCard className="text-indigo-400" />,
+        label: 'My Withdrawals',
+        value: `$${(user as any).totalCommission?.toFixed(2) || '0.00'}`,
+      },
+      {
+        icon: <FaShieldAlt className="text-green-400" />,
+        label: 'Team Commission',
+        value: `$${user.directBusiness?.toFixed(2) || '0.00'}`,
+      },
+      {
+        icon: <FaUser className="text-blue-400" />,
+        label: 'Direct Commission',
+        value: `$${(user as any).rewardPayment?.toFixed(2) || '0.00'}`,
+      },
+    ]
+  : [];
 
   const accountRecords: AccountRecord[] = [
     {

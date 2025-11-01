@@ -1,4 +1,3 @@
-// app/api/register/route.ts
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import nodemailer from 'nodemailer';
@@ -65,7 +64,7 @@ export async function POST(req: Request) {
       teamMembers: [],
     });
 
-    // ✅ If referred, add new user to referrer’s team
+    // ✅ If referred, add new user to referrer's team
     if (referredByUser) {
       await User.findByIdAndUpdate(referredByUser._id, {
         $push: { teamMembers: newUser._id },
@@ -90,28 +89,56 @@ export async function POST(req: Request) {
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: process.env.EMAIL_USER,
+        user: "",
         pass: process.env.EMAIL_PASS,
       },
     });
 
     console.log('Verification code stored');
 
-    // ✅ Send verification mail
     await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+      from: {
+        name: 'PowerX World Team',
+        address: process.env.EMAIL_USER!,
+      } as any,
       to: email,
-      subject: 'Verify Your Email',
+      subject: 'Verify Your Email - PowerX World Supreme',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #333;">Welcome to PowerX World!</h2>
-        <p> ${name} Your verification code is:</p>
-        <h1 style="background: #f4f4f4; padding: 20px; text-align: center; font-size: 32px; letter-spacing: 5px;">
-          ${verificationCode}
-        </h1>
-        <p>This code will expire in 10 minutes.</p>
-        <p>If you didn't request this, please ignore this email.</p>
-      </div>
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; color: white;">
+            <h1 style="margin: 0; font-size: 28px;">PowerX World Supreme</h1>
+            <p style="margin: 10px 0 0 0; font-size: 16px;">Email Verification</p>
+          </div>
+          
+          <div style="padding: 30px; background: #f9f9f9;">
+            <h2 style="color: #333; margin-bottom: 20px;">Welcome, ${name}!</h2>
+            <p style="color: #666; font-size: 16px; line-height: 1.6;">
+              Your verification code is:
+            </p>
+            
+            <div style="background: white; padding: 20px; border-radius: 10px; border: 2px dashed #667eea; text-align: center; margin: 20px 0;">
+              <span style="font-size: 32px; font-weight: bold; color: #667eea; letter-spacing: 5px;">
+                ${verificationCode}
+              </span>
+            </div>
+            
+            <p style="color: #666; font-size: 14px;">
+              This code expires in 10 minutes.
+            </p>
+            
+            <div style="margin-top: 30px; padding: 15px; background: #fff3cd; border-radius: 5px; border: 1px solid #ffeaa7;">
+              <p style="margin: 0; color: #856404; font-size: 12px;">
+                If you didn't request this code, please ignore this email.
+              </p>
+            </div>
+          </div>
+          
+          <div style="background: #333; padding: 20px; text-align: center; color: white;">
+            <p style="margin: 0; font-size: 12px;">
+              &copy; 2024 PowerX World Supreme. All rights reserved.
+            </p>
+          </div>
+        </div>
       `,
     });
 

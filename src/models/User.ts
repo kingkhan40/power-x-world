@@ -1,5 +1,5 @@
 // models/User.ts
-import mongoose, { Schema, Document, Types } from "mongoose";
+import mongoose, { Schema, Document, Types } from 'mongoose';
 
 export interface IInvestment {
   amount: number;
@@ -15,6 +15,7 @@ export interface IUserSettings {
   twoFactorAuth: boolean;
 }
 
+// models/User.ts
 export interface IUser extends Document {
   name: string;
   email: string;
@@ -32,7 +33,7 @@ export interface IUser extends Document {
   investments?: IInvestment[];
   walletAddress?: string;
   settings?: IUserSettings;
-  profilePic?: string | null;  // ROOT LEVEL
+  profilePic?: string | null;
 
   usdtBalance?: number;
   selfBusiness?: number;
@@ -44,6 +45,12 @@ export interface IUser extends Document {
   rewardPayment?: number;
   totalCommission?: number;
   otherPayments?: number;
+
+  // ✅ ADD THESE MISSING FIELDS
+  isVerified?: boolean; // Add this if not present
+  phone?: string; // Add this if not present
+  address?: string; // Add this if not present
+  createdAt?: Date; // Add this if not present
 }
 
 const UserSchema = new Schema<IUser>(
@@ -51,16 +58,16 @@ const UserSchema = new Schema<IUser>(
     name: { type: String, required: true, trim: true },
     email: { type: String, unique: true, required: true, lowercase: true },
     password: { type: String, required: true },
-    role: { type: String, enum: ["User", "Admin"], default: "User" },
+    role: { type: String, enum: ['User', 'Admin'], default: 'User' },
     isActive: { type: Boolean, default: true },
 
     referralCode: { type: String, unique: true, required: true },
-    referredBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
+    referredBy: { type: Schema.Types.ObjectId, ref: 'User', default: null },
 
-    team: { type: String, default: "admin" },
+    team: { type: String, default: 'admin' },
     wallet: { type: Number, default: 0 },
     level: { type: Number, default: 1 },
-    teamMembers: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    teamMembers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     totalTeam: { type: Number, default: 0 },
     activeUsers: { type: Number, default: 0 },
 
@@ -71,7 +78,7 @@ const UserSchema = new Schema<IUser>(
       },
     ],
 
-    walletAddress: { type: String, default: "" },
+    walletAddress: { type: String, default: '' },
 
     settings: {
       notifications: {
@@ -102,6 +109,6 @@ const UserSchema = new Schema<IUser>(
  * 🧠 Export Model (Hot Reload Safe)
  * ----------------------------------------- */
 export const User =
-  mongoose.models.User || mongoose.model<IUser>("User", UserSchema);
+  mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
 
 export default User;
