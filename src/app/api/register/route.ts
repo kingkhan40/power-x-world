@@ -89,7 +89,7 @@ export async function POST(req: Request) {
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: "",
+        user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
     });
@@ -105,7 +105,7 @@ export async function POST(req: Request) {
       subject: 'Verify Your Email - PowerX World Supreme',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; color: white;">
+          <div style="background: linear-gradient(135deg, #2447e4ff 0%, #7524c5ff 100%); padding: 30px; text-align: center; color: white;">
             <h1 style="margin: 0; font-size: 28px;">PowerX World Supreme</h1>
             <p style="margin: 10px 0 0 0; font-size: 16px;">Email Verification</p>
           </div>

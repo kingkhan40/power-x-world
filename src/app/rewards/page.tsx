@@ -15,18 +15,27 @@ import {
   FaRocket,
 } from 'react-icons/fa';
 import Image from 'next/image';
-import { useBalance } from '@/context/BalanceContext';
-import { RewardPlan, StatData } from 'types'; // Adjust path as needed
-import { parseRewardAmount } from 'utils/parseRewardAmount'; // Adjust path as needed
+import { useApp } from '@/context/AppContext';
+import { RewardPlan, StatData } from 'types';
+import { parseRewardAmount } from 'utils/parseRewardAmount'; // Correctly imported
 
-export default function RewardPage() {
-  const { usdtBalance, addToBalance, claimedRewards, addClaimedReward } =
-    useBalance();
+function RewardPage() {
+  const {
+    balance,
+    rewardPayment,
+    getDashboardData,
+    fetchRewardData,
+    claimReward,
+  } = useApp();
+
   const [selectedReward, setSelectedReward] = useState<RewardPlan | null>(null);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const [showConfetti, setShowConfetti] = useState<boolean>(false);
-  const [message, setMessage] = useState<string>(''); // From original RewardPage
+  const [message, setMessage] = useState<string>('');
+  const [claimedRewards, setClaimedRewards] = useState<number[]>([]);
+  const [dashboardData, setDashboardData] = useState<any>({});
+
   const [rewardPlans, setRewardPlans] = useState<RewardPlan[]>([
     {
       id: 1,
@@ -114,6 +123,48 @@ export default function RewardPage() {
     },
   ]);
 
+  // Load initial data
+  useEffect(() => {
+    loadInitialData();
+  }, []);
+
+  const loadInitialData = async () => {
+    try {
+      // Fetch dashboard data for business metrics
+      const dashboard = await getDashboardData();
+      setDashboardData(dashboard);
+
+      // Fetch claimed rewards
+      const rewardData = await fetchRewardData();
+      setClaimedRewards(rewardData.claimedRewards);
+
+      // Update reward achievements based on business data
+      updateRewardAchievements(dashboard);
+    } catch (error) {
+      console.error('Error loading initial data:', error);
+    }
+  };
+
+  const updateRewardAchievements = (dashboard: any) => {
+    const userSelfBusiness = dashboard.selfBusiness || 0;
+    const userDirectBusiness = dashboard.directBusiness || 0;
+
+    setRewardPlans((prev) =>
+      prev.map((plan) => {
+        const selfBusinessMet =
+          userSelfBusiness >= parseFloat(plan.selfBusiness.replace(',', ''));
+        const directBusinessMet =
+          userDirectBusiness >=
+          parseFloat(plan.directBusiness.replace(',', ''));
+
+        return {
+          ...plan,
+          achieved: selfBusinessMet && directBusinessMet,
+        };
+      })
+    );
+  };
+
   const unlockNextReward = (currentRewardId: number) => {
     const currentIndex = rewardPlans.findIndex(
       (plan) => plan.id === currentRewardId
@@ -121,14 +172,16 @@ export default function RewardPage() {
     const nextIndex = currentIndex + 1;
     if (nextIndex < rewardPlans.length) {
       const nextReward = rewardPlans[nextIndex];
-      const userSelfBusiness = 1000; // Replace with actual data (e.g., API or state)
-      const userDirectBusiness = 15000; // Replace with actual data
+      const userSelfBusiness = dashboardData.selfBusiness || 0;
+      const userDirectBusiness = dashboardData.directBusiness || 0;
+
       const selfBusinessMet =
-        parseFloat(userSelfBusiness.toString()) >=
+        userSelfBusiness >=
         parseFloat(nextReward.selfBusiness.replace(',', ''));
       const directBusinessMet =
-        parseFloat(userDirectBusiness.toString()) >=
+        userDirectBusiness >=
         parseFloat(nextReward.directBusiness.replace(',', ''));
+
       if (selfBusinessMet && directBusinessMet) {
         setRewardPlans((prev) =>
           prev.map((plan, index) =>
@@ -154,41 +207,44 @@ export default function RewardPage() {
     setIsProcessing(false);
     setIsSuccess(false);
     setShowConfetti(false);
-    setMessage(''); // Reset message from original RewardPage
+    setMessage('');
   };
 
   const handleClaimRewards = async () => {
     if (!selectedReward || claimedRewards.includes(selectedReward.id)) {
       return;
     }
+
     setIsProcessing(true);
     setShowConfetti(true);
 
     try {
-      // Integrate API call from original RewardPage
-      const res = await fetch('/api/user/reward', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: 'YOUR_USER_ID_HERE',
-          rewardId: selectedReward.id,
-        }), // Add rewardId
-      });
+      // Use the claimReward function from AppContext
+      const result = await claimReward(
+        selectedReward.id,
+        selectedReward.name,
+        selectedReward.rewardAmount
+      );
 
-      const data = await res.json();
-      setMessage(data.message);
+      setMessage(result.message);
 
-      if (res.ok) {
+      if (result.success) {
         setTimeout(() => {
           setIsProcessing(false);
           setIsSuccess(true);
 
+          // ✅ parseRewardAmount function ko call kiya gaya hai
           const amount = parseRewardAmount(selectedReward.rewardAmount);
-          if (amount > 0) {
-            addToBalance(amount);
-          }
-          addClaimedReward(selectedReward.id);
+          console.log(`Claimed amount: $${amount}`); // Debugging ke liye
+
+          // Add to claimed rewards
+          setClaimedRewards((prev) => [...prev, selectedReward.id]);
+
+          // Unlock next reward if applicable
           unlockNextReward(selectedReward.id);
+
+          // Reload dashboard data to update balances
+          loadInitialData();
 
           setTimeout(() => {
             handleCloseModal();
@@ -197,7 +253,7 @@ export default function RewardPage() {
       } else {
         setIsProcessing(false);
         setShowConfetti(false);
-        setMessage(data.message || 'Failed to claim reward');
+        setMessage(result.message || 'Failed to claim reward');
       }
     } catch (error) {
       setIsProcessing(false);
@@ -655,3 +711,5 @@ export default function RewardPage() {
     </div>
   );
 }
+
+export default RewardPage;

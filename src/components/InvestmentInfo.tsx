@@ -82,6 +82,7 @@ const InvestmentInfo: React.FC<InvestmentInfoProps> = ({ userEmail }) => {
             <h3 className="text-gray-200 lg:text-xl text-sm font-medium mb-2">
               Your Referral Link
             </h3>
+            
 
             <div className="flex items-center gap-2 bg-gray-800 p-2 rounded-lg shadow-[inset_-2px_-2px_5px_#1f2937,inset_2px_2px_5px_#111827]">
               <span className="text-sm text-blue-100 flex-1 break-all line-clamp-1">
