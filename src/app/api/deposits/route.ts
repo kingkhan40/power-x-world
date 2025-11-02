@@ -152,4 +152,4 @@ export async function GET(req: NextRequest) {
     console.error("GET Deposits Error:", err);
     return NextResponse.json({ error: "Failed to fetch deposits" }, { status: 500 });
   }
-}
+}    

@@ -1,24 +1,19 @@
-import { NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import nodemailer from 'nodemailer';
-import { connectDB } from '@/lib/db';
-import User from '@/models/User';
-import VerificationCode from '@/models/VerificationCode';
+import { NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
+import nodemailer from "nodemailer";
+import { connectDB } from "@/lib/db";
+import User from "@/models/User";
+import VerificationCode from "@/models/VerificationCode";
 
 export async function POST(req: Request) {
   try {
     await connectDB();
 
-    const {
-      name,
-      email,
-      password,
-      referralCode: referralCodeFromClient,
-    } = await req.json();
+    const { name, email, password, referralCode: referralCodeFromClient } = await req.json();
 
     if (!name || !email || !password) {
       return NextResponse.json(
-        { success: false, message: 'All fields are required' },
+        { success: false, message: "All fields are required" },
         { status: 400 }
       );
     }
@@ -27,7 +22,7 @@ export async function POST(req: Request) {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return NextResponse.json(
-        { success: false, message: 'Email already registered' },
+        { success: false, message: "Email already registered" },
         { status: 400 }
       );
     }
@@ -36,9 +31,7 @@ export async function POST(req: Request) {
     let referredByUser = null;
     if (referralCodeFromClient) {
       referredByUser = await User.findOne({
-        referralCode: {
-          $regex: new RegExp(`^${referralCodeFromClient}$`, 'i'),
-        },
+        referralCode: { $regex: new RegExp(`^${referralCodeFromClient}$`, "i") },
       });
     }
 
@@ -46,7 +39,7 @@ export async function POST(req: Request) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // ✅ Generate new referral code like saad-0ya6tB
-    const cleanedName = name.trim().toLowerCase().replace(/\s+/g, '-');
+    const cleanedName = name.trim().toLowerCase().replace(/\s+/g, "-");
     const randomPart = Math.random().toString(36).substring(2, 8);
     const newReferralCode = `${cleanedName}-${randomPart}`;
 
@@ -64,7 +57,7 @@ export async function POST(req: Request) {
       teamMembers: [],
     });
 
-    // ✅ If referred, add new user to referrer's team
+    // ✅ If referred, add new user to referrer’s team
     if (referredByUser) {
       await User.findByIdAndUpdate(referredByUser._id, {
         $push: { teamMembers: newUser._id },
@@ -74,10 +67,7 @@ export async function POST(req: Request) {
     }
 
     // ✅ Generate 6-digit email verification code
-    const verificationCode = Math.floor(
-      100000 + Math.random() * 900000
-    ).toString();
-    console.log('Generated verification code for:', email);
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
     await VerificationCode.create({
       email,
@@ -87,22 +77,19 @@ export async function POST(req: Request) {
 
     // ✅ Configure email (Gmail)
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      service: "gmail",
       auth: {
+        user: process.env.EMAIL_USER,
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
     });
 
-    console.log('Verification code stored');
-
+    // ✅ Send verification mail
     await transporter.sendMail({
-      from: {
-        name: 'PowerX World Team',
-        address: process.env.EMAIL_USER!,
-      } as any,
+      from: process.env.EMAIL_USER,
       to: email,
-      subject: 'Verify Your Email - PowerX World Supreme',
+      subject: "Verify Your Email",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <div style="background: linear-gradient(135deg, #2447e4ff 0%, #7524c5ff 100%); padding: 30px; text-align: center; color: white;">
@@ -145,13 +132,13 @@ export async function POST(req: Request) {
     // ✅ Return success + user's own referral link
     return NextResponse.json({
       success: true,
-      message: 'Verification code sent to your email',
+      message: "Verification code sent to your email",
       referralLink: `https://www.powerxworld.uk/register?ref=${newReferralCode}`,
     });
   } catch (err) {
-    console.error('❌ Register Error:', err);
+    console.error("❌ Register Error:", err);
     return NextResponse.json(
-      { success: false, message: 'Error registering user' },
+      { success: false, message: "Error registering user" },
       { status: 500 }
     );
   }
