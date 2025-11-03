@@ -7,18 +7,21 @@ export async function POST(req: Request) {
   try {
     await connectDB();
 
-    const { userId, amount, walletAddress, status, method } = await req.json();
+    const { userId, email, amount, walletAddress, status, method } = await req.json();
 
-    // ✅ Validate input
-    if (!userId || !amount || !walletAddress) {
+    // ✅ Check required fields
+    if ((!userId && !email) || !amount || !walletAddress) {
       return NextResponse.json({
         success: false,
-        message: "All fields are required (userId, amount, walletAddress)",
+        message: "All fields are required (userId/email, amount, walletAddress)",
       });
     }
 
-    // ✅ Check if user exists
-    const user = await User.findById(userId);
+    // ✅ Find user (by userId or email)
+    const user = userId
+      ? await User.findById(userId)
+      : await User.findOne({ email });
+
     if (!user) {
       return NextResponse.json({
         success: false,
@@ -26,7 +29,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // ✅ Check sufficient balance
+    // ✅ Ensure balance is enough
     if (user.wallet < amount) {
       return NextResponse.json({
         success: false,
@@ -34,35 +37,39 @@ export async function POST(req: Request) {
       });
     }
 
-    // ✅ Deduct balance
+    // ✅ Calculate fee & amount to receive
+    const fee = amount * 0.05;
+    const amountAfterFee = amount - fee;
+
+    // ✅ Deduct full amount from wallet
     user.wallet -= amount;
     await user.save();
 
-    // ✅ Create withdrawal record
-    const withdrawal = await Withdraw.create({
-      userId,
-      amount,
+    // ✅ Create withdraw record
+    const withdraw = await Withdraw.create({
+      userId: user._id,
+      amount: amountAfterFee,
       walletAddress,
+      fee,
       status: status || "pending",
-      method: method || "USDT-TRC20",
+      method: method || "USDT (TRC20)",
     });
 
     return NextResponse.json({
       success: true,
       message: "Withdrawal request created successfully",
-      withdrawal,
+      withdrawal: withdraw,
+      newBalance: user.wallet,
     });
   } catch (error: any) {
     console.error("Withdraw Error:", error?.message || error);
     return NextResponse.json({
       success: false,
-      message:
-        error?.message || "Server error while creating withdraw record",
+      message: error?.message || "Server error while creating withdraw record",
     });
   }
 }
 
-// ✅ Optional: Fetch all withdrawals for a user
 export async function GET(req: Request) {
   try {
     await connectDB();
@@ -88,8 +95,7 @@ export async function GET(req: Request) {
     console.error("Withdraw Fetch Error:", error?.message || error);
     return NextResponse.json({
       success: false,
-      message:
-        error?.message || "Server error while fetching withdrawal history",
+      message: error?.message || "Server error while fetching withdrawals",
     });
   }
-}
+}                                                                                              
