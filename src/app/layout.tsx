@@ -5,6 +5,8 @@ import ClientLayout from '@/components/ClientLayout';
 import SessionProviderWrapper from '@/components/SessionProviderWrapper';
 import { BalanceProvider } from '@/context/BalanceContext';
 import { AuthProvider } from '@/context/AuthContext';
+import { AppProvider } from '@/context/AppContext'; // ✅ Import AppProvider
+
 // ✅ Google Font
 const outfit = Outfit({
   subsets: ['latin'],
@@ -27,7 +29,9 @@ function RootLayout({ children }: { children: React.ReactNode }) {
         <SessionProviderWrapper>
           <AuthProvider>
             <BalanceProvider>
-              <ClientLayout>{children}</ClientLayout>
+              <AppProvider> 
+                <ClientLayout>{children}</ClientLayout>
+              </AppProvider>
             </BalanceProvider>
           </AuthProvider>
         </SessionProviderWrapper>

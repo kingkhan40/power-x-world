@@ -36,8 +36,6 @@ function Page() {
       <DiscountSlider />
       <EarnSection />
       <LaunchedSection />
-
-
       <Footer />
     </div>
   );

@@ -201,7 +201,7 @@ const SelfInvestment = () => {
             <div className="flex items-center justify-between lg:mb-4 mb-2">
               <h2 className="lg:text-2xl text-base font-bold text-white flex items-center gap-2">
                 <FaChartLine className="text-green-400" size={20} />
-                Investment Status
+                Investment Bar 3X to 9X
               </h2>
               <div className={`px-3 py-1 rounded-full text-sm font-bold ${
                 timeRemaining > 0 ? 'bg-yellow-500/20 text-yellow-300 border border-yellow-400/30' : 'bg-green-500/20 text-green-300 border border-green-400/30'
