@@ -11,14 +11,11 @@ import {
 
 interface Withdraw {
   _id: string;
-  transactionId: string;
   amount: number;
   method: string;
-  date: string;
-  time: string;
+  walletAddress: string;
   status: "completed" | "pending" | "failed";
-  wallet: string;
-  fee?: number;
+  createdAt: string;
 }
 
 interface Tab {
@@ -28,20 +25,29 @@ interface Tab {
   count: number;
 }
 
-const WithdrawalHistory = () => {
+const WithdrawalHistoryPage = () => {
   const [withdrawData, setWithdrawData] = useState<Withdraw[]>([]);
   const [activeTab, setActiveTab] = useState<string>("all");
   const [loading, setLoading] = useState<boolean>(true);
 
+  // ✅ Fetch user-specific withdrawals using userId
   const fetchWithdraws = async () => {
     try {
-      const userWallet = typeof window !== "undefined" ? localStorage.getItem("userWallet") : null;
-      const url = userWallet
-        ? `/api/withdraw/history?wallet=${userWallet}`
-        : "/api/withdraw/history";
+      const userId =
+        typeof window !== "undefined" ? localStorage.getItem("userId") : null;
 
-      const res = await fetch(url, { cache: "no-store" });
-      if (!res.ok) throw new Error("Failed to fetch");
+      if (!userId) {
+        console.error("No userId found in localStorage");
+        setLoading(false);
+        return;
+      }
+
+      const res = await fetch(`/api/withdraw/history?userId=${userId}`, {
+        cache: "no-store",
+      });
+
+      if (!res.ok) throw new Error("Failed to fetch withdraw history");
+
       const data: Withdraw[] = await res.json();
       setWithdrawData(data);
     } catch (error) {
@@ -53,7 +59,7 @@ const WithdrawalHistory = () => {
 
   useEffect(() => {
     fetchWithdraws();
-    const interval = setInterval(fetchWithdraws, 5000);
+    const interval = setInterval(fetchWithdraws, 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -105,7 +111,7 @@ const WithdrawalHistory = () => {
         backgroundAttachment: "fixed",
       }}
     >
-      {/* Blur Overlay */}
+      {/* Overlay */}
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
 
       <div className="container mx-auto max-w-6xl relative z-10">
@@ -117,9 +123,8 @@ const WithdrawalHistory = () => {
           <p className="text-blue-100 text-sm lg:text-base">Track your withdrawal requests in real-time</p>
         </div>
 
-        {/* Main Card */}
+        {/* Card Container */}
         <div className="relative p-6 rounded-2xl bg-gray-900/90 border border-gray-700 shadow-2xl overflow-hidden">
-          {/* Animated Border */}
           <div
             className="absolute -inset-2 rounded-2xl opacity-60 animate-spin"
             style={{
@@ -128,7 +133,6 @@ const WithdrawalHistory = () => {
             }}
           ></div>
 
-          {/* Inner Background */}
           <div className="absolute inset-0.5 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 z-[1]"></div>
 
           {/* Tabs */}
@@ -156,7 +160,7 @@ const WithdrawalHistory = () => {
             ))}
           </div>
 
-          {/* Withdrawal List */}
+          {/* Withdrawal Cards */}
           <div className="relative z-20 space-y-4">
             {filteredWithdrawals.length === 0 ? (
               <div className="text-center py-16">
@@ -171,29 +175,21 @@ const WithdrawalHistory = () => {
                   className="p-5 lg:p-6 rounded-xl bg-gradient-to-r from-gray-800/50 to-gray-900/40 border border-white/20 backdrop-blur-sm hover:border-white/40 transition-all duration-300"
                 >
                   <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                    {/* Left: Icon + Details */}
                     <div className="flex items-center gap-4">
                       <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shadow-lg">
                         <FaMoneyBillWave className="text-white text-xl" />
                       </div>
                       <div>
                         <h3 className="text-white font-bold text-lg">{w.method}</h3>
-                        <p className="text-blue-300 font-mono text-sm">TXN: {w.transactionId}</p>
-                        <p className="text-white/70 text-sm">{w.date} at {w.time}</p>
+                        <p className="text-white/70 text-sm">{new Date(w.createdAt).toLocaleString()}</p>
                         <p className="font-mono text-xs text-white/60 truncate max-w-[180px] lg:max-w-none">
-                          {w.wallet}
+                          {w.walletAddress}
                         </p>
                       </div>
                     </div>
 
-                    {/* Right: Amount + Status */}
                     <div className="text-right">
-                      <div className="text-white text-2xl font-bold mb-1">
-                        ${w.amount.toLocaleString()}
-                      </div>
-                      {w.fee && w.fee > 0 && (
-                        <div className="text-red-400 text-sm mb-1">Fee: ${w.fee}</div>
-                      )}
+                      <div className="text-white text-2xl font-bold mb-1">${w.amount.toLocaleString()}</div>
                       <span
                         className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold border ${getStatusColor(
                           w.status
@@ -214,4 +210,4 @@ const WithdrawalHistory = () => {
   );
 };
 
-export default WithdrawalHistory;
+export default WithdrawalHistoryPage;
