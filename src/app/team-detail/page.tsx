@@ -2,16 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import {
-  Search,
-  Copy,
-  User,
-  ChevronRight,
-  Users,
-  Wallet,
-  Activity,
-  Star,
-} from 'lucide-react';
+import { Search, User, ChevronRight, Users } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 interface User {
@@ -153,7 +144,6 @@ const Page = () => {
         {/* Grid Layout - Boxes */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filtered.map((user) => {
-            const stats = getStats(user);
 
             return (
               <motion.div
@@ -189,92 +179,11 @@ const Page = () => {
                 </div>
 
                 {/* Email */}
-                <div className="mb-3">
-                  <p className="text-gray-400 text-xs mb-1">Email</p>
+                <div className="mb-3 flex gap-2 items-center">
+                  <p className="text-gray-400 text-xs">Email</p>
                   <p className="text-white text-sm truncate">{user.email}</p>
                 </div>
 
-                {/* Referral Info */}
-                <div className="mb-3">
-                  <p className="text-gray-400 text-xs mb-1">Referred By</p>
-                  <div className="flex items-center space-x-2">
-                    <User size={14} className="text-green-400" />
-                    <span className="text-green-300 text-sm">You</span>
-                  </div>
-                </div>
-
-                {/* Stats Grid */}
-                <div className="grid grid-cols-2 gap-2 mb-4">
-                  <div className="bg-gray-800 rounded-lg p-3">
-                    <div className="flex items-center justify-between">
-                      <Users size={16} className="text-blue-400  mb-1" />
-                      <p className="text-white font-bold text-sm">
-                        {stats.total}
-                      </p>
-                    </div>
-                    <p className="text-gray-400 text-xs">Total Team</p>
-                  </div>
-                  <div className="bg-gray-800 rounded-lg p-3">
-                    <div className="flex items-center justify-between">
-                      <Activity size={16} className="text-green-400 mb-1" />
-                      <p className="text-white font-bold text-sm">
-                        {stats.active}
-                      </p>
-                    </div>
-                    <p className="text-gray-400 text-xs">Active</p>
-                  </div>
-                  <div className="bg-gray-800 rounded-lg p-3">
-                    <div className="flex items-center justify-between">
-                      <Star size={16} className="text-purple-400 mb-1" />
-                      <p className="text-white font-bold text-sm">
-                        Lvl {stats.level}
-                      </p>
-                    </div>
-                    <p className="text-gray-400 text-xs">Level</p>
-                  </div>
-                  <div className="bg-gray-800 rounded-lg p-3">
-                    <div className="flex items-center justify-between">
-                      <Wallet size={16} className="text-yellow-400  mb-1" />
-                      <p className="text-white font-bold text-sm">
-                        {stats.wallet}
-                      </p>
-                    </div>
-                    <p className="text-gray-400 text-xs">Wallet</p>
-                  </div>
-                </div>
-
-                {/* Referral Code */}
-                <div className="mb-4">
-                  <p className="text-gray-400 text-xs mb-1">Referral Code</p>
-                  <div className="flex items-center justify-between bg-gray-800 rounded-lg px-3 py-2">
-                    <code className="text-green-400 text-sm font-mono">
-                      {user.referralCode}
-                    </code>
-                    <button
-                      onClick={() => copyReferralCode(user.referralCode)}
-                      className="text-gray-400 hover:text-white transition-colors"
-                    >
-                      <Copy size={14} />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => toggleUserStatus(user._id, !user.isActive)}
-                    className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-colors ${
-                      user.isActive
-                        ? 'bg-red-600 hover:bg-red-700 text-white'
-                        : 'bg-green-600 hover:bg-green-700 text-white'
-                    }`}
-                  >
-                    {user.isActive ? 'Deactivate' : 'Activate'}
-                  </button>
-                  <button className="flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-400 hover:to-purple-400 text-white rounded-lg px-3 py-2 text-xs font-semibold transition-all">
-                    <ChevronRight size={14} />
-                  </button>
-                </div>
               </motion.div>
             );
           })}
