@@ -50,6 +50,8 @@ interface DashboardData {
   totalBusiness?: number;
   wallet?: number;
   totalCommission?: number;
+  selfBusiness?: number;
+  directBusiness?: number;
 }
 
 const Team = () => {
@@ -60,6 +62,7 @@ const Team = () => {
   const [dashboard, setDashboard] = useState<DashboardData>({});
   const [loading, setLoading] = useState<boolean>(true);
 
+  // ===== Fetch Dashboard Data =====
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
@@ -69,7 +72,14 @@ const Team = () => {
         const res = await fetch(`/api/user/dashboard?userId=${userId}`);
         const data = await res.json();
         if (res.ok) {
-          setDashboard(data);
+          // Combine selfBusiness + directBusiness
+          const combinedBusiness =
+            (data.selfBusiness || 0) + (data.directBusiness || 0);
+
+          setDashboard({
+            ...data,
+            totalBusiness: combinedBusiness,
+          });
         }
       } catch (err) {
         console.error("Failed to fetch dashboard:", err);
@@ -83,7 +93,7 @@ const Team = () => {
     const userWallet = localStorage.getItem("userWallet");
     if (socket && userWallet) {
       socket.on(`level_update_${userWallet}`, (data: any) => {
-        setDashboard(prev => ({ ...prev, level: data.level }));
+        setDashboard((prev) => ({ ...prev, level: data.level }));
       });
     }
 
@@ -95,6 +105,7 @@ const Team = () => {
     };
   }, []);
 
+  // ===== Fetch Team Members =====
   useEffect(() => {
     const fetchTeamMembers = async () => {
       try {
@@ -121,6 +132,7 @@ const Team = () => {
     fetchTeamMembers();
   }, []);
 
+  // ===== Stats Cards =====
   const statsData: StatsItem[] = [
     {
       id: 1,
@@ -140,9 +152,11 @@ const Team = () => {
       label: "Invest Levels",
       icon: <FaLayerGroup className="text-yellow-400" />,
     },
-     {
+    {
       id: 4,
-      value: "$8585",
+      value: loading
+        ? "..."
+        : `$${dashboard.totalBusiness?.toLocaleString() || 0}`,
       label: "Total Business",
       icon: <FaChartLine className="text-green-400" />,
     },
@@ -166,6 +180,7 @@ const Team = () => {
     >
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
 
+      {/* Background Gradients */}
       <div
         className="absolute top-0 left-0 w-72 h-72 rounded-full z-10"
         style={{
@@ -199,6 +214,7 @@ const Team = () => {
         }}
       ></div>
 
+      {/* Main Container */}
       <div className="container mx-auto max-w-7xl relative z-20">
         <div className="text-center mb-8">
           <h1 className="lg:text-4xl text-2xl mb-3">
@@ -213,6 +229,7 @@ const Team = () => {
           {errorTeam && <p className="text-red-400 mt-2 text-sm">{errorTeam}</p>}
         </div>
 
+        {/* ===== Stats Cards Grid ===== */}
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           {statsData.map((item) => (
             <div
@@ -234,7 +251,7 @@ const Team = () => {
           ))}
         </div>
 
-        {/* Team Levels Grid (UNCHANGED) */}
+        {/* ===== Team Levels Grid ===== */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {staticTeamLevels.map((levelData: TeamLevel) => (
             <div
