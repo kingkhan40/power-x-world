@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaHistory,
   FaMoneyBillWave,
@@ -35,119 +35,106 @@ interface Tab {
   count: number;
 }
 
+interface Deposit {
+  _id: string;
+  wallet?: string;
+  amount: number;
+  token?: string;
+  txHash?: string;
+  chain?: string;
+  confirmed?: boolean;
+  createdAt?: string;
+}
+
+interface Withdrawal {
+  _id: string;
+  wallet?: string;
+  amount: number;
+  token?: string;
+  txHash?: string;
+  chain?: string;
+  confirmed?: boolean;
+  createdAt?: string;
+}
+
 const TransactionsHistory = () => {
   const [activeTab, setActiveTab] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [dateFilter, setDateFilter] = useState<string>("all");
+  const [transactionsData, setTransactionsData] = useState<Transaction[]>([]);
 
-  // Transactions history data
-  const transactionsData: Transaction[] = [
-    {
-      id: 1,
-      transactionId: "TXN001234",
-      amount: 500.0,
-      type: "deposit",
-      method: "USDT",
-      date: "2024-01-15",
-      time: "14:30:45",
-      status: "completed",
-      wallet: "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
-      color: "from-green-500 to-emerald-500",
-      icon: <FaArrowDown className="text-white" />,
-    },
-    {
-      id: 2,
-      transactionId: "TXN001235",
-      amount: 150.0,
-      type: "withdrawal",
-      method: "USDT",
-      date: "2024-01-14",
-      time: "10:15:22",
-      status: "processing",
-      wallet: "CH9300762011623852957",
-      color: "from-blue-500 to-cyan-500",
-      icon: <FaArrowUp className="text-white" />,
-    },
-    {
-      id: 3,
-      transactionId: "TXN001236",
-      amount: 300.0,
-      type: "investment",
-      method: "USDT",
-      date: "2024-01-13",
-      time: "16:45:33",
-      status: "completed",
-      wallet: "Staking Plan #001",
-      color: "from-purple-500 to-pink-500",
-      icon: <FaChartLine className="text-white" />,
-    },
-    {
-      id: 4,
-      transactionId: "TXN001237",
-      amount: 75.5,
-      type: "reward",
-      method: "USDT",
-      date: "2024-01-12",
-      time: "09:20:15",
-      status: "completed",
-      wallet: "Reward System",
-      color: "from-yellow-500 to-orange-500",
-      icon: <FaGift className="text-white" />,
-    },
-    {
-      id: 5,
-      transactionId: "TXN001238",
-      amount: 200.0,
-      type: "withdrawal",
-      method: "USDT",
-      date: "2024-01-11",
-      time: "11:30:08",
-      status: "failed",
-      wallet: "TYVJvqLuW4BMvM2E4E1E1E1E1E1E1E1E1E1E1",
-      color: "from-red-500 to-pink-500",
-      icon: <FaArrowUp className="text-white" />,
-    },
-    {
-      id: 6,
-      transactionId: "TXN001239",
-      amount: 1000.0,
-      type: "deposit",
-      method: "USDT",
-      date: "2024-01-10",
-      time: "13:25:47",
-      status: "completed",
-      wallet: "0x742d35Cc6634C0532925a3b8D4B5A1F6B6C5D7E8",
-      color: "from-indigo-500 to-purple-500",
-      icon: <FaArrowDown className="text-white" />,
-    },
-    {
-      id: 7,
-      transactionId: "TXN001240",
-      amount: 250.0,
-      type: "transfer",
-      method: "USDT",
-      date: "2024-01-09",
-      time: "15:40:12",
-      status: "completed",
-      wallet: "User: John Doe",
-      color: "from-teal-500 to-cyan-500",
-      icon: <FaExchangeAlt className="text-white" />,
-    },
-    {
-      id: 8,
-      transactionId: "TXN001241",
-      amount: 50.0,
-      type: "reward",
-      method: "USDT",
-      date: "2024-01-08",
-      time: "08:15:33",
-      status: "completed",
-      wallet: "Referral System",
-      color: "from-yellow-500 to-amber-500",
-      icon: <FaGift className="text-white" />,
-    },
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+        const userId = userData?._id;
+        if (!userId) {
+          console.warn("No userId found");
+          return;
+        }
+
+        // Fetch deposits
+        const depRes = await fetch(`/api/deposits/history?userId=${userId}`);
+        let deposits: Deposit[] = [];
+        if (depRes.ok) {
+          deposits = await depRes.json();
+        } else {
+          console.warn("Deposits fetch failed:", depRes.status);
+        }
+
+        const mappedDeposits: Transaction[] = deposits.map((dep, index) => ({
+          id: index + 1,
+          transactionId: dep.txHash || dep._id,
+          amount: dep.amount,
+          type: "deposit",
+          method: dep.token || "USDT",
+          date: dep.createdAt ? new Date(dep.createdAt).toLocaleDateString() : "N/A",
+          time: dep.createdAt ? new Date(dep.createdAt).toLocaleTimeString() : "N/A",
+          status: dep.confirmed ? "completed" : "processing",
+          wallet: dep.wallet || "N/A",
+          color: "from-green-500 to-emerald-500",
+          icon: <FaArrowDown className="text-white" />,
+        }));
+
+        // Fetch withdrawals
+        const withRes = await fetch(`/api/withdraw/history?userId=${userId}`);
+        let withdrawals: Withdrawal[] = [];
+        if (withRes.ok) {
+          withdrawals = await withRes.json();
+        } else {
+          console.warn("Withdrawa fetch failed:", withRes.status);
+        }
+
+        const mappedWithdrawals: Transaction[] = withdrawals.map((withd, index) => ({
+          id: mappedDeposits.length + index + 1,
+          transactionId: withd.txHash || withd._id,
+          amount: withd.amount,
+          type: "withdrawal",
+          method: withd.token || "USDT",
+          date: withd.createdAt ? new Date(withd.createdAt).toLocaleDateString() : "N/A",
+          time: withd.createdAt ? new Date(withd.createdAt).toLocaleTimeString() : "N/A",
+          status: withd.confirmed ? "completed" : "processing",
+          wallet: withd.wallet || "N/A",
+          color: "from-blue-500 to-cyan-500",
+          icon: <FaArrowUp className="text-white" />,
+        }));
+
+        // Combine and sort by date descending
+        const combined = [...mappedDeposits, ...mappedWithdrawals].sort((a, b) => {
+          return new Date(b.date + ' ' + b.time).getTime() - new Date(a.date + ' ' + a.time).getTime();
+        });
+
+        setTransactionsData(combined);
+      } catch (error) {
+        console.error("Error fetching transactions:", error);
+      }
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, 5000); // Poll every 5 seconds for real-time updates
+    return () => clearInterval(interval);
+  }, []);
 
   const tabs: Tab[] = [
     {
