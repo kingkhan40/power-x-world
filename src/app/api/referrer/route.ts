@@ -1,67 +1,45 @@
-// app/api/referrer/route.ts
-import { MongoClient, ObjectId } from 'mongodb';
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
+import { connectDB } from "@/lib/db";
+import User from "@/models/User";
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const userId = searchParams.get('userId');
-
-  let client: MongoClient | null = null;
-
+export async function GET(req: Request) {
   try {
-    client = await MongoClient.connect(process.env.MONGODB_URI!);
-    const db = client.db(); // Uses DB name from URI
+    await connectDB();
 
-    // === FEATURE 1: Return all users referred by `userId` ===
-    if (userId) {
-      if (!userId.trim()) {
-        return NextResponse.json(
-          { message: 'User ID is required' },
-          { status: 400 }
-        );
-      }
+    // Extract ?code= from URL
+    const { searchParams } = new URL(req.url);
+    const code = searchParams.get("code");
 
-      const referredBy = ObjectId.isValid(userId) ? new ObjectId(userId) : userId;
-
-      const referredUsers = await db
-        .collection('users')
-        .find({ referredBy })
-        .toArray();
-
-      return NextResponse.json({ referredUsers }, { status: 200 });
+    if (!code) {
+      return NextResponse.json(
+        { success: false, message: "Referral code missing" },
+        { status: 400 }
+      );
     }
 
-    // === FEATURE 2: Hard-coded lookup for USR001234 (fallback sponsor) ===
-    const targetUser = await db
-      .collection('users')
-      .findOne({ userId: 'USR001234' });
+    // Find user by referral code (case-insensitive)
+    const user = await User.findOne({
+      referralCode: { $regex: new RegExp(`^${code}$`, "i") },
+    }).select("name email referralCode");
 
-    if (!targetUser) {
+    if (!user) {
       return NextResponse.json(
-        { error: 'User not found' },
+        { success: false, message: "Invalid referral code" },
         { status: 404 }
       );
     }
 
-    const sponsorId = targetUser.sponsorId || 'SPN002345';
-
+    return NextResponse.json({
+      success: true,
+      name: user.name,
+      email: user.email,
+      referralCode: user.referralCode,
+    });
+  } catch (err) {
+    console.error("❌ Referrer Fetch Error:", err);
     return NextResponse.json(
-      { sponsorId },
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
+      { success: false, message: "Server error" },
+      { status: 500 }
     );
-  } catch (error) {
-    console.error('Error in /api/referrer:', error);
-    return NextResponse.json(
-      { error: 'Failed to process request' },
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-  } finally {
-    await client?.close();
   }
 }
