@@ -1,12 +1,17 @@
 // models/User.ts
-import mongoose, { Schema, Document, Types } from 'mongoose';
+import mongoose, { Schema, Document, Types } from "mongoose";
 
+/* -----------------------------------------
+ * 🧩 Sub-Schemas & Interfaces
+ * ----------------------------------------- */
 export interface IInvestment {
   amount: number;
   date: Date;
 }
 
 export interface IUserSettings {
+  usdtBalance?: number;
+  selfBusiness?: number;
   notifications: {
     push: boolean;
     email: boolean;
@@ -15,7 +20,9 @@ export interface IUserSettings {
   twoFactorAuth: boolean;
 }
 
-// models/User.ts
+/* -----------------------------------------
+ * 🧠 Main User Interface
+ * ----------------------------------------- */
 export interface IUser extends Document {
   name: string;
   email: string;
@@ -35,39 +42,43 @@ export interface IUser extends Document {
   settings?: IUserSettings;
   profilePic?: string | null;
 
+  // Business Fields
   usdtBalance?: number;
   selfBusiness?: number;
   directBusiness?: number;
   rewardBalance?: number;
   currentRewardLevel?: number;
 
-  // 💵 Additional Payment Sources (for staking, withdrawals, etc.)
+  // Payments
   rewardPayment?: number;
   totalCommission?: number;
   otherPayments?: number;
 
-  // ✅ ADD THESE MISSING FIELDS
-  isVerified?: boolean; // Add this if not present
-  phone?: string; // Add this if not present
-  address?: string; // Add this if not present
-  createdAt?: Date; // Add this if not present
+  // Misc
+  isVerified?: boolean;
+  phone?: string;
+  address?: string;
+  createdAt?: Date;
 }
 
+/* -----------------------------------------
+ * 🧩 User Schema Definition
+ * ----------------------------------------- */
 const UserSchema = new Schema<IUser>(
   {
     name: { type: String, required: true, trim: true },
     email: { type: String, unique: true, required: true, lowercase: true },
     password: { type: String, required: true },
-    role: { type: String, enum: ['User', 'Admin'], default: 'User' },
+    role: { type: String, enum: ["User", "Admin"], default: "User" },
     isActive: { type: Boolean, default: true },
 
     referralCode: { type: String, unique: true, required: true },
-    referredBy: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+    referredBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
 
-    team: { type: String, default: 'admin' },
+    team: { type: String, default: "admin" },
     wallet: { type: Number, default: 0 },
     level: { type: Number, default: 1 },
-    teamMembers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+    teamMembers: [{ type: Schema.Types.ObjectId, ref: "User" }],
     totalTeam: { type: Number, default: 0 },
     activeUsers: { type: Number, default: 0 },
 
@@ -78,9 +89,11 @@ const UserSchema = new Schema<IUser>(
       },
     ],
 
-    walletAddress: { type: String, default: '' },
+    walletAddress: { type: String, default: "" },
 
     settings: {
+      usdtBalance: { type: Number, default: 0 },
+      selfBusiness: { type: Number, default: 0 },
       notifications: {
         push: { type: Boolean, default: true },
         email: { type: Boolean, default: false },
@@ -89,7 +102,7 @@ const UserSchema = new Schema<IUser>(
       twoFactorAuth: { type: Boolean, default: false },
     },
 
-    profilePic: { type: String, default: null }, // ROOT LEVEL
+    profilePic: { type: String, default: null },
 
     usdtBalance: { type: Number, default: 0 },
     selfBusiness: { type: Number, default: 0 },
@@ -97,18 +110,21 @@ const UserSchema = new Schema<IUser>(
     rewardBalance: { type: Number, default: 0 },
     currentRewardLevel: { type: Number, default: 1 },
 
-    // 💵 Additional Payment Fields
     rewardPayment: { type: Number, default: 0 },
     totalCommission: { type: Number, default: 0 },
     otherPayments: { type: Number, default: 0 },
+
+    isVerified: { type: Boolean, default: false },
+    phone: { type: String, default: "" },
+    address: { type: String, default: "" },
   },
   { timestamps: true }
 );
 
 /* -----------------------------------------
- * 🧠 Export Model (Hot Reload Safe)
+ * ✅ Safe Export for Hot Reload
  * ----------------------------------------- */
 export const User =
-  mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
+  mongoose.models.User || mongoose.model<IUser>("User", UserSchema);
 
 export default User;
