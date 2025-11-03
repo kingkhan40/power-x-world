@@ -51,4 +51,4 @@ export async function GET(req: Request) {
     console.error("Dashboard API Error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
-}
+}  
