@@ -54,11 +54,9 @@ const DepositHistory = () => {
       setLoading(false);
     }
   };
-  // ✅ Auto-refresh every 5 seconds
+  // ✅ Load on mount only
   useEffect(() => {
     fetchDeposits();
-    const interval = setInterval(fetchDeposits, 5000);
-    return () => clearInterval(interval);
   }, []);
   // ✅ Tabs
   const tabs: Tab[] = [
@@ -401,15 +399,8 @@ const DepositHistory = () => {
             )}
           </div>
         </div>
-        {/* Auto-refresh Indicator */}
-        <div className="text-center mt-4">
-          <div className="inline-flex items-center gap-2 text-white/60 text-sm">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            Auto-refreshing every 5 seconds
-          </div>
-        </div>
       </div>
     </div>
   );
 };
-export default DepositHistory;
+export default DepositHistory; 
