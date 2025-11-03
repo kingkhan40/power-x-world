@@ -106,7 +106,7 @@ const Page = () => {
   };
 
   /* -----------------------------------------
-   * Team Stats
+   * Team Stats 
    * ----------------------------------------- */
   const getStats = (u: User) => ({
     total: u.totalTeam || 0,
