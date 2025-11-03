@@ -1,6 +1,7 @@
-import mongoose, { Schema, models, model } from "mongoose";
+import mongoose, { Schema, models, model, Types } from "mongoose";
 
 export interface IDeposit {
+  userId: Types.ObjectId; // 👈 Added
   wallet: string;
   amount: number;
   token?: string;
@@ -12,6 +13,7 @@ export interface IDeposit {
 
 const DepositSchema = new Schema<IDeposit>(
   {
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: true }, // 👈 Added
     wallet: { type: String, required: true },
     amount: { type: Number, required: true },
     token: { type: String },
@@ -23,6 +25,5 @@ const DepositSchema = new Schema<IDeposit>(
   { timestamps: true }
 );
 
-// 👇 Add this export
 export const Deposit =
   models.Deposit || model<IDeposit>("Deposit", DepositSchema);

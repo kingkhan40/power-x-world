@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
 
     // === 1. SAVE DEPOSIT ===
     const deposit = await Deposit.create({
-      user: userId,
+      userId, // 👈 Fixed: was "user"
       wallet,
       amount,
       token,
@@ -65,7 +65,11 @@ export async function POST(req: NextRequest) {
     const commissionRates = [0.12, 0.05, 0.02, 0.02]; // L1:12%, L2:5%, L3:2%, L4:2%
     let currentReferrerId = user.referredBy;
 
-    for (let level = 0; level < commissionRates.length && currentReferrerId; level++) {
+    for (
+      let level = 0;
+      level < commissionRates.length && currentReferrerId;
+      level++
+    ) {
       const referrer = await User.findById(currentReferrerId);
       if (!referrer) break;
 
@@ -141,7 +145,7 @@ export async function GET(req: NextRequest) {
     }
 
     const deposits = await Deposit.find({
-      user: userId,
+      userId, // 👈 Fixed
       confirmed: true,
     })
       .select("amount token txHash createdAt")
@@ -150,6 +154,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(deposits);
   } catch (err: any) {
     console.error("GET Deposits Error:", err);
-    return NextResponse.json({ error: "Failed to fetch deposits" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch deposits" },
+      { status: 500 }
+    );
   }
-}    
+}
