@@ -128,6 +128,10 @@ function DepositInner() {
       setTxHash(txHash as string);
       alert('✅ Deposit sent! Confirm in your wallet.');
 
+      // Get userId from localStorage
+      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+      const userId = userData?._id;
+
       // Save to MongoDB
       await fetch('/api/deposit', {
         method: 'POST',
@@ -138,6 +142,7 @@ function DepositInner() {
           token: 'USDT (BEP20)',
           txHash,
           chain: 'BNB Smart Chain',
+          userId,
         }),
       });
 
@@ -580,4 +585,4 @@ function Deposit() {
   );
 }
 
-export default Deposit;
+export default Deposit; 

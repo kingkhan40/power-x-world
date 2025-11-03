@@ -33,16 +33,18 @@ export async function POST(req: NextRequest) {
 
     // === 1. SAVE DEPOSIT ===
     const deposit = await Deposit.create({
-      userId, // 👈 Fixed: was "user"
+      userId,
       wallet,
       amount,
       token,
       txHash,
       chain,
-      confirmed: true,
+      confirmed: false, // Changed to false for security; confirm via separate process
     });
 
     // === 2. UPDATE USER (INVESTMENT + WALLET + USDT BALANCE) ===
+    // Note: In a real system, user updates should only happen after confirmation.
+    // For now, updating immediately as per original logic.
     const user = await User.findById(userId);
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -62,6 +64,7 @@ export async function POST(req: NextRequest) {
     await user.save();
 
     // === 3. MULTI-LEVEL REFERRAL COMMISSION ===
+    // Improved: Pay commission on every deposit, but track/add to team/upgrade level only on first commission per downline.
     const commissionRates = [0.12, 0.05, 0.02, 0.02]; // L1:12%, L2:5%, L3:2%, L4:2%
     let currentReferrerId = user.referredBy;
 
@@ -78,23 +81,28 @@ export async function POST(req: NextRequest) {
       referrer.teamMembers = referrer.teamMembers || [];
 
       const commissionKey = `${user._id.toString()}_L${level + 1}`;
-      const alreadyPaid = referrer.commissionedUsers.includes(commissionKey);
+      const isFirstCommission = !referrer.commissionedUsers.includes(commissionKey);
 
-      if (!alreadyPaid) {
-        const commission = amount * commissionRates[level];
+      // Always pay commission
+      const commission = amount * commissionRates[level];
+      referrer.wallet = (referrer.wallet || 0) + commission;
 
-        // Add commission to wallet
-        referrer.wallet = (referrer.wallet || 0) + commission;
+      if (isFirstCommission) {
+        referrer.commissionedUsers.push(commissionKey);
 
         // Add to team (only Level 1)
         if (level === 0 && !referrer.teamMembers.includes(user._id)) {
           referrer.teamMembers.push(user._id);
         }
 
-        // Track to avoid duplicate
-        referrer.commissionedUsers.push(commissionKey);
+        // === LEVEL UPGRADE (max 4, only for direct referrals) ===
+        if (level === 0 && referrer.level < 4) {
+          referrer.level += 1;
+        }
+      }
 
-        // === RECALCULATE TEAM SIZE & ACTIVE USERS ===
+      // === RECALCULATE TEAM SIZE & ACTIVE USERS (only for direct referrer) ===
+      if (level === 0) {
         referrer.totalTeam = referrer.teamMembers.length;
 
         const activeCount = await User.countDocuments({
@@ -102,23 +110,18 @@ export async function POST(req: NextRequest) {
           "investments.amount": { $gte: 50 },
         });
         referrer.activeUsers = activeCount;
-
-        // === LEVEL UPGRADE (max 4) ===
-        if (referrer.level < 4) {
-          referrer.level += 1;
-        }
-
-        await referrer.save();
       }
+
+      await referrer.save();
 
       // Move up
       currentReferrerId = referrer.referredBy;
     }
 
     // === RESPONSE ===
+    // Note: Removed "verified: true" since no actual verification is done.
     return NextResponse.json({
       success: true,
-      verified: true,
       deposit,
       user: {
         wallet: user.wallet,
@@ -145,7 +148,7 @@ export async function GET(req: NextRequest) {
     }
 
     const deposits = await Deposit.find({
-      userId, // 👈 Fixed
+      userId,
       confirmed: true,
     })
       .select("amount token txHash createdAt")

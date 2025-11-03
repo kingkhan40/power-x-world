@@ -17,7 +17,7 @@ interface Deposit {
   date: string;
   time: string;
   status: "completed" | "pending" | "failed";
-  wallet: string;
+  wallet: string;     
   color?: string;
 }
 
@@ -36,7 +36,14 @@ const DepositHistory = () => {
   // 🔹 Fetch Deposits from MongoDB
   const fetchDeposits = async () => {
     try {
-      const res = await fetch("/api/deposit/history");
+      const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+      const userId = userData?._id;
+
+      if (!userId) return console.warn("No userId found in localStorage");
+
+      const res = await fetch(`/api/deposits/history?userId=${userId}`);
+      if (!res.ok) throw new Error("Failed to fetch deposits");
+
       const data = await res.json();
       setDepositData(data);
     } catch (error) {
@@ -145,36 +152,6 @@ const DepositHistory = () => {
 
         {/* Main Card */}
         <div className="p-6 rounded-2xl relative overflow-hidden bg-gray-900 border border-gray-800 shadow-2xl">
-          {/* Glow border */}
-          <div
-            className="absolute -inset-2 rounded-2xl animate-spin opacity-70"
-            style={{
-              background:
-                "conic-gradient(from 0deg, #10b981, #3b82f6, #8b5cf6, #f59e0b, #10b981)",
-              animationDuration: "9000ms",
-              zIndex: 0,
-            }}
-          ></div>
-          <div className="absolute inset-0.5 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 z-1"></div>
-
-          {/* Gradient circles */}
-          <div
-            className="absolute -top-8 -left-8 w-24 h-24 rounded-full z-10"
-            style={{
-              background: "linear-gradient(45deg, #10b981, #3b82f6, #10b981)",
-              filter: "blur(12px)",
-              opacity: "0.6",
-            }}
-          ></div>
-          <div
-            className="absolute -bottom-8 -right-8 w-20 h-20 rounded-full z-10"
-            style={{
-              background: "linear-gradient(135deg, #8b5cf6, #f59e0b, #8b5cf6)",
-              filter: "blur(10px)",
-              opacity: "0.4",
-            }}
-          ></div>
-
           {/* Tabs */}
           <div className="relative z-20">
             <div className="flex overflow-x-auto gap-1 lg:gap-2 mb-4 lg:mb-6 pb-2 lg:pb-2 scrollbar-hide">
@@ -210,7 +187,6 @@ const DepositHistory = () => {
                   key={deposit._id}
                   className="p-4 lg:p-6 rounded-xl bg-gradient-to-r from-gray-800/50 to-gray-900/30 border border-white/20 backdrop-blur-sm hover:border-white/40 transition-all duration-300 group"
                 >
-                  {/* Desktop layout */}
                   <div className="hidden lg:flex flex-row items-center justify-between gap-4">
                     <div className="flex items-center gap-4 flex-1">
                       <div
