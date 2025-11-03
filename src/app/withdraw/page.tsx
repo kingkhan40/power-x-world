@@ -12,7 +12,7 @@ import {
 } from 'react-icons/fa';
 import { useBalance } from '@/context/BalanceContext';
 import { useRouter } from 'next/navigation'; // Added for navigation
-import Loader from '@/components/UI/Loader';
+import Loading from '@/components/UI/Loading';
 
 function WithdrawPage() {
   const router = useRouter(); // Initialize router
@@ -91,7 +91,7 @@ function WithdrawPage() {
   };
 
   if (loading) {
-    return <Loader />;
+    return <Loading />;
   }
 
   return (
