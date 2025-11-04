@@ -137,7 +137,7 @@ const Team = () => {
     {
       id: 1,
       value: loading ? "Loading..." : (dashboard.totalTeam ?? 0).toString(),
-      label: "Total Team",
+      label: "Total Partner",
       icon: <FaUsers className="text-blue-400" />,
     },
     {

@@ -34,7 +34,7 @@ const Sidebar = () => {
     { name: 'Team', path: '/team' },
     { name: 'Self Investment', path: '/selfInvestment' },
     { name: 'Rewards', path: '/rewards' },
-    { name: 'Our Team', path: '/team-detail' },
+    { name: 'Our Partner', path: '/team-detail' },
     { name: 'Profile Records', path: '/profileRecords' },
     { name: 'Salary System', path: '/salarySystem' },
     { name: 'Deposit History', path: '/depositHistory' },

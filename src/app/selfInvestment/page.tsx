@@ -177,24 +177,7 @@ const SelfInvestment = () => {
           </button>
         </div>
 
-        {/* ✅ Summary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-10">
-          <div className="bg-gradient-to-br from-blue-500/10 to-blue-700/10 rounded-xl p-4 border border-blue-400/30 text-center">
-            <FaCoins className="mx-auto text-blue-400 text-2xl mb-2" />
-            <div className="text-white font-bold text-lg">Total Earned</div>
-            <div className="text-blue-300">${totalEarned.toFixed(2)}</div>
-          </div>
-          <div className="bg-gradient-to-br from-green-500/10 to-green-700/10 rounded-xl p-4 border border-green-400/30 text-center">
-            <FaCheckCircle className="mx-auto text-green-400 text-2xl mb-2" />
-            <div className="text-white font-bold text-lg">Max Limit</div>
-            <div className="text-green-300">${maxAmount.toFixed(2)}</div>
-          </div>
-          <div className="bg-gradient-to-br from-purple-500/10 to-purple-700/10 rounded-xl p-4 border border-purple-400/30 text-center">
-            <FaChartLine className="mx-auto text-purple-400 text-2xl mb-2" />
-            <div className="text-white font-bold text-lg">Progress</div>
-            <div className="text-purple-300">{currentProgress.toFixed(1)}%</div>
-          </div>
-        </div>
+     
       </div>
     </div>
   );
