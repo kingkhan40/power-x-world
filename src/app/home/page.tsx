@@ -76,10 +76,7 @@ function HomePage() {
         {/* ✅ Main Content (UI untouched) */}
         <div className="space-y-4">
           <BalanceCard balance={totalBalance ?? 0} />
-          <InvestmentInfo
-            userEmail={user?.email ?? ''}
-            todayIncome={todayIncome ?? 0}
-          />
+          <InvestmentInfo userEmail={user?.email ?? ""} />
           <IconGridNavigation />
           <BasicPlan />
         </div>
