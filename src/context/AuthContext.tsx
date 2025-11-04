@@ -700,22 +700,62 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   // Logout Function
-  const logout = (): void => {
+ const logout = async (): Promise<void> => {
+  try {
+    const token = localStorage.getItem("token");
+
+    // ✅ Call backend logout API
+    const res = await fetch("/api/logout", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: token ? `Bearer ${token}` : "",
+      },
+    });
+
+    const data = await res.json();
+    console.log("Logout response:", data); // ✅ Dev terminal me dikhega
+
+    // Clear client-side state
     setUser(null);
     setIsAuthenticated(false);
     setProfileData({
       user: null,
-      referrerData: { name: 'Admin', sponsorId: null, profile: null },
+      referrerData: { name: "Admin", sponsorId: null, profile: null },
       loading: false,
-      error: '',
-      message: '',
+      error: "",
+      message: "",
+      fetchProfile: async () => {},
+      updateProfile: async () => {},
+      updateProfilePicture: async () => {},
+    });
+
+    // Clear localStorage
+    localStorage.clear();
+
+    // Redirect to login page
+    router.push("/login");
+  } catch (err: any) {
+    console.error("Logout failed:", err.message || err);
+
+    // Ensure local logout even if API fails
+    setUser(null);
+    setIsAuthenticated(false);
+    setProfileData({
+      user: null,
+      referrerData: { name: "Admin", sponsorId: null, profile: null },
+      loading: false,
+      error: "",
+      message: "",
       fetchProfile: async () => {},
       updateProfile: async () => {},
       updateProfilePicture: async () => {},
     });
     localStorage.clear();
-    router.push('/login');
-  };
+    router.push("/login");
+  }
+};
+
 
   // Get Password Strength
   const getPasswordStrength = (): PasswordStrength => {
