@@ -1,5 +1,9 @@
+<<<<<<< HEAD
 'use client';
 
+=======
+"use client";
+>>>>>>> upstream/main
 import React, { useEffect, useState } from "react";
 import {
   FaHistory,
@@ -8,32 +12,38 @@ import {
   FaCheck,
   FaTimes,
 } from "react-icons/fa";
-
 interface Deposit {
   _id: string;
-  transactionId: string;
+  wallet?: string;
   amount: number;
+<<<<<<< HEAD
   method: string;
   date: string;
   time: string;
   status: "completed" | "pending" | "failed";
   wallet: string;
   userId: string;
+=======
+  token?: string;
+  txHash?: string;
+  chain?: string;
+  confirmed?: boolean;
+  createdAt?: string;
+>>>>>>> upstream/main
 }
-
 interface Tab {
   id: string;
   label: string;
   icon: JSX.Element;
   count: number;
 }
-
 const DepositHistory = () => {
   const [depositData, setDepositData] = useState<Deposit[]>([]);
   const [activeTab, setActiveTab] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+<<<<<<< HEAD
 
   // ✅ Get userId from your authentication system
   const getUserId = () => {
@@ -50,24 +60,49 @@ const DepositHistory = () => {
       const userId = getUserId();
       const res = await fetch(`/api/deposits/history?userId=${userId}`);
       if (!res.ok) throw new Error("Failed to fetch deposits");
+=======
+  // ✅ Fetch data from MongoDB via API with userId
+  const fetchDeposits = async () => {
+    try {
+      setLoading(true);
+      const storedUser = localStorage.getItem("userData");
+      if (!storedUser) {
+        throw new Error("User not logged in");
+      }
+      const user = JSON.parse(storedUser);
+      const userId = user._id;
+      const res = await fetch(`/api/deposits/history?userId=${userId}`);
+>>>>>>> upstream/main
       const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to fetch deposits");
+      }
       setDepositData(data);
       setError(null);
+<<<<<<< HEAD
     } catch (error) {
       console.error("Error fetching deposits:", error);
       setError('Failed to load deposits');
+=======
+    } catch (err: any) {
+      console.error("Error fetching deposits:", err);
+      setError(err.message || 'Failed to load deposits');
+>>>>>>> upstream/main
       setDepositData([]);
     } finally {
       setLoading(false);
     }
   };
+<<<<<<< HEAD
 
   // ✅ Auto-refresh every 5 seconds
+=======
+  // ✅ Load on mount only
+>>>>>>> upstream/main
   useEffect(() => {
     fetchDeposits();
-    const interval = setInterval(fetchDeposits, 5000);
-    return () => clearInterval(interval);
   }, []);
+<<<<<<< HEAD
 
   // ✅ Tabs
   const tabs: Tab[] = [
@@ -97,10 +132,41 @@ const DepositHistory = () => {
     },
   ];
 
+=======
+  // ✅ Tabs
+  const tabs: Tab[] = [
+    {
+      id: "all",
+      label: "All Deposits",
+      icon: <FaHistory />,
+      count: depositData.length
+    },
+    {
+      id: "completed",
+      label: "Completed",
+      icon: <FaCheck />,
+      count: depositData.filter(d => d.confirmed === true).length
+    },
+    {
+      id: "pending",
+      label: "Pending",
+      icon: <FaClock />,
+      count: depositData.filter(d => d.confirmed === false).length
+    },
+    {
+      id: "failed",
+      label: "Failed",
+      icon: <FaTimes />,
+      count: depositData.filter(d => d.confirmed === undefined).length // Assuming no 'failed', count will be 0
+    },
+  ];
+>>>>>>> upstream/main
   // ✅ Filtering logic
   const filteredDeposits = depositData.filter((deposit) => {
-    const matchesTab = activeTab === "all" || deposit.status === activeTab;
+    const status = deposit.confirmed === true ? "completed" : deposit.confirmed === false ? "pending" : "failed";
+    const matchesTab = activeTab === "all" || status === activeTab;
     const matchesSearch =
+<<<<<<< HEAD
       deposit.transactionId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       deposit.method?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       deposit.wallet?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -134,6 +200,30 @@ const DepositHistory = () => {
     }
   };
 
+=======
+      deposit.txHash?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      deposit.token?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      deposit.chain?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      deposit.wallet?.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesTab && matchesSearch;
+  });
+  // ✅ Helper functions
+  const getStatusColor = (confirmed?: boolean) => {
+    if (confirmed === true) return "text-green-400 bg-green-500/20 border-green-400/30";
+    if (confirmed === false) return "text-yellow-400 bg-yellow-500/20 border-yellow-400/30";
+    return "text-red-400 bg-red-500/20 border-red-400/30"; // For undefined or failed
+  };
+  const getStatusIcon = (confirmed?: boolean) => {
+    if (confirmed === true) return <FaCheck className="text-sm" />;
+    if (confirmed === false) return <FaClock className="text-sm" />;
+    return <FaTimes className="text-sm" />;
+  };
+  const getStatusLabel = (confirmed?: boolean) => {
+    if (confirmed === true) return "Completed";
+    if (confirmed === false) return "Pending";
+    return "Failed";
+  };
+>>>>>>> upstream/main
   if (loading) {
     return (
       <div className="min-h-screen flex justify-center items-center text-white">
@@ -144,7 +234,10 @@ const DepositHistory = () => {
       </div>
     );
   }
+<<<<<<< HEAD
 
+=======
+>>>>>>> upstream/main
   if (error) {
     return (
       <div className="min-h-screen flex justify-center items-center text-white">
@@ -164,7 +257,10 @@ const DepositHistory = () => {
       </div>
     );
   }
+<<<<<<< HEAD
 
+=======
+>>>>>>> upstream/main
   return (
     <div
       className="min-h-screen py-8 lg:px-4 px-2 relative"
@@ -179,7 +275,6 @@ const DepositHistory = () => {
     >
       {/* Background Overlay */}
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
-
       <div className="container mx-auto max-w-6xl relative z-10">
         {/* Header Section */}
         <div className="text-center my-6 lg:mt-0">
@@ -193,13 +288,20 @@ const DepositHistory = () => {
             Track Your Deposit Transactions and Status
           </p>
         </div>
+<<<<<<< HEAD
 
+=======
+>>>>>>> upstream/main
         {/* Search Bar */}
         <div className="mb-6 flex justify-center">
           <div className="relative w-full max-w-md">
             <input
               type="text"
+<<<<<<< HEAD
               placeholder="Search by Transaction ID, Method, or Wallet..."
+=======
+              placeholder="Search by TxHash, Token, Chain, or Wallet..."
+>>>>>>> upstream/main
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full px-4 py-3 pl-10 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/60 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-300"
@@ -217,7 +319,10 @@ const DepositHistory = () => {
             )}
           </div>
         </div>
+<<<<<<< HEAD
 
+=======
+>>>>>>> upstream/main
         {/* Main Content Card */}
         <div className="lg:p-6 p-3 rounded-2xl relative overflow-hidden bg-gray-900 border border-gray-800 shadow-2xl">
           {/* Rotating Border Animation */}
@@ -231,7 +336,10 @@ const DepositHistory = () => {
             }}
           ></div>
           <div className="absolute inset-0.5 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 z-1"></div>
+<<<<<<< HEAD
 
+=======
+>>>>>>> upstream/main
           {/* Animated Gradient Circles */}
           <div
             className="absolute -top-8 -left-8 w-24 h-24 rounded-full z-10"
@@ -250,7 +358,10 @@ const DepositHistory = () => {
               opacity: "0.4",
             }}
           ></div>
+<<<<<<< HEAD
 
+=======
+>>>>>>> upstream/main
           <div
             className="absolute top-1/2 -right-10 w-16 h-16 rounded-full z-10"
             style={{
@@ -259,7 +370,10 @@ const DepositHistory = () => {
               opacity: "0.3",
             }}
           ></div>
+<<<<<<< HEAD
 
+=======
+>>>>>>> upstream/main
           {/* Content */}
           <div className="relative z-20">
             {/* Tabs */}
@@ -288,9 +402,9 @@ const DepositHistory = () => {
                 </button>
               ))}
             </div>
-
             {/* Deposits List */}
             <div className="space-y-3 lg:space-y-4">
+<<<<<<< HEAD
               {filteredDeposits.map((deposit) => (
                 <div
                   key={deposit._id}
@@ -365,15 +479,49 @@ const DepositHistory = () => {
                         <div className="flex flex-row items-center gap-4 mb-2">
                           <h3 className="text-white font-semibold text-lg">
                             {deposit.method}
+=======
+              {filteredDeposits.map((deposit) => {
+                const dateObj = deposit.createdAt ? new Date(deposit.createdAt) : null;
+                const date = dateObj ? dateObj.toLocaleDateString() : 'N/A';
+                const time = dateObj ? dateObj.toLocaleTimeString() : '';
+                return (
+                  <div
+                    key={deposit._id}
+                    className="p-4 lg:p-6 rounded-xl bg-gradient-to-r from-gray-800/50 to-gray-900/30 border border-white/20 backdrop-blur-sm hover:border-white/40 transition-all duration-300 group"
+                  >
+                    {/* Mobile Layout */}
+                    <div className="lg:hidden flex flex-col gap-3">
+                      {/* Top Row - Icon, Method, Amount */}
+                      <div className="flex items-center justify-between w-full gap-3">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-blue-500 flex items-center justify-center shadow-lg`}
+                          >
+                            <FaMoneyBillWave className="text-white text-sm" />
+                          </div>
+                          <h3 className="text-white font-semibold text-base capitalize truncate">
+                            {deposit.token || 'Unknown'} on {deposit.chain || 'N/A'}
+>>>>>>> upstream/main
                           </h3>
-                          <span className="text-blue-300 font-mono text-sm">
-                            {deposit.transactionId}
-                          </span>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-white text-lg font-bold">
+                            ${deposit.amount.toLocaleString()}
+                          </div>
+                        </div>
+                      </div>
+                      {/* Middle Row - Transaction ID */}
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-blue-300 font-mono text-xs truncate">
+                          ID: {deposit.txHash || 'N/A'}
+                        </span>
+                        <div className="flex flex-col gap-1">
                           <span
-                            className={`px-3 py-1 rounded-full text-sm font-semibold border flex items-center gap-2 ${getStatusColor(
-                              deposit.status
+                            className={`px-2 py-1 rounded-full text-xs font-semibold border flex items-center gap-1 ${getStatusColor(
+                              deposit.confirmed
                             )}`}
                           >
+<<<<<<< HEAD
                             {getStatusIcon(deposit.status)}
                             {deposit.status.charAt(0).toUpperCase() +
                               deposit.status.slice(1)}
@@ -388,22 +536,77 @@ const DepositHistory = () => {
                           <span className="font-mono text-xs bg-white/10 px-2 py-1 rounded">
                             {deposit.wallet?.slice(0, 12)}...
                             {deposit.wallet?.slice(-8)}
+=======
+                            {getStatusIcon(deposit.confirmed)}
+                            {getStatusLabel(deposit.confirmed)}
+>>>>>>> upstream/main
                           </span>
                         </div>
                       </div>
-                    </div>
-
-                    <div className="text-right">
-                      <div className="text-white text-2xl font-bold mb-1">
-                        ${deposit.amount.toLocaleString()}
+                      {/* Bottom Row - Details */}
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-white/70">
+                        <span className="flex items-center gap-1 bg-white/10 px-2 py-1 rounded-full">
+                          <FaClock className="text-xs" />
+                          {date}
+                        </span>
+                        <span className="bg-white/10 px-2 py-1 rounded-full capitalize">
+                          {deposit.chain || 'N/A'}
+                        </span>
+                        <span className="font-mono text-xs bg-white/10 px-2 py-1 rounded truncate max-w-[120px]">
+                          {deposit.wallet?.slice(0, 8)}...
+                          {deposit.wallet?.slice(-6)}
+                        </span>
                       </div>
-                      <div className="text-white/50 text-sm">Amount</div>
+                    </div>
+                    {/* Desktop Layout */}
+                    <div className="hidden lg:flex flex-row items-center justify-between gap-4">
+                      <div className="flex items-center gap-4 flex-1">
+                        {/* Icon with gradient background */}
+                        <div
+                          className={`w-16 h-16 rounded-xl bg-gradient-to-br from-green-500 to-blue-500 flex items-center justify-center shadow-lg`}
+                        >
+                          <FaMoneyBillWave className="text-white text-lg" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex flex-row items-center gap-4 mb-2">
+                            <h3 className="text-white font-semibold text-lg">
+                              {deposit.token || 'Unknown'} on {deposit.chain || 'N/A'}
+                            </h3>
+                            <span className="text-blue-300 font-mono text-sm">
+                              {deposit.txHash || 'N/A'}
+                            </span>
+                            <span
+                              className={`px-3 py-1 rounded-full text-sm font-semibold border flex items-center gap-2 ${getStatusColor(
+                                deposit.confirmed
+                              )}`}
+                            >
+                              {getStatusIcon(deposit.confirmed)}
+                              {getStatusLabel(deposit.confirmed)}
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-4 text-sm text-white/70">
+                            <span className="flex items-center gap-1">
+                              <FaClock />
+                              {date} at {time}
+                            </span>
+                            <span className="font-mono text-xs bg-white/10 px-2 py-1 rounded">
+                              {deposit.wallet?.slice(0, 12)}...
+                              {deposit.wallet?.slice(-8)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-white text-2xl font-bold mb-1">
+                          ${deposit.amount.toLocaleString()}
+                        </div>
+                        <div className="text-white/50 text-sm">Amount</div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
-
             {/* Empty State */}
             {filteredDeposits.length === 0 && (
               <div className="text-center py-8 lg:py-12">
@@ -416,17 +619,28 @@ const DepositHistory = () => {
                 <p className="text-white/60 text-sm lg:text-base">
                   {searchTerm
                     ? "Try adjusting your search terms"
+<<<<<<< HEAD
                     : depositData.length === 0 
+=======
+                    : depositData.length === 0
+>>>>>>> upstream/main
                     ? "You haven't made any deposits yet"
                     : "No deposits match the current filters"}
                 </p>
               </div>
             )}
+<<<<<<< HEAD
 
             {/* Refresh Button */}
             {filteredDeposits.length > 0 && (
               <div className="text-center mt-6 lg:mt-8">
                 <button 
+=======
+            {/* Refresh Button */}
+            {filteredDeposits.length > 0 && (
+              <div className="text-center mt-6 lg:mt-8">
+                <button
+>>>>>>> upstream/main
                   onClick={fetchDeposits}
                   className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-400 hover:to-blue-400 text-white py-2 lg:py-3 px-6 lg:px-8 rounded-xl font-semibold text-sm lg:text-base transition-all duration-300 transform hover:scale-105 shadow-lg"
                 >
@@ -434,6 +648,7 @@ const DepositHistory = () => {
                 </button>
               </div>
             )}
+<<<<<<< HEAD
           </div>
         </div>
 
@@ -442,11 +657,17 @@ const DepositHistory = () => {
           <div className="inline-flex items-center gap-2 text-white/60 text-sm">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
             Auto-refreshing every 5 seconds
+=======
+>>>>>>> upstream/main
           </div>
         </div>
       </div>
     </div>
   );
 };
+<<<<<<< HEAD
 
 export default DepositHistory;
+=======
+export default DepositHistory; 
+>>>>>>> upstream/main

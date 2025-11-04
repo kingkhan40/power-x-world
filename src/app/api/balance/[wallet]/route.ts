@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import { Deposit } from "@/models/Deposit";
+import  Deposit  from "@/models/Deposit";
 import {Withdrawal} from "@/models/Withdrawal";
 
 export async function GET(req: Request, { params }: { params: { wallet: string } }) {

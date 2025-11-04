@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import Investment from "@/models/Investment";
-import { Deposit } from "@/models/Deposit";
+import Deposit  from "@/models/Deposit";
 import { earnedForPeriod } from "@/lib/staking";
 import { io } from "@server/socket-server";
  // ✅ Imported socket instance

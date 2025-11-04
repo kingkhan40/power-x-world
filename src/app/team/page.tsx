@@ -24,7 +24,14 @@ interface DashboardData {
   totalTeam?: number;
   activeUsers?: number;
   totalBusiness?: number;
+<<<<<<< HEAD
   selfBusiness?: number;   // ← ADDED
+=======
+  wallet?: number;
+  totalCommission?: number;
+  selfBusiness?: number;
+  directBusiness?: number;
+>>>>>>> upstream/main
 }
 
 const Team = () => {
@@ -32,6 +39,7 @@ const Team = () => {
   const [dashboard, setDashboard] = useState<DashboardData>({});
   const [loading, setLoading] = useState<boolean>(true);
 
+  // ===== Fetch Dashboard Data =====
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
@@ -40,10 +48,23 @@ const Team = () => {
 
         const res = await fetch(`/api/user/dashboard?userId=${userId}`);
         const data = await res.json();
+<<<<<<< HEAD
 
         console.log("API DATA:", data);
 
         if (res.ok) setDashboard(data);
+=======
+        if (res.ok) {
+          // Combine selfBusiness + directBusiness
+          const combinedBusiness =
+            (data.selfBusiness || 0) + (data.directBusiness || 0);
+
+          setDashboard({
+            ...data,
+            totalBusiness: combinedBusiness,
+          });
+        }
+>>>>>>> upstream/main
       } catch (err) {
         console.error(err);
       } finally {
@@ -52,10 +73,55 @@ const Team = () => {
     };
 
     fetchDashboard();
+<<<<<<< HEAD
     const interval = setInterval(fetchDashboard, 10000);
     return () => clearInterval(interval);
+=======
+
+    const userWallet = localStorage.getItem("userWallet");
+    if (socket && userWallet) {
+      socket.on(`level_update_${userWallet}`, (data: any) => {
+        setDashboard((prev) => ({ ...prev, level: data.level }));
+      });
+    }
+
+    return () => {
+      if (socket && localStorage.getItem("userWallet")) {
+        const w = localStorage.getItem("userWallet");
+        socket.off(`level_update_${w}`);
+      }
+    };
   }, []);
 
+  // ===== Fetch Team Members =====
+  useEffect(() => {
+    const fetchTeamMembers = async () => {
+      try {
+        const userId = localStorage.getItem("userId");
+        if (!userId) return;
+
+        const res = await fetch(`/api/user/team?userId=${userId}`);
+        const data = await res.json();
+
+        if (!res.ok) {
+          setErrorTeam(data.message || "Failed to fetch team members");
+          return;
+        }
+
+        setTeamMembers(data.team || []);
+      } catch (err) {
+        console.error("Failed to fetch team members:", err);
+        setErrorTeam("Network error. Please try again.");
+      } finally {
+        setLoadingTeam(false);
+      }
+    };
+
+    fetchTeamMembers();
+>>>>>>> upstream/main
+  }, []);
+
+  // ===== Stats Cards =====
   const statsData: StatsItem[] = [
     {
       id: 1,
@@ -79,7 +145,11 @@ const Team = () => {
       id: 4,
       value: loading
         ? "..."
+<<<<<<< HEAD
         : `$${dashboard.totalBusiness?.toLocaleString() ?? "0"}`,
+=======
+        : `$${dashboard.totalBusiness?.toLocaleString() || 0}`,
+>>>>>>> upstream/main
       label: "Total Business",
       icon: <FaChartLine className="text-green-400" />,
     },
@@ -107,11 +177,48 @@ const Team = () => {
     >
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
 
+<<<<<<< HEAD
       <div className="absolute top-0 left-0 w-72 h-72 rounded-full z-10" style={{ background: "linear-gradient(45deg, #3b82f6, #8b5cf6, #3b82f6)", filter: "blur(80px)", opacity: "0.4" }}></div>
       <div className="absolute top-0 right-0 w-64 h-64 rounded-full z-10" style={{ background: "linear-gradient(135deg, #10b981, #3b82f6, #10b981)", filter: "blur(70px)", opacity: "0.3" }}></div>
       <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full z-10" style={{ background: "linear-gradient(225deg, #ec4899, #8b5cf6, #ec4899)", filter: "blur(90px)", opacity: "0.35" }}></div>
       <div className="absolute bottom-0 right-0 w-60 h-60 rounded-full z-10" style={{ background: "linear-gradient(315deg, #f59e0b, #10b981, #f59e0b)", filter: "blur(60px)", opacity: "0.25" }}></div>
+=======
+      {/* Background Gradients */}
+      <div
+        className="absolute top-0 left-0 w-72 h-72 rounded-full z-10"
+        style={{
+          background: "linear-gradient(45deg, #3b82f6, #8b5cf6, #3b82f6)",
+          filter: "blur(80px)",
+          opacity: "0.4",
+        }}
+      ></div>
+      <div
+        className="absolute top-0 right-0 w-64 h-64 rounded-full z-10"
+        style={{
+          background: "linear-gradient(135deg, #10b981, #3b82f6, #10b981)",
+          filter: "blur(70px)",
+          opacity: "0.3",
+        }}
+      ></div>
+      <div
+        className="absolute bottom-0 left-0 w-80 h-80 rounded-full z-10"
+        style={{
+          background: "linear-gradient(225deg, #ec4899, #8b5cf6, #ec4899)",
+          filter: "blur(90px)",
+          opacity: "0.35",
+        }}
+      ></div>
+      <div
+        className="absolute bottom-0 right-0 w-60 h-60 rounded-full z-10"
+        style={{
+          background: "linear-gradient(315deg, #f59e0b, #10b981, #f59e0b)",
+          filter: "blur(60px)",
+          opacity: "0.25",
+        }}
+      ></div>
+>>>>>>> upstream/main
 
+      {/* Main Container */}
       <div className="container mx-auto max-w-7xl relative z-20">
         <div className="text-center mb-8">
           <h1 className="lg:text-4xl text-2xl mb-3 text-white font-bold">
@@ -122,7 +229,12 @@ const Team = () => {
           </p>
         </div>
 
+<<<<<<< HEAD
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+=======
+        {/* ===== Stats Cards Grid ===== */}
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+>>>>>>> upstream/main
           {statsData.map((item) => (
             <div
               key={item.id}
@@ -143,6 +255,10 @@ const Team = () => {
           ))}
         </div>
 
+<<<<<<< HEAD
+=======
+        {/* ===== Team Levels Grid ===== */}
+>>>>>>> upstream/main
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {staticTeamLevels.map((levelData) => (
             <div

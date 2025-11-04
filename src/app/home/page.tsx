@@ -1,91 +1,63 @@
 'use client';
-
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useApp } from '@/context/AppContext';
+import { useBalance } from '@/context/BalanceContext';
 import BalanceCard from '@/components/BalanceCard';
 import BasicPlan from '@/components/BasicPlan';
 import IconGridNavigation from '@/components/IconGridNavigation';
-import InvestmentInfo from '@/components/InvestmentInfo';
-import { useBalance } from '@/context/BalanceContext';
+import InvestmentInfo from "@/components/InvestmentInfo";
 
-type DashboardData = {
-  level?: number;
-  totalTeam?: number;
-  activeUsers?: number;
-  wallet?: number;
-  totalCommission?: number;
-  rewardPayment?: number;
-  otherPayments?: number;
-};
+import Loader from '@/components/UI/Loader';
 
 function HomePage() {
-  const router = useRouter();
-  const { balance: contextBalance, setBalance: setContextBalance } =
-    useBalance();
+  const { user, loading, totalBalance } = useApp();
+  const { setBalance: setContextBalance } = useBalance();
 
-  const [user, setUser] = useState<{
-    name?: string;
-    email?: string;
-    wallet?: string;
-  } | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [dashboard, setDashboard] = useState<DashboardData>({});
-  const [balance, setBalance] = useState<number>(0);
-  const [totalCommission, setTotalCommission] = useState<number>(0);
-  const [rewardPayment, setRewardPayment] = useState<number>(0);
-  const [otherPayments, setOtherPayments] = useState<number>(0);
+  const [todayIncome, setTodayIncome] = useState<number>(0);
 
-  // Fetch user & dashboard data
+  // ✅ Fetch today's income from API
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userEmail = localStorage.getItem('userEmail');
-    const userName = localStorage.getItem('userName');
-    const userWallet = localStorage.getItem('userWallet');
-    const userId = localStorage.getItem('userId');
+    const fetchTodayIncome = async () => {
+      try {
+        const userId = localStorage.getItem('userId');
+        if (!userId) return;
 
-    if (!token) {
-      router.replace('/login');
-      return;
+        const res = await fetch(`/api/stake/user?userId=${userId}`);
+        if (!res.ok) throw new Error('Failed to fetch user stake data');
+
+        const data = await res.json();
+
+        if (data?.activeStake) {
+          // ✅ try to read todayReward or fallback to totalReward / totalEarned
+          const todayReward =
+            data.activeStake.todayReward ??
+            data.activeStake.rewardsEarned ??
+            data.totalEarned ??
+            0;
+
+          setTodayIncome(todayReward);
+        } else {
+          setTodayIncome(0);
+        }
+      } catch (err) {
+        console.error('Error fetching today income:', err);
+        setTodayIncome(0);
+      }
+    };
+
+    fetchTodayIncome();
+  }, []);
+
+  // ✅ Sync balance context safely
+  useEffect(() => {
+    if (typeof totalBalance === 'number') {
+      setContextBalance?.(totalBalance);
     }
-
-    setUser({
-      name: userName || 'User',
-      email: userEmail || '',
-      wallet: userWallet || '',
-    });
-
-    // Fetch dashboard info
-    if (userId) {
-      fetch(`/api/user/dashboard?userId=${userId}`)
-        .then((res) => res.json())
-        .then((data) => {
-          setDashboard(data);
-          const mainBalance = data.wallet ?? 0;
-          setBalance(mainBalance);
-          setContextBalance?.(mainBalance);
-          setTotalCommission(data.totalCommission ?? 0);
-          setRewardPayment(data.rewardPayment ?? 0);
-          setOtherPayments(data.otherPayments ?? 0);
-        })
-        .catch(console.error);
-    }
-
-    setLoading(false);
-  }, [router, setContextBalance]);
+  }, [totalBalance, setContextBalance]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-black text-white">
-        <p className="text-lg animate-pulse">Checking session...</p>
-      </div>
-    );
+    return <Loader />;
   }
-
-  const totalBalance =
-    (balance ?? 0) +
-    (totalCommission ?? 0) +
-    (rewardPayment ?? 0) +
-    (otherPayments ?? 0);
 
   return (
     <div
@@ -101,10 +73,13 @@ function HomePage() {
       <div className="absolute inset-0 bg-black/70"></div>
 
       <div className="container mx-auto px-3 lg:px-6 py-6 relative z-10 space-y-6">
-        {/* Main Content */}
+        {/* ✅ Main Content (UI untouched) */}
         <div className="space-y-4">
-          <BalanceCard balance={totalBalance} />
-          <InvestmentInfo userEmail={user?.email ?? ''} />
+          <BalanceCard balance={totalBalance ?? 0} />
+          <InvestmentInfo
+            userEmail={user?.email ?? ''}
+            todayIncome={todayIncome ?? 0}
+          />
           <IconGridNavigation />
           <BasicPlan />
         </div>

@@ -1,6 +1,10 @@
 'use client';
 
+<<<<<<< HEAD
 import React, { useEffect, useState } from "react";
+=======
+import React, { useState, useEffect } from "react";
+>>>>>>> upstream/main
 import {
   FaArrowDown,
   FaArrowUp,
@@ -35,11 +39,34 @@ interface Tab {
   count: number;
 }
 
+interface Deposit {
+  _id: string;
+  wallet?: string;
+  amount: number;
+  token?: string;
+  txHash?: string;
+  chain?: string;
+  confirmed?: boolean;
+  createdAt?: string;
+}
+
+interface Withdrawal {
+  _id: string;
+  wallet?: string;
+  amount: number;
+  token?: string;
+  txHash?: string;
+  chain?: string;
+  confirmed?: boolean;
+  createdAt?: string;
+}
+
 const TransactionsHistory = () => {
   const [transactionsData, setTransactionsData] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
+<<<<<<< HEAD
 
   // 🧭 Fetch data from API
   useEffect(() => {
@@ -99,6 +126,83 @@ const TransactionsHistory = () => {
         return <FaHistory className="text-white" />;
     }
   };
+=======
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [dateFilter, setDateFilter] = useState<string>("all");
+  const [transactionsData, setTransactionsData] = useState<Transaction[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+        const userId = userData?._id;
+        if (!userId) {
+          console.warn("No userId found");
+          return;
+        }
+
+        // Fetch deposits
+        const depRes = await fetch(`/api/deposits/history?userId=${userId}`);
+        let deposits: Deposit[] = [];
+        if (depRes.ok) {
+          deposits = await depRes.json();
+        } else {
+          console.warn("Deposits fetch failed:", depRes.status);
+        }
+
+        const mappedDeposits: Transaction[] = deposits.map((dep, index) => ({
+          id: index + 1,
+          transactionId: dep.txHash || dep._id,
+          amount: dep.amount,
+          type: "deposit",
+          method: dep.token || "USDT",
+          date: dep.createdAt ? new Date(dep.createdAt).toLocaleDateString() : "N/A",
+          time: dep.createdAt ? new Date(dep.createdAt).toLocaleTimeString() : "N/A",
+          status: dep.confirmed ? "completed" : "processing",
+          wallet: dep.wallet || "N/A",
+          color: "from-green-500 to-emerald-500",
+          icon: <FaArrowDown className="text-white" />,
+        }));
+
+        // Fetch withdrawals
+        const withRes = await fetch(`/api/withdraw/history?userId=${userId}`);
+        let withdrawals: Withdrawal[] = [];
+        if (withRes.ok) {
+          withdrawals = await withRes.json();
+        } else {
+          console.warn("Withdrawa fetch failed:", withRes.status);
+        }
+
+        const mappedWithdrawals: Transaction[] = withdrawals.map((withd, index) => ({
+          id: mappedDeposits.length + index + 1,
+          transactionId: withd.txHash || withd._id,
+          amount: withd.amount,
+          type: "withdrawal",
+          method: withd.token || "USDT",
+          date: withd.createdAt ? new Date(withd.createdAt).toLocaleDateString() : "N/A",
+          time: withd.createdAt ? new Date(withd.createdAt).toLocaleTimeString() : "N/A",
+          status: withd.confirmed ? "completed" : "processing",
+          wallet: withd.wallet || "N/A",
+          color: "from-blue-500 to-cyan-500",
+          icon: <FaArrowUp className="text-white" />,
+        }));
+
+        // Combine and sort by date descending
+        const combined = [...mappedDeposits, ...mappedWithdrawals].sort((a, b) => {
+          return new Date(b.date + ' ' + b.time).getTime() - new Date(a.date + ' ' + a.time).getTime();
+        });
+
+        setTransactionsData(combined);
+      } catch (error) {
+        console.error("Error fetching transactions:", error);
+      }
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, 5000); // Poll every 5 seconds for real-time updates
+    return () => clearInterval(interval);
+  }, []);
+>>>>>>> upstream/main
 
   const tabs: Tab[] = [
     {
