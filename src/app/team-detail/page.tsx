@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, User, ChevronRight, Users } from 'lucide-react';
+import { Search, User, ChevronRight, Users, UserCheck, UserX } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 interface User {
@@ -59,6 +59,15 @@ const Page = () => {
   useEffect(() => {
     fetchMyTeam();
   }, [currentUserId]);
+
+  /* -----------------------------------------
+   * Team Statistics Calculate Karein
+   * ----------------------------------------- */
+  const teamStats = {
+    totalMembers: myReferrals.length,
+    activeMembers: myReferrals.filter(user => user.isActive).length,
+    inactiveMembers: myReferrals.filter(user => !user.isActive).length
+  };
 
   /* -----------------------------------------
    * Copy Code
@@ -141,10 +150,143 @@ const Page = () => {
           </div>
         </div>
 
+        {/* Team Statistics Cards - Exactly like Deposit Page */}
+        <div className="grid grid-cols-2 gap-6 mb-8">
+          {/* Total Team Members Card */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 }}
+            className="lg:p-5 p-1 rounded-2xl relative overflow-hidden bg-gray-900 border border-gray-800 shadow-2xl"
+          >
+            {/* Animated Border */}
+            <div
+              className="absolute -inset-2 rounded-2xl animate-spin opacity-70"
+              style={{
+                background:
+                  'conic-gradient(from 0deg, #7d9efb, #a83bf8, #ff6b6b, #51cf66, #7d9efb)',
+                animationDuration: '9000ms',
+                zIndex: 0,
+              }}
+            ></div>
+            <div className="absolute inset-0.5 rounded-2xl bg-gray-900 z-1"></div>
+
+            {/* Animated Gradient Circles */}
+            <div
+              className="absolute -top-12 -left-12 w-24 h-24 rounded-full z-10 animate-spin"
+              style={{
+                background: 'linear-gradient(45deg, #7d9efb, #a83bf8)',
+                animationDuration: '9000ms',
+                filter: 'blur(12px)',
+                opacity: '0.6',
+              }}
+            ></div>
+
+            <div
+              className="absolute -bottom-12 -right-12 w-28 h-28 rounded-full z-10 animate-spin"
+              style={{
+                background: 'linear-gradient(135deg, #a83bf8, #7d9efb)',
+                animationDuration: '4000ms',
+                filter: 'blur(10px)',
+                opacity: '0.4',
+              }}
+            ></div>
+
+            {/* Main Content */}
+            <div className="relative z-20 bg-gradient-to-br from-gray-800 to-blue-900 p-6 rounded-2xl shadow-2xl border border-white/10">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-gray-300 text-sm font-semibold mb-2">Total Team Members</h3>
+                  <p className="text-3xl font-bold text-white">{teamStats.totalMembers}</p>
+                  <p className="text-blue-200 text-sm mt-1">All registered users</p>
+                </div>
+                <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 p-4 rounded-2xl border border-blue-500/30">
+                  <Users className="text-blue-400" size={32} />
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Active/Inactive Members Card */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4 }}
+            className="lg:p-5 p-1 rounded-2xl relative overflow-hidden bg-gray-900 border border-gray-800 shadow-2xl"
+          >
+            {/* Animated Border */}
+            <div
+              className="absolute -inset-2 rounded-2xl animate-spin opacity-70"
+              style={{
+                background:
+                  'conic-gradient(from 0deg, #51cf66, #7d9efb, #a83bf8, #ff6b6b, #51cf66)',
+                animationDuration: '9000ms',
+                zIndex: 0,
+              }}
+            ></div>
+            <div className="absolute inset-0.5 rounded-2xl bg-gray-900 z-1"></div>
+
+            {/* Animated Gradient Circles */}
+            <div
+              className="absolute -top-12 -left-12 w-24 h-24 rounded-full z-10 animate-spin"
+              style={{
+                background: 'linear-gradient(45deg, #51cf66, #7d9efb)',
+                animationDuration: '9000ms',
+                filter: 'blur(12px)',
+                opacity: '0.6',
+              }}
+            ></div>
+
+            <div
+              className="absolute -bottom-12 -right-12 w-28 h-28 rounded-full z-10 animate-spin"
+              style={{
+                background: 'linear-gradient(135deg, #7d9efb, #51cf66)',
+                animationDuration: '4000ms',
+                filter: 'blur(10px)',
+                opacity: '0.4',
+              }}
+            ></div>
+
+            {/* Main Content */}
+            <div className="relative z-20 bg-gradient-to-br from-gray-800 to-green-900 p-6 rounded-2xl shadow-2xl border border-white/10">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-gray-300 text-sm font-semibold">Team Status</h3>
+                <div className="flex gap-2">
+                  <UserCheck className="text-green-400" size={20} />
+                  <UserX className="text-red-400" size={20} />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                {/* Active Members */}
+                <div className="text-center">
+                  <div className="bg-green-500/20 border border-green-500/30 rounded-xl p-3">
+                  <div className="flex items-center justify-between">
+                    <UserCheck className="text-green-400" size={20} />
+                    <p className="text-2xl font-bold text-green-400">{teamStats.activeMembers}</p>
+                    </div>
+                    <p className="text-green-300 text-xs">Active</p>
+                  </div>
+                </div>
+
+                {/* Inactive Members */}
+                <div className="text-center">
+                  <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-3">
+                   <div className="flex items-center justify-between">
+                    <UserX className="text-red-400 " size={20} />
+                    <p className="text-2xl font-bold text-red-400">{teamStats.inactiveMembers}</p>
+                    </div>
+                    <p className="text-red-300 text-xs">Inactive</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
         {/* Grid Layout - Boxes */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filtered.map((user) => {
-
             return (
               <motion.div
                 key={user._id}

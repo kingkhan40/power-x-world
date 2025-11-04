@@ -45,7 +45,7 @@ const ClientLayout = ({ children }: { children: React.ReactNode }) => {
   const appPages: string[] = [
     '/home',
     '/team',
-    '/deposit',
+    '/deposits',
     '/withdraw',
     '/selfInvestment',
     '/rewards',

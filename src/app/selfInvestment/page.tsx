@@ -118,7 +118,7 @@ const SelfInvestment = () => {
             <div className="flex items-center justify-between mb-4">
               <h2 className="lg:text-2xl text-lg font-bold text-white flex items-center gap-2">
                 <FaChartLine className="text-green-400" size={20} />
-                Investment Bar 3X
+                Investment Bar 3X To 9X
               </h2>
               <div className="px-3 py-1 rounded-full text-sm font-bold bg-green-500/20 text-green-300 border border-green-400/30">
                 Active

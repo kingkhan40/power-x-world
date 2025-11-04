@@ -80,18 +80,12 @@ function DepositInner() {
     setDepositAmount(e.target.value);
   };
 
-  const calculateTax = (amount: string) => {
-    const numAmount = parseFloat(amount) || 0;
-    return (numAmount * 0.05).toFixed(2);
-  };
-
+  // Tax hat gaya - ab koi tax nahi hai
   const calculateNetAmount = (amount: string) => {
     const numAmount = parseFloat(amount) || 0;
-    const tax = numAmount * 0.05;
-    return (numAmount - tax).toFixed(2);
+    return numAmount.toFixed(2); // Same amount without any deduction
   };
 
-  const tax = calculateTax(depositAmount);
   const netAmount = calculateNetAmount(depositAmount);
 
   const handleDeposit = async () => {
@@ -157,7 +151,7 @@ function DepositInner() {
 
   return (
     <div
-      className="min-h-screen py-8 px-4 relative"
+      className="min-h-screen py-8 px-2 relative"
       style={{
         backgroundImage:
           "url('https://i.pinimg.com/1200x/d3/41/1d/d3411d9ca4a908d779248dc1dce86822.jpg')",
@@ -193,10 +187,10 @@ function DepositInner() {
         </div>
 
         {/* Main Card with BalanceCard Style Animation */}
-        <div className="lg:p-5 p-1 rounded-2xl relative overflow-hidden bg-gray-900 border border-gray-800 shadow-2xl mb-8">
+        <div className="lg:p-5 p-0.5 rounded-2xl relative overflow-hidden bg-gray-900 border border-gray-800 shadow-2xl mb-8">
           {/* Animated Border - Exactly like BalanceCard */}
           <div
-            className="absolute -inset-2 rounded-2xl animate-spin opacity-70"
+            className="absolute -inset-1 rounded-2xl animate-spin opacity-70"
             style={{
               background:
                 'conic-gradient(from 0deg, #7d9efb, #a83bf8, #ff6b6b, #51cf66, #7d9efb)',
@@ -243,7 +237,7 @@ function DepositInner() {
             <div className="bg-gradient-to-r from-gray-900 via-blue-900 to-purple-900 rounded-t-2xl p-6 text-center relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10"></div>
               <div className="relative">
-                <h2 className="text-2xl font-bold text-white mb-2 bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
+                <h2 className="text-lg font-bold text-white mb-1 bg-gradient-to-r from-white to-blue-100 bg-clip-text text-transparent">
                   Secure Deposit Process
                 </h2>
                 <p className="text-blue-200 text-sm">
@@ -258,7 +252,7 @@ function DepositInner() {
             <div className="flex border-b border-white/20">
               <button
                 onClick={() => setActiveTab('connectWallet')}
-                className={`flex-1 py-4 font-semibold transition-all duration-300 ${
+                className={`flex-1 py-4 text-sm font-semibold transition-all duration-300 ${
                   activeTab === 'connectWallet'
                     ? 'bg-blue-600 text-white'
                     : 'text-gray-300 hover:bg-white/5'
@@ -268,7 +262,7 @@ function DepositInner() {
               </button>
               <button
                 onClick={() => isConnected && setActiveTab('deposit')}
-                className={`flex-1 py-4 font-semibold transition-all duration-300 ${
+                className={`flex-1 py-4 text-sm font-semibold transition-all duration-300 ${
                   activeTab === 'deposit'
                     ? 'bg-green-600 text-white'
                     : isConnected
@@ -285,11 +279,11 @@ function DepositInner() {
             <div className="p-6">
               {activeTab === 'connectWallet' && (
                 <div className="text-center">
-                  <div className="mb-6">
+                  <div className="mb-2">
                     <h3 className="text-xl font-bold text-white mb-2">
                       Connect Your Wallet
                     </h3>
-                    <p className="text-blue-200">
+                    <p className="text-blue-200 text-sm">
                       Connect your wallet to start the deposit process
                     </p>
                   </div>
@@ -386,29 +380,18 @@ function DepositInner() {
                           </div>
                         </div>
 
-                        {/* Tax Calculation */}
+                        {/* Amount Display - Tax Free */}
                         {depositAmount && (
-                          <div className="mt-4 bg-gradient-to-r from-blue-500/10 to-green-500/10 rounded-xl p-4 border border-white/20">
-                            <div className="grid grid-cols-2 gap-4 text-sm">
-                              <div>
-                                <div className="text-gray-400">
-                                  Deposit Amount:
-                                </div>
-                                <div className="text-white font-bold">
-                                  ${depositAmount}
-                                </div>
+                          <div className="mt-4 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-xl p-4 border border-white/20">
+                            <div className="text-center">
+                              <div className="text-gray-400 text-sm mb-1">
+                                You will deposit:
                               </div>
-                              <div>
-                                <div className="text-gray-400">Tax (5%):</div>
-                                <div className="text-red-400 font-bold">
-                                  -${tax}
-                                </div>
+                              <div className="text-green-400 font-bold text-xl">
+                                ${depositAmount}
                               </div>
-                              <div className="col-span-2 border-t border-white/20 pt-2">
-                                <div className="text-gray-400">Net Amount:</div>
-                                <div className="text-green-400 font-bold text-lg">
-                                  ${netAmount}
-                                </div>
+                              <div className="text-green-300 text-sm mt-1">
+                                ✅ No fees - Full amount deposited
                               </div>
                             </div>
                           </div>
@@ -430,7 +413,7 @@ function DepositInner() {
                         <div className="relative group">
                           <input
                             type="text"
-                            className="w-full p-4 pr-12 bg-gradient-to-r from-gray-900/50 to-blue-900/30 border border-white/20 rounded-2xl text-white font-mono text-sm backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300 group-hover:border-blue-400/50"
+                            className="w-full p-4 pr-12 bg-transparent border border-white/20 rounded-2xl text-white font-mono text-sm backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300 group-hover:border-blue-400/50"
                             value={adminWallet}
                             readOnly
                           />
@@ -474,9 +457,7 @@ function DepositInner() {
                             Processing Deposit...
                           </div>
                         ) : (
-                          `Deposit $${
-                            depositAmount || '0'
-                          } (Net: $${netAmount})`
+                          `Deposit $${depositAmount || '0'}`
                         )}
                       </button>
 
@@ -497,9 +478,9 @@ function DepositInner() {
         </div>
 
         {/* Features Grid with Same Animation Style */}
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-2 gap-3">
           {/* Feature 1 */}
-          <div className="p-1 rounded-2xl relative overflow-hidden bg-gray-900 border border-gray-800 shadow-2xl">
+          <div className="p-1 rounded-md relative overflow-hidden bg-gray-900 border border-gray-800 shadow-2xl">
             <div
               className="absolute -inset-2 rounded-2xl animate-spin opacity-60"
               style={{
@@ -509,18 +490,18 @@ function DepositInner() {
                 zIndex: 0,
               }}
             ></div>
-            <div className="absolute inset-0.5 rounded-2xl bg-gray-900 z-1"></div>
-            <div className="relative  backdrop-blur-sm rounded-2xl p-6 text-center   z-20">
-              <FaBolt className="text-3xl text-blue-400 mx-auto mb-3 group-hover:animate-pulse" />
-              <div className="text-white text-lg font-bold mb-1">
+            <div className="absolute inset-0.5 rounded-md bg-gray-900 z-1"></div>
+            <div className="relative  backdrop-blur-sm rounded-2xl p-2 text-center   z-20">
+              <FaBolt className="text-2xl text-blue-400 mx-auto mb-3 group-hover:animate-pulse" />
+              <div className="text-white text-base font-bold mb-1">
                 Instant Process
               </div>
-              <div className="text-blue-100 text-sm">Real-time processing</div>
+              <div className="text-blue-100 text-xs">Real-time processing</div>
             </div>
           </div>
 
           {/* Feature 2 */}
-          <div className=" p-0.5 rounded-2xl relative overflow-hidden bg-gray-900 shadow-2xl">
+          <div className=" p-0.5 rounded-md relative overflow-hidden bg-gray-900 shadow-2xl">
             <div
               className="absolute -inset-0.5 rounded-2xl animate-spin opacity-50"
               style={{
@@ -530,13 +511,13 @@ function DepositInner() {
                 zIndex: 0,
               }}
             ></div>
-            <div className="absolute inset-0.5 rounded-2xl bg-gray-900 z-1"></div>
-            <div className="relative backdrop-blur-sm rounded-2xl p-6 text-center  z-20">
-              <FaGem className="text-3xl text-purple-400 mx-auto mb-3 group-hover:animate-pulse" />
-              <div className="text-white text-lg font-bold mb-1">
-                Low 5% Tax
+            <div className="absolute inset-0.5 rounded-md bg-gray-900 z-1"></div>
+            <div className="relative backdrop-blur-sm rounded-2xl p-2 text-center  z-20">
+              <FaGem className="text-2xl text-purple-400 mx-auto mb-3 group-hover:animate-pulse" />
+              <div className="text-white text-base font-bold mb-1">
+                Zero Fees
               </div>
-              <div className="text-blue-100 text-sm">Competitive fees</div>
+              <div className="text-blue-100 text-xs">No hidden charges</div>
             </div>
           </div>
         </div>
@@ -585,4 +566,4 @@ function Deposit() {
   );
 }
 
-export default Deposit; 
+export default Deposit;
