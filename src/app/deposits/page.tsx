@@ -10,17 +10,13 @@ import {
   FaGem,
   FaArrowLeft,
 } from 'react-icons/fa';
-import {
-  WagmiProvider,
-  useAccount,
-  useDisconnect,
-} from 'wagmi';
+import { WagmiProvider, useAccount, useDisconnect } from 'wagmi';
 import { bsc } from 'wagmi/chains';
 import { createWeb3Modal, defaultWagmiConfig } from '@web3modal/wagmi/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 
-const projectId = '4ed88d6c567e9799d509e8050f3f73c4';
+const projectId = '4ed88d6c567e9799d509e8050f3f73c4'; 
 const chains = [bsc] as const;
 
 const wagmiConfig = defaultWagmiConfig({
@@ -31,7 +27,7 @@ const wagmiConfig = defaultWagmiConfig({
     description:
       'Deposit USDT via MetaMask / TrustWallet / SafePal / TokenPocket',
     url: 'http://localhost:3000',
-    icons: ['https://yourwebsite.com/icon.png'],
+    icons: ['http://localhost:3000/icon.png'],
   },
 });
 
@@ -69,6 +65,34 @@ function DepositInner() {
     navigator.clipboard.writeText(adminWallet);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
+  };
+
+  // ✅ Added Confirm Transaction Handler
+  const handleConfirm = async () => {
+    if (!address) return alert('Please connect your wallet first');
+    setIsLoading(true);
+
+    try {
+      const res = await fetch('/api/check-transaction', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          wallet: address,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('✅ Transaction confirmed successfully!');
+        setTxHash(data.txHash);
+      } else {
+        alert(data.error || 'No valid deposit found yet.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Something went wrong while confirming.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -118,36 +142,6 @@ function DepositInner() {
             }}
           ></div>
           <div className="absolute inset-0.5 rounded-2xl bg-gray-900 z-1"></div>
-
-          <div
-            className="absolute -top-12 -left-12 w-24 h-24 rounded-full z-10 animate-spin"
-            style={{
-              background: 'linear-gradient(45deg, #7d9efb, #a83bf8)',
-              animationDuration: '9000ms',
-              filter: 'blur(12px)',
-              opacity: '0.6',
-            }}
-          ></div>
-
-          <div
-            className="absolute -bottom-12 -right-12 w-28 h-28 rounded-full z-10 animate-spin"
-            style={{
-              background: 'linear-gradient(135deg, #a83bf8, #7d9efb)',
-              animationDuration: '4000ms',
-              filter: 'blur(10px)',
-              opacity: '0.4',
-            }}
-          ></div>
-
-          <div
-            className="absolute top-1/2 -right-8 w-16 h-16 rounded-full z-10 animate-spin"
-            style={{
-              background: 'linear-gradient(225deg, #7d9efb, #a83bf8)',
-              animationDuration: '5000ms',
-              filter: 'blur(8px)',
-              opacity: '0.3',
-            }}
-          ></div>
 
           <div className="relative z-20">
             <div className="bg-gradient-to-r from-gray-900 via-blue-900 to-purple-900 rounded-t-2xl p-6 text-center relative overflow-hidden">
@@ -309,6 +303,14 @@ function DepositInner() {
                           </div>
                         )}
                       </div>
+
+                      {/* ✅ Confirm Transaction Button (newly added) */}
+                      <button
+                        onClick={handleConfirm}
+                        className="mt-6 bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-xl font-bold transition-all"
+                      >
+                        Confirm Transaction
+                      </button>
 
                       {/* Transaction Hash Display */}
                       {txHash && (

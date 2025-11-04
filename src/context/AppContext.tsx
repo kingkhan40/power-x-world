@@ -48,6 +48,9 @@ interface AppContextType {
   otherPayments: number;
   totalBalance: number;
 
+  // Balance Setter (exposed so other components can update totalBalance)
+  setTotalBalance: (value: number) => void;
+
   // Reward API Functions
   fetchRewardData: () => Promise<{ claimedRewards: number[] }>;
   claimReward: (rewardId: number, rewardName: string, rewardAmount: string) => Promise<{ success: boolean; message: string }>;
@@ -76,9 +79,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [totalCommission, setTotalCommission] = useState<number>(0);
   const [rewardPayment, setRewardPayment] = useState<number>(0);
   const [otherPayments, setOtherPayments] = useState<number>(0);
+  const [totalBalance, setTotalBalance] = useState<number>(0);
 
-  // Calculate total balance
-  const totalBalance = (balance ?? 0) + (totalCommission ?? 0) + (rewardPayment ?? 0) + (otherPayments ?? 0);
+  // Update totalBalance automatically when components change
+  useEffect(() => {
+    setTotalBalance(
+      (balance ?? 0) + (totalCommission ?? 0) + (rewardPayment ?? 0) + (otherPayments ?? 0)
+    );
+  }, [balance, totalCommission, rewardPayment, otherPayments]);
 
   // Fetch dashboard data
   const fetchDashboardData = async (): Promise<void> => {
@@ -105,16 +113,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       // Fetch dashboard info from API
       if (userId) {
         const response = await fetch(`/api/user/dashboard?userId=${userId}`);
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch dashboard data');
-        }
+        if (!response.ok) throw new Error('Failed to fetch dashboard data');
 
         const data = await response.json();
         setDashboard(data);
-        
-        const mainBalance = data.wallet ?? 0;
-        setBalance(mainBalance);
+
+        // Update balances
+        setBalance(data.wallet ?? 0);
         setTotalCommission(data.totalCommission ?? 0);
         setRewardPayment(data.rewardPayment ?? 0);
         setOtherPayments(data.otherPayments ?? 0);
@@ -211,6 +216,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     rewardPayment,
     otherPayments,
     totalBalance,
+
+    // Setter
+    setTotalBalance,
 
     // API Functions
     fetchRewardData,
