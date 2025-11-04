@@ -34,6 +34,9 @@ type AdminContextType = {
   userStats: UserStats;
   settings: AdminSettings;
   profile: AdminProfile;
+  sidebarOpen: boolean;
+  setSidebarOpen: (open: boolean) => void;
+  toggleSidebar: () => void;
   updateSettings: (newSettings: Partial<AdminSettings>) => Promise<void>;
   updateProfile: (newProfile: Partial<AdminProfile>) => Promise<void>;
   changePassword: (
@@ -51,6 +54,10 @@ const AdminContext = createContext<AdminContextType | undefined>(undefined);
  * 🧩 Provider Component
  * ----------------------------- */
 export function AdminProvider({ children }: { children: React.ReactNode }) {
+  // 🔹 Sidebar state
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // 🔹 User & settings states
   const [userStats, setUserStats] = useState<UserStats>({
     totalUsers: 0,
     activeUsers: 0,
@@ -93,16 +100,15 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
    * ----------------------------- */
   const fetchProfileAndSettings = async () => {
     try {
-      const res = await fetch("/api/profile"); // fetch saved profile from DB
+      const res = await fetch("/api/profile");
       if (!res.ok) throw new Error(`Status ${res.status}`);
       const data = await res.json();
+
       if (data.success) {
         setProfile({
           name: data.name || "",
           email: data.email || "",
         });
-        // Note: Settings are not updated here as the replacement function does not handle them.
-        // If settings are fetched from another endpoint, you may need to call it separately.
       }
     } catch (err) {
       console.error("Fetch profile/settings error:", err);
@@ -114,7 +120,6 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
    * ----------------------------- */
   const updateSettings = async (newSettings: Partial<AdminSettings>) => {
     try {
-      // Optimistic update
       setSettings((prev) => ({ ...prev, ...newSettings }));
 
       const res = await fetch("/api/settings", {
@@ -125,11 +130,9 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       const data = await res.json();
 
       if (data.success && data.settings) {
-        // Merge server response
         setSettings((prev) => ({ ...prev, ...data.settings }));
       } else {
         console.error("Update settings error:", data.error);
-        // Optionally revert optimistic update here
       }
     } catch (err) {
       console.error("Update settings error:", err);
@@ -177,7 +180,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   };
 
   /* -----------------------------
-   * 🔁 Auto-refresh (polling)
+   * 🔁 Auto-refresh
    * ----------------------------- */
   useEffect(() => {
     fetchTotalUsers();
@@ -186,7 +189,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     const interval = setInterval(() => {
       fetchTotalUsers();
       fetchProfileAndSettings();
-    }, 60000); // 60s
+    }, 60000);
 
     return () => clearInterval(interval);
   }, []);
@@ -198,6 +201,9 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     userStats,
     settings,
     profile,
+    sidebarOpen,
+    setSidebarOpen,
+    toggleSidebar: () => setSidebarOpen((prev) => !prev),
     updateSettings,
     updateProfile,
     changePassword,
