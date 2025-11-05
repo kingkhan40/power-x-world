@@ -71,6 +71,44 @@ function DepositInner() {
     setTimeout(() => setCopied(false), 1500);
   };
 
+  const handleConfirmDeposit = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Get userId from localStorage
+      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+      const userId = userData?._id;
+
+      // Save manual deposit to MongoDB
+      const response = await fetch('/api/deposit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          wallet: address,
+          amount: 0, // Manual deposit mein amount 0 hoga
+          token: 'USDT (BEP20)',
+          txHash: 'manual_deposit_' + Date.now(),
+          chain: 'BNB Smart Chain',
+          userId,
+          status: 'pending',
+          type: 'manual'
+        }),
+      });
+
+      if (response.ok) {
+        setTxHash('manual_deposit_' + Date.now());
+        alert('✅ Deposit confirmed! Admin will verify your transaction.');
+      } else {
+        alert('❌ Failed to confirm deposit. Please try again.');
+      }
+    } catch (error) {
+      console.error('Deposit confirmation failed:', error);
+      alert('❌ Deposit confirmation failed, try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div
       className="min-h-screen py-8 px-2 relative"
@@ -310,11 +348,30 @@ function DepositInner() {
                         )}
                       </div>
 
-                      {/* Transaction Hash Display */}
+                      {/* Confirm Deposit Button */}
+                      <button
+                        onClick={handleConfirmDeposit}
+                        disabled={isLoading}
+                        className="w-full bg-gradient-to-r from-cyan-900 via-blue-900 to-purple-900 hover:from-blue-800 hover:to-emerald-700 hover:via-teal-700 text-white py-4 px-6 rounded-2xl font-bold text-xl tracking-wide shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none mb-4"
+                      >
+                        {isLoading ? (
+                          <div className="flex items-center justify-center gap-2">
+                            <FaSync className="animate-spin" />
+                            Confirming Deposit...
+                          </div>
+                        ) : (
+                          'Confirm Deposit'
+                        )}
+                      </button>
+
+                  
                       {txHash && (
                         <div className="mt-6 bg-green-500/20 border border-green-500/30 rounded-2xl p-4">
                           <p className="text-green-400 text-center text-sm break-all">
-                            ✅ Transaction Hash: {txHash}
+                            ✅ Deposit Confirmed! Transaction ID: {txHash}
+                          </p>
+                          <p className="text-green-300 text-center text-xs mt-2">
+                            Admin will verify your deposit shortly.
                           </p>
                         </div>
                       )}
@@ -387,10 +444,10 @@ function DepositInner() {
                   <div className="absolute inset-0 bg-blue-400/20 rounded-full animate-ping"></div>
                 </div>
                 <p className="text-white text-xl font-bold mb-2">
-                  Processing Deposit...
+                  Confirming Deposit...
                 </p>
                 <p className="text-blue-200 text-sm">
-                  Confirming transaction...
+                  Please wait while we process your request...
                 </p>
               </div>
             </div>
