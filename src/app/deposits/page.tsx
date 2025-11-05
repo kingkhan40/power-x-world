@@ -307,7 +307,7 @@ function DepositInner() {
                       {/* ✅ Confirm Transaction Button (newly added) */}
                       <button
                         onClick={handleConfirm}
-                        className="mt-6 bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-xl font-bold transition-all"
+                         className="w-full bg-gradient-to-r from-cyan-900 via-blue-900 to-purple-900 hover:from-blue-800 hover:to-emerald-700 hover:via-teal-700 text-white py-4 px-6 rounded-2xl font-bold text-xl tracking-wide shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none mb-4"
                       >
                         Confirm Transaction
                       </button>
@@ -417,3 +417,5 @@ function Deposit() {
 }
 
 export default Deposit;
+
+
