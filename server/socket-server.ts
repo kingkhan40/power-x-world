@@ -13,13 +13,19 @@ const { json } = expressPkg;
 
 let io: Server | null = null;
 
-// ✅ Initialize Express app
+// ✅ Initialize Express App
 const app = express();
 
-// ✅ Setup CORS
+// ✅ Define Allowed Origin (fallback system)
+const allowedOrigin =
+  process.env.CLIENT_URL ||
+  process.env.NEXT_PUBLIC_CLIENT_URL ||
+  "http://localhost:3000";
+
+// ✅ Setup CORS (local + live both supported)
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "https://powerxworld.uk",
+    origin: allowedOrigin,
     methods: ["GET", "POST"],
     credentials: true,
   })
@@ -31,13 +37,13 @@ app.use(json());
 const server = http.createServer(app);
 
 /**
- * ✅ Initialize Socket.io (only once)
+ * ✅ Initialize Socket.IO (sirf ek dafa)
  */
 export function initSocket(serverInstance?: http.Server): Server {
   if (!io) {
     io = new Server(serverInstance || server, {
       cors: {
-        origin: process.env.CLIENT_URL || "https://powerxworld.uk",
+        origin: allowedOrigin,
         methods: ["GET", "POST"],
         credentials: true,
       },
@@ -46,10 +52,24 @@ export function initSocket(serverInstance?: http.Server): Server {
     io.on("connection", (socket) => {
       console.log("🟢 Socket connected:", socket.id);
 
-      // Example test event
+      // 🔹 Register wallet to a unique socket room
+      socket.on("register", (payload: { wallet?: string }) => {
+        try {
+          const wallet = payload?.wallet?.toLowerCase?.();
+          if (!wallet) return;
+          socket.join(wallet); // each wallet gets its own room
+          console.log(`[socket] socket ${socket.id} joined room ${wallet}`);
+        } catch (err) {
+          console.error("register error", err);
+        }
+      });
+
+      // 🔹 Test Event
       socket.on("testEvent", (data) => {
         console.log("📩 testEvent received:", data);
-        socket.emit("serverResponse", { message: "Server received your data!" });
+        socket.emit("serverResponse", {
+          message: "Server received your data!",
+        });
       });
 
       socket.on("disconnect", () => {
@@ -64,18 +84,26 @@ export function initSocket(serverInstance?: http.Server): Server {
 }
 
 /**
- * ✅ HTTP fallback emit endpoint
+ * ✅ Manual emit endpoint (backend APIs socket event trigger kar sakti hain)
  */
 app.post("/emit", (req, res) => {
   try {
-    const { event, payload } = req.body;
+    const { event, payload, wallet } = req.body;
     console.log(`📡 Emitting event: ${event}`, payload);
 
     if (!io) {
       throw new Error("Socket.IO not initialized");
     }
 
-    io.emit(event, payload);
+    // 🔹 If wallet provided → emit to that specific room
+    if (wallet) {
+      io.to(wallet.toLowerCase()).emit(event, payload);
+      console.log(`🎯 Event sent to wallet room: ${wallet}`);
+    } else {
+      io.emit(event, payload);
+      console.log(`🌍 Event broadcasted globally`);
+    }
+
     res.json({ success: true });
   } catch (error: any) {
     console.error("❌ Emit Error:", error);
@@ -83,27 +111,35 @@ app.post("/emit", (req, res) => {
   }
 });
 
-/// 🕒 Auto reward updater every minute
+/**
+ * 🕒 Auto Reward Cron Job (Har Minute chalti hai)
+ */
 cron.schedule("* * * * *", async () => {
   try {
-    await axios.post("https://powerxworld.uk/api/invest/reward");
+    // 👇 Environment ke hisaab se API URL select karega
+    const targetUrl =
+      process.env.NODE_ENV === "production"
+        ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/invest/reward`
+        : "http://localhost:3000/api/invest/reward";
+
+    await axios.post(targetUrl);
     console.log("✅ Reward updated successfully");
   } catch (err: any) {
     console.error("❌ Error updating reward:", err.message);
   }
 });
 
-
-// ✅ Start server if run directly
-const isDirectRun =
-  import.meta.url === `file://${process.argv[1]}` ||
-  process.argv[1]?.endsWith("socket-server.ts");
-
-if (isDirectRun) {
+/**
+ * ✅ Server start condition (har env me chal jayega)
+ */
+if (process.argv[1]?.includes("socket-server.ts")) {
   const PORT = Number(process.env.SOCKET_PORT) || 4004;
+
   initSocket(server);
+
   server.listen(PORT, () => {
-    console.log(`🚀 Socket.IO server running on port ${PORT}`);
+    console.log("🚀 Socket.IO server running on port", PORT);
+    console.log("🌐 Allowed Origin:", allowedOrigin);
   });
 }
 

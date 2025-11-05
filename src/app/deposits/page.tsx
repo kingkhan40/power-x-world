@@ -10,17 +10,13 @@ import {
   FaGem,
   FaArrowLeft,
 } from 'react-icons/fa';
-import {
-  WagmiProvider,
-  useAccount,
-  useDisconnect,
-} from 'wagmi';
+import { WagmiProvider, useAccount, useDisconnect } from 'wagmi';
 import { bsc } from 'wagmi/chains';
 import { createWeb3Modal, defaultWagmiConfig } from '@web3modal/wagmi/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 
-const projectId = '4ed88d6c567e9799d509e8050f3f73c4';
+const projectId = '4ed88d6c567e9799d509e8050f3f73c4'; 
 const chains = [bsc] as const;
 
 const wagmiConfig = defaultWagmiConfig({
@@ -31,7 +27,7 @@ const wagmiConfig = defaultWagmiConfig({
     description:
       'Deposit USDT via MetaMask / TrustWallet / SafePal / TokenPocket',
     url: 'http://localhost:3000',
-    icons: ['https://yourwebsite.com/icon.png'],
+    icons: ['http://localhost:3000/icon.png'],
   },
 });
 
@@ -71,39 +67,29 @@ function DepositInner() {
     setTimeout(() => setCopied(false), 1500);
   };
 
-  const handleConfirmDeposit = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Get userId from localStorage
-      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-      const userId = userData?._id;
+  // ✅ Added Confirm Transaction Handler
+  const handleConfirm = async () => {
+    if (!address) return alert('Please connect your wallet first');
+    setIsLoading(true);
 
-      // Save manual deposit to MongoDB
-      const response = await fetch('/api/deposit', {
+    try {
+      const res = await fetch('/api/check-transaction', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           wallet: address,
-          amount: 0, // Manual deposit mein amount 0 hoga
-          token: 'USDT (BEP20)',
-          txHash: 'manual_deposit_' + Date.now(),
-          chain: 'BNB Smart Chain',
-          userId,
-          status: 'pending',
-          type: 'manual'
         }),
       });
-
-      if (response.ok) {
-        setTxHash('manual_deposit_' + Date.now());
-        alert('✅ Deposit confirmed! Admin will verify your transaction.');
+      const data = await res.json();
+      if (data.success) {
+        alert('✅ Transaction confirmed successfully!');
+        setTxHash(data.txHash);
       } else {
-        alert('❌ Failed to confirm deposit. Please try again.');
+        alert(data.error || 'No valid deposit found yet.');
       }
-    } catch (error) {
-      console.error('Deposit confirmation failed:', error);
-      alert('❌ Deposit confirmation failed, try again.');
+    } catch (err) {
+      console.error(err);
+      alert('Something went wrong while confirming.');
     } finally {
       setIsLoading(false);
     }
@@ -156,36 +142,6 @@ function DepositInner() {
             }}
           ></div>
           <div className="absolute inset-0.5 rounded-2xl bg-gray-900 z-1"></div>
-
-          <div
-            className="absolute -top-12 -left-12 w-24 h-24 rounded-full z-10 animate-spin"
-            style={{
-              background: 'linear-gradient(45deg, #7d9efb, #a83bf8)',
-              animationDuration: '9000ms',
-              filter: 'blur(12px)',
-              opacity: '0.6',
-            }}
-          ></div>
-
-          <div
-            className="absolute -bottom-12 -right-12 w-28 h-28 rounded-full z-10 animate-spin"
-            style={{
-              background: 'linear-gradient(135deg, #a83bf8, #7d9efb)',
-              animationDuration: '4000ms',
-              filter: 'blur(10px)',
-              opacity: '0.4',
-            }}
-          ></div>
-
-          <div
-            className="absolute top-1/2 -right-8 w-16 h-16 rounded-full z-10 animate-spin"
-            style={{
-              background: 'linear-gradient(225deg, #7d9efb, #a83bf8)',
-              animationDuration: '5000ms',
-              filter: 'blur(8px)',
-              opacity: '0.3',
-            }}
-          ></div>
 
           <div className="relative z-20">
             <div className="bg-gradient-to-r from-gray-900 via-blue-900 to-purple-900 rounded-t-2xl p-6 text-center relative overflow-hidden">
@@ -348,23 +304,15 @@ function DepositInner() {
                         )}
                       </div>
 
-                      {/* Confirm Deposit Button */}
+                      {/* ✅ Confirm Transaction Button (newly added) */}
                       <button
-                        onClick={handleConfirmDeposit}
-                        disabled={isLoading}
-                        className="w-full bg-gradient-to-r from-cyan-900 via-blue-900 to-purple-900 hover:from-blue-800 hover:to-emerald-700 hover:via-teal-700 text-white py-4 px-6 rounded-2xl font-bold text-xl tracking-wide shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none mb-4"
+                        onClick={handleConfirm}
+                        className="mt-6 bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-xl font-bold transition-all"
                       >
-                        {isLoading ? (
-                          <div className="flex items-center justify-center gap-2">
-                            <FaSync className="animate-spin" />
-                            Confirming Deposit...
-                          </div>
-                        ) : (
-                          'Confirm Deposit'
-                        )}
+                        Confirm Transaction
                       </button>
 
-                  
+                      {/* Transaction Hash Display */}
                       {txHash && (
                         <div className="mt-6 bg-green-500/20 border border-green-500/30 rounded-2xl p-4">
                           <p className="text-green-400 text-center text-sm break-all">

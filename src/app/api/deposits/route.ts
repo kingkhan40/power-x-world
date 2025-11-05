@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import Deposit  from "@/models/Deposit";
+import Deposit from "@/models/Deposit";
 import User from "@/models/User";
+import axios from "axios";
+
+/**
+ * POST → Add a new deposit record (manual or system-detected)
+ * GET → Fetch all confirmed deposits of a user
+ */
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,19 +25,28 @@ export async function POST(req: NextRequest) {
     // === VALIDATION ===
     if (!wallet || !amount || !txHash || !userId) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { success: false, message: "Missing required fields." },
         { status: 400 }
       );
     }
 
     if (amount < 50) {
       return NextResponse.json(
-        { error: "Minimum deposit is 50 USDT" },
+        { success: false, message: "Minimum deposit is 50 USDT." },
         { status: 400 }
       );
     }
 
-    // === 1. SAVE DEPOSIT ===
+    // === 1. CHECK FOR DUPLICATE TRANSACTION ===
+    const existing = await Deposit.findOne({ txHash });
+    if (existing) {
+      return NextResponse.json({
+        success: false,
+        message: "Transaction already exists.",
+      });
+    }
+
+    // === 2. SAVE DEPOSIT (Unconfirmed initially) ===
     const deposit = await Deposit.create({
       userId,
       wallet,
@@ -39,34 +54,29 @@ export async function POST(req: NextRequest) {
       token,
       txHash,
       chain,
-      confirmed: false, // Changed to false for security; confirm via separate process
+      confirmed: false, // Confirmation via /check-transaction or admin
     });
 
-    // === 2. UPDATE USER (INVESTMENT + WALLET + USDT BALANCE) ===
-    // Note: In a real system, user updates should only happen after confirmation.
-    // For now, updating immediately as per original logic.
+    // === 3. FIND USER ===
     const user = await User.findById(userId);
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json({ success: false, message: "User not found." });
     }
 
-    // Add to investments
+    // === 4. IMMEDIATE BALANCE UPDATE (optional, if auto-confirm system used) ===
+    user.wallet = (user.wallet || 0) + amount;
+    user.usdtBalance = (user.usdtBalance || 0) + amount;
+    user.selfBusiness = (user.selfBusiness || 0) + amount;
+
+    // === Add investment record ===
     user.investments = user.investments || [];
     user.investments.push({ amount, date: new Date() });
 
-    // Update wallet & usdtBalance
-    user.wallet = (user.wallet || 0) + amount;
-    user.usdtBalance = (user.usdtBalance || 0) + amount;
-
-    // Update selfBusiness (if not already set)
-    user.selfBusiness = (user.selfBusiness || 0) + amount;
-
     await user.save();
 
-    // === 3. MULTI-LEVEL REFERRAL COMMISSION ===
-    // Improved: Pay commission on every deposit, but track/add to team/upgrade level only on first commission per downline.
-    const commissionRates = [0.12, 0.05, 0.02, 0.02]; // L1:12%, L2:5%, L3:2%, L4:2%
-    let currentReferrerId = user.referredBy;
+    // === 5. REFERRAL COMMISSION SYSTEM (4-level deep) ===
+    const commissionRates = [0.12, 0.05, 0.02, 0.02];
+    let currentReferrerId = (user as any).referredBy;
 
     for (
       let level = 0;
@@ -76,52 +86,69 @@ export async function POST(req: NextRequest) {
       const referrer = await User.findById(currentReferrerId);
       if (!referrer) break;
 
-      // Initialize arrays
-      referrer.commissionedUsers = referrer.commissionedUsers || [];
-      referrer.teamMembers = referrer.teamMembers || [];
+      // Initialize fields if missing
+      (referrer as any).commissionedUsers = (referrer as any).commissionedUsers || [];
+      (referrer as any).teamMembers = (referrer as any).teamMembers || [];
 
       const commissionKey = `${user._id.toString()}_L${level + 1}`;
-      const isFirstCommission = !referrer.commissionedUsers.includes(commissionKey);
+      const isFirstCommission =
+        !(referrer as any).commissionedUsers.includes(commissionKey);
 
-      // Always pay commission
+      // === Calculate commission ===
       const commission = amount * commissionRates[level];
       referrer.wallet = (referrer.wallet || 0) + commission;
 
       if (isFirstCommission) {
-        referrer.commissionedUsers.push(commissionKey);
+        (referrer as any).commissionedUsers.push(commissionKey);
 
-        // Add to team (only Level 1)
-        if (level === 0 && !referrer.teamMembers.includes(user._id)) {
-          referrer.teamMembers.push(user._id);
+        // Add to team on Level 1 only
+        if (level === 0 && !(referrer as any).teamMembers.includes(user._id)) {
+          (referrer as any).teamMembers.push(user._id);
         }
 
-        // === LEVEL UPGRADE (max 4, only for direct referrals) ===
-        if (level === 0 && referrer.level < 4) {
-          referrer.level += 1;
+        // Auto-upgrade level for direct referrals (max 4)
+        if (level === 0 && (referrer as any).level < 4) {
+          (referrer as any).level = ((referrer as any).level || 1) + 1;
         }
       }
 
-      // === RECALCULATE TEAM SIZE & ACTIVE USERS (only for direct referrer) ===
+      // Recalculate team stats (only Level 1)
       if (level === 0) {
-        referrer.totalTeam = referrer.teamMembers.length;
-
+        (referrer as any).totalTeam = (referrer as any).teamMembers.length;
         const activeCount = await User.countDocuments({
-          _id: { $in: referrer.teamMembers },
+          _id: { $in: (referrer as any).teamMembers },
           "investments.amount": { $gte: 50 },
         });
-        referrer.activeUsers = activeCount;
+        (referrer as any).activeUsers = activeCount;
       }
 
       await referrer.save();
 
-      // Move up
-      currentReferrerId = referrer.referredBy;
+      // Move to next upline
+      currentReferrerId = (referrer as any).referredBy;
+    }
+
+    // === 6. Emit live socket update (if socket server is available) ===
+    const socketServerUrl = process.env.SOCKET_SERVER_URL || "http://localhost:4004";
+
+    try {
+      await axios.post(`${socketServerUrl}/emit`, {
+        event: "balanceUpdated",
+        payload: {
+          wallet,
+          newBalance: user.usdtBalance,
+        },
+        wallet, // included so socket-server can emit to room
+      });
+      console.log(`📡 Socket Emit → balanceUpdated (${wallet}) = ${user.usdtBalance}`);
+    } catch (emitErr: any) {
+      console.warn("⚠️ Socket emit failed:", emitErr?.message || emitErr);
     }
 
     // === RESPONSE ===
-    // Note: Removed "verified: true" since no actual verification is done.
     return NextResponse.json({
       success: true,
+      message: "Deposit saved successfully.",
       deposit,
       user: {
         wallet: user.wallet,
@@ -130,21 +157,25 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (err: any) {
-    console.error("Deposit API Error:", err);
+    console.error("🚨 Deposit API Error:", err);
     return NextResponse.json(
-      { error: "Internal Server Error", details: err.message },
+      { success: false, message: "Internal Server Error", error: err.message },
       { status: 500 }
     );
   }
 }
 
-// === GET: Fetch all confirmed deposits of user ===
+// === GET: Fetch confirmed deposits ===
 export async function GET(req: NextRequest) {
   try {
     await connectDB();
+
     const userId = req.headers.get("x-user-id");
     if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { success: false, message: "Unauthorized request." },
+        { status: 401 }
+      );
     }
 
     const deposits = await Deposit.find({
@@ -154,11 +185,11 @@ export async function GET(req: NextRequest) {
       .select("amount token txHash createdAt")
       .sort({ createdAt: -1 });
 
-    return NextResponse.json(deposits);
+    return NextResponse.json({ success: true, deposits });
   } catch (err: any) {
-    console.error("GET Deposits Error:", err);
+    console.error("🚨 GET Deposits Error:", err);
     return NextResponse.json(
-      { error: "Failed to fetch deposits" },
+      { success: false, message: "Failed to fetch deposits." },
       { status: 500 }
     );
   }
