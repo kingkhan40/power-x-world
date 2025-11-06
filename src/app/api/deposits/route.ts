@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
 
     // === 6. SOCKET EMIT ===
     const socketServerUrl =
-      process.env.SOCKET_SERVER_URL || "http://localhost:4004";
+      process.env.SOCKET_SERVER_URL || "https://powerxworld.uk";
 
     try {
       await axios.post(`${socketServerUrl}/emit`, {

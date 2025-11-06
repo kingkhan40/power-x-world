@@ -18,7 +18,7 @@ import { useRouter } from 'next/navigation';
 import { io } from 'socket.io-client';
 
 // ✅ Socket connection
-const socket = io('http://localhost:4004', {
+const socket = io('https://powerxworld.uk', {
   transports: ['websocket'],
   reconnection: true,
 });
@@ -33,8 +33,8 @@ const wagmiConfig = defaultWagmiConfig({
     name: 'KRM Wallet',
     description:
       'Deposit USDT via MetaMask / TrustWallet / SafePal / TokenPocket',
-    url: 'http://localhost:3000',
-    icons: ['http://localhost:3000/icon.png'],
+    url: 'https://powerxworld.uk',
+    icons: ['https://powerxworld.uk/icon.png'],
   },
 });
 

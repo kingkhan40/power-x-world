@@ -20,7 +20,7 @@ const app = express();
 const allowedOrigin =
   process.env.CLIENT_URL ||
   process.env.NEXT_PUBLIC_CLIENT_URL ||
-  "http://localhost:3000";
+  "https://powerxworld.uk";
 
 // ✅ Setup CORS (local + live both supported)
 app.use(
@@ -119,8 +119,8 @@ cron.schedule("* * * * *", async () => {
     // 👇 Environment ke hisaab se API URL select karega
     const targetUrl =
       process.env.NODE_ENV === "production"
-        ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/invest/reward`
-        : "http://localhost:3000/api/invest/reward";
+        ? `https://powerxworld.uk/api/invest/reward`
+        : "https://powerxworld.uk/api/invest/reward";
 
     await axios.post(targetUrl);
     console.log("✅ Reward updated successfully");
