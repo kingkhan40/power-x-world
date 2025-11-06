@@ -11,7 +11,7 @@ import {
 } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { teamLevels as staticTeamLevels } from "@/data/teamLevel";
-import socket from "@/lib/socket";
+import { getSocket } from "@/lib/socket"; // ✅ CHANGE: Named import
 
 interface StatsItem {
   id: number;
@@ -91,6 +91,7 @@ const Team = () => {
     fetchDashboard();
 
     const userWallet = localStorage.getItem("userWallet");
+    const socket = getSocket(); // ✅ CHANGE: getSocket() call karein
     if (socket && userWallet) {
       socket.on(`level_update_${userWallet}`, (data: any) => {
         setDashboard((prev) => ({ ...prev, level: data.level }));
@@ -98,6 +99,7 @@ const Team = () => {
     }
 
     return () => {
+      const socket = getSocket(); // ✅ CHANGE: getSocket() call karein
       if (socket && localStorage.getItem("userWallet")) {
         const w = localStorage.getItem("userWallet");
         socket.off(`level_update_${w}`);

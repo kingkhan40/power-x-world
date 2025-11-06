@@ -59,3 +59,4 @@ export function closeSocket(): void {
   socket.disconnect();
   socket = null;
 }
+

@@ -309,7 +309,7 @@ function DepositInner() {
 
                       <button
                         onClick={handleConfirm}
-                        className="mt-6 bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-xl font-bold transition-all"
+                         className="w-full bg-gradient-to-r from-cyan-900 via-blue-900 to-purple-900 hover:from-blue-800 hover:to-emerald-700 hover:via-teal-700 text-white py-4 px-6 rounded-2xl font-bold text-xl tracking-wide shadow-2xl hover:shadow-3xl transition-all duration-500 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none mb-4"
                       >
                         Confirm Transaction
                       </button>
@@ -317,7 +317,10 @@ function DepositInner() {
                       {txHash && (
                         <div className="mt-6 bg-green-500/20 border border-green-500/30 rounded-2xl p-4">
                           <p className="text-green-400 text-center text-sm break-all">
-                            ✅ Transaction Hash: {txHash}
+                            ✅ Deposit Confirmed! Transaction ID: {txHash}
+                          </p>
+                          <p className="text-green-300 text-center text-xs mt-2">
+                            Admin will verify your deposit shortly.
                           </p>
                         </div>
                       )}
@@ -391,10 +394,10 @@ function DepositInner() {
                   <div className="absolute inset-0 bg-blue-400/20 rounded-full animate-ping"></div>
                 </div>
                 <p className="text-white text-xl font-bold mb-2">
-                  Processing Deposit...
+                  Confirming Deposit...
                 </p>
                 <p className="text-blue-200 text-sm">
-                  Confirming transaction...
+                  Please wait while we process your request...
                 </p>
               </div>
             </div>
@@ -416,3 +419,5 @@ function Deposit() {
 }
 
 export default Deposit;
+
+
