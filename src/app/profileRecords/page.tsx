@@ -19,7 +19,6 @@ interface PersonalInfoItem {
   label: string;
   value: string;
 }
-
 interface AccountRecord {
   title: string;
   amount: string;
@@ -39,16 +38,14 @@ const ProfileRecords = () => {
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editName, setEditName] = useState(user?.userName || '');
-  const [profileImage, setProfileImage] = useState<string | null>(
-    user?.profilePic || null
-  );
+  const [profileImage, setProfileImage] = useState<string | null>(user?.profilePic || null);
 
   // === FETCH DATA ===
   useEffect(() => {
     if (user?.userId) {
       fetchUserProfile();
     }
-  }, [user?.userId]);
+  }, [user?.userId, fetchUserProfile]);
 
   // Update edit form when user data changes
   useEffect(() => {
@@ -65,7 +62,7 @@ const ProfileRecords = () => {
     if (!local || !domain) return email;
     const masked =
       local.length <= 3
-        ? local[0] + '***'.repeat(local.length - 1)
+        ? local[0] + '*'.repeat(local.length - 1)
         : local[0] + '*'.repeat(local.length - 3) + local.slice(-2);
     return `${masked}@${domain}`;
   };
@@ -86,51 +83,50 @@ const ProfileRecords = () => {
   const handleEditSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
-
     try {
       await updateUserProfile(editName, profileImage || undefined);
       setIsEditModalOpen(false);
       setProfileImage(null);
     } catch (err) {
-      console.log(error)
+      console.error('Failed to update profile:', err);
+      setError('Failed to update profile. Please try again.');
     }
   };
 
-
-const personalInfo: PersonalInfoItem[] = user
-  ? [
-      {
-        icon: <FaUser className="text-blue-400" />,
-        label: 'My Self Invest',
-        value: `$${user.selfBusiness?.toFixed(2) || '0.00'}`,
-      },
-      {
-        icon: <FaEnvelope className="text-purple-400" />,
-        label: 'Profit Record',
-        value: `$${user.rewardBalance?.toFixed(2) || '0.00'}`,
-      },
-      {
-        icon: <FaCalendar className="text-yellow-400" />,
-        label: 'My Total Deposit',
-        value: `$${user.usdtBalance?.toFixed(2) || '0.00'}`,
-      },
-      {
-        icon: <FaIdCard className="text-indigo-400" />,
-        label: 'My Withdrawals',
-        value: `$${(user as any).totalCommission?.toFixed(2) || '0.00'}`,
-      },
-      {
-        icon: <FaShieldAlt className="text-green-400" />,
-        label: 'Team Commission',
-        value: `$${user.directBusiness?.toFixed(2) || '0.00'}`,
-      },
-      {
-        icon: <FaUser className="text-blue-400" />,
-        label: 'Direct Commission',
-        value: `$${(user as any).rewardPayment?.toFixed(2) || '0.00'}`,
-      },
-    ]
-  : [];
+  const personalInfo: PersonalInfoItem[] = user
+    ? [
+        {
+          icon: <FaUser className="text-blue-400" />,
+          label: 'My Self Invest',
+          value: `$${user.selfBusiness?.toFixed(2) || '0.00'}`,
+        },
+        {
+          icon: <FaEnvelope className="text-purple-400" />,
+          label: 'Profit Record',
+          value: `$${user.rewardBalance?.toFixed(2) || '0.00'}`,
+        },
+        {
+          icon: <FaCalendar className="text-yellow-400" />,
+          label: 'My Total Deposit',
+          value: `$${user.usdtBalance?.toFixed(2) || '0.00'}`,
+        },
+        {
+          icon: <FaIdCard className="text-indigo-400" />,
+          label: 'My Withdrawals',
+          value: `$${(user as any).totalCommission?.toFixed(2) || '0.00'}`,
+        },
+        {
+          icon: <FaShieldAlt className="text-green-400" />,
+          label: 'Team Commission',
+          value: `$${user.directBusiness?.toFixed(2) || '0.00'}`,
+        },
+        {
+          icon: <FaUser className="text-blue-400" />,
+          label: 'Direct Commission',
+          value: `$${(user as any).rewardPayment?.toFixed(2) || '0.00'}`,
+        },
+      ]
+    : [];
 
   const accountRecords: AccountRecord[] = [
     {
@@ -140,18 +136,19 @@ const personalInfo: PersonalInfoItem[] = user
   ];
 
   // === RENDER ===
-  if (profileData.loading)
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen text-white text-xl">
         Loading...
       </div>
     );
+  }
 
-  if (profileData.error || !user)
+  if (error || !user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen text-white">
         <FaExclamationTriangle className="text-5xl text-red-500 mb-4" />
-        <p>{profileData.error || 'No data'}</p>
+        <p>{error || 'No data available'}</p>
         <button
           onClick={fetchUserProfile}
           className="mt-4 px-6 py-2 bg-red-600 rounded-lg"
@@ -160,6 +157,7 @@ const personalInfo: PersonalInfoItem[] = user
         </button>
       </div>
     );
+  }
 
   return (
     <div
@@ -173,11 +171,13 @@ const personalInfo: PersonalInfoItem[] = user
         backgroundAttachment: 'fixed',
       }}
     >
+      {/* Background Overlay */}
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
       <div className="container mx-auto max-w-6xl relative z-20">
-        {/* === HEADER === */}
+        {/* My Profile Header Card */}
         <div className="relative mb-3">
           <div className="relative z-20 flex flex-col lg:flex-row items-center gap-2">
+            {/* Profile Picture */}
             <div className="relative">
               <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center border-4 border-white/30 shadow-2xl overflow-hidden">
                 {user.profilePic ? (
@@ -206,7 +206,7 @@ const personalInfo: PersonalInfoItem[] = user
                 className="hidden"
               />
             </div>
-
+            {/* Profile Info */}
             <div className="flex-1 text-center">
               <h2 className="text-base lg:text-2xl font-bold text-white">
                 {user.userName}
@@ -215,12 +215,13 @@ const personalInfo: PersonalInfoItem[] = user
                 {maskEmail(user.userEmail)}
               </p>
             </div>
-
+            {/* Edit Button */}
             <button
               onClick={() => setIsEditModalOpen(true)}
               className="bg-gradient-to-r lg:flex hidden from-blue-500 to-purple-500 hover:from-blue-400 hover:to-purple-400 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-2xl items-center gap-2"
             >
-              <FaEdit /> Edit Profile
+              <FaEdit />
+              Edit Profile
             </button>
             <button
               onClick={() => setIsEditModalOpen(true)}
@@ -230,42 +231,40 @@ const personalInfo: PersonalInfoItem[] = user
             </button>
           </div>
         </div>
-
-        {/* === REFERRER CARD === */}
+        {/* Referrer Information Card */}
         <div className="lg:p-6 p-3 rounded-2xl relative overflow-hidden bg-gray-900 border border-gray-800 shadow-2xl lg:mb-8 mb-3">
           <div
             className="absolute -top-8 -left-8 w-24 h-24 rounded-full z-10"
             style={{
-              background: 'linear-gradient(45deg,#a855f7,#ec4899,#a855f7)',
-              filter: 'blur(12px)',
-              opacity: '0.6',
+              background: "linear-gradient(45deg, #a855f7, #ec4899, #a855f7)",
+              filter: "blur(12px)",
+              opacity: "0.6",
             }}
           ></div>
           <div
             className="absolute -bottom-8 -right-8 w-20 h-20 rounded-full z-10"
             style={{
-              background: 'linear-gradient(135deg,#3b82f6,#10b981,#3b82f6)',
-              filter: 'blur(10px)',
-              opacity: '0.4',
+              background: "linear-gradient(135deg, #3b82f6, #10b981, #3b82f6)",
+              filter: "blur(10px)",
+              opacity: "0.4",
             }}
           ></div>
           <div
             className="absolute -inset-2 rounded-2xl animate-spin opacity-70"
             style={{
               background:
-                'conic-gradient(from 0deg,#3b82f6,#8b5cf6,#ec4899,#10b981,#f59e0b,#3b82f6)',
-              animationDuration: '10000ms',
+                "conic-gradient(from 0deg, #3b82f6, #8b5cf6, #ec4899, #10b981, #f59e0b, #3b82f6)",
+              animationDuration: "10000ms",
               zIndex: 0,
             }}
           ></div>
           <div className="absolute inset-0.5 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 z-1"></div>
-
           <div className="relative z-20 text-center">
-            {profileData.referrerData.profile ? (
+            {profileData?.referrerData?.profile ? (
               <img
                 src={profileData.referrerData.profile}
                 className="w-12 h-12 rounded-full mx-auto"
-                alt="Referrer"
+                alt="Referrer Profile"
               />
             ) : (
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center mx-auto">
@@ -273,42 +272,42 @@ const personalInfo: PersonalInfoItem[] = user
               </div>
             )}
             <div className="text-white font-semibold text-sm mt-2">
-              {profileData.referrerData.name}
+              {profileData?.referrerData?.name || 'N/A'}
             </div>
             <div className="flex items-center justify-center gap-2 mt-1">
               <span className="text-white/70 text-sm">Sp ID :</span>
               <span className="text-white font-semibold text-xs">
-                {profileData.referrerData.sponsorId
+                {profileData?.referrerData?.sponsorId
                   ? profileData.referrerData.sponsorId.slice(-6).toUpperCase()
                   : 'N/A'}
               </span>
             </div>
           </div>
         </div>
-
-        <div className="p-6 rounded-2xl relative my-2 overflow-hidden bg-gray-900 border border-gray-800 shadow-2xl">
+        {/* Account Records */}
+        <div className="p-6 rounded-2xl relative mt-2 overflow-hidden bg-gray-900 border border-gray-800 shadow-2xl">
           <div
             className="absolute -top-8 -left-8 w-24 h-24 rounded-full z-10"
             style={{
-              background: 'linear-gradient(45deg, #a855f7, #ec4899, #a855f7)',
-              filter: 'blur(12px)',
-              opacity: '0.6',
+              background: "linear-gradient(45deg, #a855f7, #ec4899, #a855f7)",
+              filter: "blur(12px)",
+              opacity: "0.6",
             }}
           ></div>
           <div
             className="absolute -bottom-8 -right-8 w-20 h-20 rounded-full z-10"
             style={{
-              background: 'linear-gradient(135deg, #3b82f6, #10b981, #3b82f6)',
-              filter: 'blur(10px)',
-              opacity: '0.4',
+              background: "linear-gradient(135deg, #3b82f6, #10b981, #3b82f6)",
+              filter: "blur(10px)",
+              opacity: "0.4",
             }}
           ></div>
           <div
             className="absolute -inset-2 rounded-2xl animate-spin opacity-50"
             style={{
               background:
-                'conic-gradient(from 0deg, #3b82f6, #8b5cf6, #ec4899, #10b981, #f59e0b, #3b82f6)',
-              animationDuration: '12000ms',
+                "conic-gradient(from 0deg, #3b82f6, #8b5cf6, #ec4899, #10b981, #f59e0b, #3b82f6)",
+              animationDuration: "12000ms",
               zIndex: 0,
             }}
           ></div>
@@ -329,44 +328,43 @@ const personalInfo: PersonalInfoItem[] = user
             ))}
           </div>
         </div>
-
-        {/* === 6 BOXES GRID === */}
+        {/* Personal Information */}
         <div className="lg:p-6 p-3 rounded-2xl relative overflow-hidden bg-gray-900 border border-gray-800 shadow-2xl">
           <div
             className="absolute -top-8 -left-8 w-24 h-24 rounded-full z-10"
             style={{
-              background: 'linear-gradient(45deg,#a855f7,#ec4899,#a855f7)',
-              filter: 'blur(12px)',
-              opacity: '0.6',
+              background: "linear-gradient(45deg, #a855f7, #ec4899, #a855f7)",
+              filter: "blur(12px)",
+              opacity: "0.6",
             }}
           ></div>
           <div
             className="absolute -bottom-8 -right-8 w-20 h-20 rounded-full z-10"
             style={{
-              background: 'linear-gradient(135deg,#3b82f6,#10b981,#3b82f6)',
-              filter: 'blur(10px)',
-              opacity: '0.4',
+              background: "linear-gradient(135deg, #3b82f6, #10b981, #3b82f6)",
+              filter: "blur(10px)",
+              opacity: "0.4",
             }}
           ></div>
           <div
             className="absolute -inset-2 rounded-2xl animate-spin opacity-50"
             style={{
               background:
-                'conic-gradient(from 0deg,#3b82f6,#8b5cf6,#ec4899,#10b981,#f59e0b,#3b82f6)',
-              animationDuration: '12000ms',
+                "conic-gradient(from 0deg, #3b82f6, #8b5cf6, #ec4899, #10b981, #f59e0b, #3b82f6)",
+              animationDuration: "12000ms",
               zIndex: 0,
             }}
           ></div>
           <div className="absolute inset-0.5 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 z-1"></div>
           <div className="relative z-20">
             <div className="grid grid-cols-2 gap-2">
-              {personalInfo.map((info, i) => (
+              {personalInfo.map((info, index) => (
                 <div
-                  key={i}
+                  key={index}
                   className="flex flex-col items-center gap-4 lg:p-3 p-2 rounded-md bg-gradient-to-r from-gray-800/50 to-gray-900/30 border border-white/20 backdrop-blur-sm"
                 >
                   <div className="text-white/70 text-sm">{info.label}</div>
-                  <div className="text-white text-xs font-semibold">
+                  <div className="text-white text-xs flex flex-wrap font-semibold">
                     {info.value}
                   </div>
                 </div>
@@ -374,128 +372,123 @@ const personalInfo: PersonalInfoItem[] = user
             </div>
           </div>
         </div>
-
-        {/* === EDIT MODAL === */}
-        {isEditModalOpen && (
-          <>
-            <div
-              className="fixed inset-0 bg-black/60 backdrop-blur-lg z-40"
-              onClick={() => setIsEditModalOpen(false)}
-            />
-            <div className="fixed inset-0 flex items-center justify-center lg:p-4 p-2 z-50">
-              <div className="w-full max-w-2xl animate-slide-up rounded-2xl relative overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto">
-                <div className="absolute -inset-1 rounded-2xl overflow-hidden">
-                  <div
-                    className="w-full h-full animate-spin opacity-70"
-                    style={{
-                      background:
-                        'conic-gradient(from 0deg,#a855f7,#ec4899,#f59e0b,#10b981,#3b82f6,#a855f7)',
-                      animationDuration: '10000ms',
-                    }}
-                  ></div>
-                </div>
-                <div className="absolute inset-0.5 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 z-1"></div>
-                <div className="relative z-20 m-1">
-                  <div className="bg-gradient-to-r from-blue-500 to-purple-500 py-6 px-6 rounded-t-2xl">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-3">
-                        <FaEdit className="text-white text-xl" />
-                        <div>
-                          <div className="text-xl font-bold text-white">
-                            Edit Profile
-                          </div>
-                          <div className="text-blue-100 text-sm">
-                            Update your personal information
-                          </div>
+      </div>
+      {/* Edit Profile Modal */}
+      {isEditModalOpen && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-lg z-40"
+            onClick={() => setIsEditModalOpen(false)}
+          />
+          <div className="fixed inset-0 flex items-center justify-center lg:p-4 p-2 z-50">
+            <div className="w-full max-w-2xl rounded-2xl relative overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto animate-slide-up">
+              <div className="absolute -inset-1 rounded-2xl overflow-hidden">
+                <div
+                  className="w-full h-full animate-spin opacity-70"
+                  style={{
+                    background:
+                      "conic-gradient(from 0deg, #a855f7, #ec4899, #f59e0b, #10b981, #3b82f6, #a855f7)",
+                    animationDuration: "10000ms",
+                  }}
+                ></div>
+              </div>
+              <div className="absolute inset-0.5 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 z-1"></div>
+              <div className="relative z-20 m-1">
+                <div className="bg-gradient-to-r from-blue-500 to-purple-500 py-6 px-6 rounded-t-2xl">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                      <FaEdit className="text-white text-xl" />
+                      <div>
+                        <div className="text-xl font-bold text-white">
+                          Edit Profile
+                        </div>
+                        <div className="text-blue-100 text-sm">
+                          Update your personal information
                         </div>
                       </div>
-                      <button
-                        onClick={() => setIsEditModalOpen(false)}
-                        className="text-white hover:text-gray-200 p-2 rounded-lg hover:bg-white/10"
-                      >
-                        <FaTimes className="text-xl" />
-                      </button>
                     </div>
+                    <button
+                      onClick={() => setIsEditModalOpen(false)}
+                      className="text-white hover:text-gray-200 transition-colors p-2 rounded-lg hover:bg-white/10"
+                    >
+                      <FaTimes className="text-xl" />
+                    </button>
                   </div>
-                  <div className="p-6">
-                    <form onSubmit={handleEditSubmit} className="space-y-6">
-                      <div className="flex flex-col items-center space-y-4">
-                        <div className="relative">
-                          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center border-4 border-white/30 shadow-2xl overflow-hidden">
-                            {profileImage ? (
-                              <img
-                                src={profileImage}
-                                alt="Preview"
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <FaUser className="text-white text-2xl" />
-                            )}
-                          </div>
-                          <label
-                            htmlFor="modalProfilePic"
-                            className="absolute -bottom-2 -right-2 p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full border-2 border-white/30 shadow-lg hover:scale-110 transition-transform duration-300 cursor-pointer"
-                          >
-                            <FaCamera className="text-white text-sm" />
-                          </label>
-                          <input
-                            id="modalProfilePic"
-                            type="file"
-                            accept="image/*"
-                            onChange={handleProfilePicChange}
-                            className="hidden"
-                          />
+                </div>
+                <div className="p-6">
+                  <form onSubmit={handleEditSubmit} className="space-y-6">
+                    <div className="flex flex-col items-center justify-center space-y-4">
+                      <div className="relative">
+                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center border-4 border-white/30 shadow-2xl overflow-hidden">
+                          {profileImage || user.profilePic ? (
+                            <img
+                              src={profileImage || user.profilePic || ""}
+                              alt="Profile Preview"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <FaUser className="text-white text-2xl" />
+                          )}
                         </div>
-                        <p className="text-white/70 text-sm text-center">
-                          Click camera to change picture
-                        </p>
-                      </div>
-
-                      <div className="space-y-3">
-                        <label className="text-white font-semibold">
-                          Full Name
+                        <label
+                          htmlFor="modalProfilePic"
+                          className="absolute -bottom-2 -right-2 p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full border-2 border-white/30 shadow-lg hover:scale-110 transition-transform duration-300 cursor-pointer"
+                        >
+                          <FaCamera className="text-white text-sm" />
                         </label>
                         <input
-                          type="text"
-                          value={editName}
-                          onChange={(e) => setEditName(e.target.value)}
-                          className="w-full p-3 bg-gradient-to-r from-gray-800/90 to-gray-900 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300 backdrop-blur-sm"
+                          id="modalProfilePic"
+                          type="file"
+                          accept="image/*"
+                          onChange={handleProfilePicChange}
+                          className="hidden"
                         />
                       </div>
-
-                      {/* Error Message */}
-                      {error && (
-                        <p className="text-red-400 text-sm text-center">
-                          {error}
-                        </p>
-                      )}
-
-                      <div className="flex gap-4 pt-4">
-                        <button
-                          type="submit"
-                          disabled={loading}
-                          className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 text-white py-3 rounded-xl font-bold transition-all duration-300 transform hover:scale-105 shadow-2xl disabled:opacity-70"
-                        >
-                          {loading ? 'Saving...' : 'Save Changes'}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setIsEditModalOpen(false)}
-                          className="flex-1 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-500 hover:to-gray-600 text-white py-3 rounded-xl font-bold transition-all duration-300 border border-gray-500/50"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </form>
-                  </div>
+                      <p className="text-white/70 text-sm text-center">
+                        Click on camera icon to change profile picture
+                      </p>
+                    </div>
+                    <div className="space-y-3">
+                      <label className="text-white font-semibold">
+                        Full Name
+                      </label>
+                      <input
+                        type="text"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        className="w-full p-3 bg-gradient-to-r from-gray-800/90 to-gray-900 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300 backdrop-blur-sm"
+                      />
+                    </div>
+                    {error && (
+                      <p className="text-red-400 text-sm text-center">
+                        {error}
+                      </p>
+                    )}
+                    <div className="flex gap-4 pt-4">
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 text-white py-3 lg:px-6 px-4 lg:text-lg text-sm rounded-xl font-bold transition-all duration-300 transform hover:scale-105 shadow-2xl disabled:opacity-50"
+                      >
+                        {loading ? 'Saving...' : 'Save Changes'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsEditModalOpen(false)}
+                        className="flex-1 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-500 hover:to-gray-600 text-white py-3 lg:px-6 px-4 lg:text-lg text-sm rounded-xl font-bold transition-all duration-300 border border-gray-500/50"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
                 </div>
               </div>
             </div>
-          </>
-        )}
-      </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
 
-export default ProfileRecords;
+export default ProfileRecords; 
