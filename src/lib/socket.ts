@@ -3,16 +3,16 @@ import { io, Socket } from "socket.io-client";
 let socket: Socket | null = null;
 
 /**
- * Initialize socket (singleton)
- * - Returns Socket or null when executed server-side
+ * ✅ Initialize socket (singleton)
+ * - Prevents duplicate connections
+ * - Includes safe reconnection handling
  */
 export function initSocket(): Socket | null {
-  if (typeof window === "undefined") return null; // server-side: no socket
-  if (socket) return socket; // already initialized
+  if (typeof window === "undefined") return null; // SSR guard
+  if (socket && socket.connected) return socket; // already connected
 
   const url = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:4004";
 
-  // create socket with sensible reconnection settings
   socket = io(url, {
     transports: ["websocket"],
     withCredentials: true,
@@ -23,39 +23,48 @@ export function initSocket(): Socket | null {
     reconnectionDelayMax: 5000,
   });
 
+  /* ✅ Event Handlers */
   socket.on("connect", () => {
-    console.log("🟢 [Socket] connected:", socket?.id, "| URL:", url);
+    console.log(`🟢 [Socket] Connected → ID: ${socket?.id} | URL: ${url}`);
   });
 
   socket.on("connect_error", (err: any) => {
-    console.error("🔴 [Socket] connect_error:", err?.message ?? err);
+    const msg =
+      typeof err === "object" && err !== null ? err.message || JSON.stringify(err) : String(err);
+    console.error("🔴 [Socket] Connection Error:", msg);
   });
 
-  socket.on("reconnect_attempt", (attempt) => {
-    console.log("🔁 [Socket] reconnect attempt:", attempt);
+  socket.on("reconnect_attempt", (attempt: number) => {
+    console.log(`🔁 [Socket] Reconnect Attempt #${attempt}`);
   });
 
-  socket.on("reconnect", (attempt) => {
-    console.log("✅ [Socket] reconnected after attempt:", attempt);
+  socket.on("reconnect", (attempt: number) => {
+    console.log(`✅ [Socket] Reconnected Successfully (after ${attempt} attempts)`);
   });
 
-  socket.on("disconnect", (reason: any) => {
-    console.warn("⚪ [Socket] disconnected:", reason);
+  socket.on("disconnect", (reason: string) => {
+    console.warn("⚪ [Socket] Disconnected:", reason);
   });
 
   return socket;
 }
 
-/** Get the initialized socket (or initialize lazily) */
+/**
+ * ✅ Get existing socket instance (or lazy-init if not created)
+ */
 export function getSocket(): Socket | null {
   if (typeof window === "undefined") return null;
   if (!socket) return initSocket();
   return socket;
 }
 
-/** Close socket and cleanup */
+/**
+ * ✅ Close and cleanup socket
+ */
 export function closeSocket(): void {
-  if (!socket) return;
-  socket.disconnect();
-  socket = null;
+  if (socket) {
+    console.log("🔻 [Socket] Disconnecting manually...");
+    socket.disconnect();
+    socket = null;
+  }
 }
