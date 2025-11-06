@@ -15,7 +15,7 @@ import { bsc } from 'wagmi/chains';
 import { createWeb3Modal, defaultWagmiConfig } from '@web3modal/wagmi/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { io } from 'socket.io-client'; // ✅ Added socket.io client
+import { io } from 'socket.io-client';
 
 // ✅ Socket connection
 const socket = io('http://localhost:4004', {
@@ -55,12 +55,18 @@ function DepositInner() {
   const [isLoading, setIsLoading] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('connectWallet');
+  const [deposits, setDeposits] = useState<any[]>([]); // ✅ Added for totalDeposit logic
   const router = useRouter();
 
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
 
   const adminWallet = '0x6E84f52A49F290833928e651a86FF64e5851f422';
+
+  // ✅ Added total deposit logic
+  const totalDeposit = Array.isArray(deposits)
+    ? deposits.reduce((sum, d) => sum + d.amount, 0)
+    : 0;
 
   // ✅ Detect wallet connect event
   useEffect(() => {
@@ -71,10 +77,28 @@ function DepositInner() {
     }
   }, [isConnected, address]);
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(adminWallet);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+  // ✅ Fix copy-to-clipboard issue (works reliably in all browsers)
+  const copyToClipboard = async () => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(adminWallet);
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = adminWallet;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch (err) {
+      console.error('Copy failed', err);
+      alert('❌ Failed to copy address');
+    }
   };
 
   const handleConfirm = async () => {
@@ -93,6 +117,11 @@ function DepositInner() {
       if (data.success) {
         alert('✅ Transaction confirmed successfully!');
         setTxHash(data.txHash);
+
+        // ✅ optional: save deposit to state to calculate total
+        if (data.amount) {
+          setDeposits((prev) => [...prev, { amount: data.amount }]);
+        }
       } else {
         alert(data.message || 'No valid deposit found yet.');
       }
@@ -195,6 +224,8 @@ function DepositInner() {
             </div>
 
             <div className="p-6">
+              {/* 👇 Your existing connectWallet and deposit UIs remain unchanged */}
+              {/* ----------------------------- */}
               {activeTab === 'connectWallet' && (
                 <div className="text-center">
                   {!isConnected ? (
@@ -237,6 +268,7 @@ function DepositInner() {
                     </div>
                   ) : (
                     <>
+                      {/* Deposit Section (unchanged) */}
                       <div className="bg-blue-500/20 border border-blue-500/30 rounded-2xl p-4 mb-6">
                         <div className="flex items-center justify-between">
                           <div>
@@ -321,6 +353,13 @@ function DepositInner() {
                           </p>
                         </div>
                       )}
+
+                      {/* ✅ Show total deposit (optional display) */}
+                      {totalDeposit > 0 && (
+                        <p className="text-center text-blue-300 mt-4 text-sm">
+                          💵 Total Deposited: {totalDeposit.toFixed(2)} USDT
+                        </p>
+                      )}
                     </>
                   )}
                 </div>
@@ -329,7 +368,7 @@ function DepositInner() {
           </div>
         </div>
 
-        {/* ✅ Bottom Feature Boxes */}
+        {/* ✅ Bottom Feature Boxes (unchanged) */}
         <div className="grid grid-cols-2 gap-3">
           <div className="p-1 rounded-md relative overflow-hidden bg-gray-900 border border-gray-800 shadow-2xl">
             <div
