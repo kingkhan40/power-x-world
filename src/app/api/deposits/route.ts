@@ -30,14 +30,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (amount < 50) {
+    // ✅ FIX: Minimum deposit now 5 USDT
+    if (amount < 5) {
       return NextResponse.json(
-        { success: false, message: "Minimum deposit is 50 USDT." },
+        { success: false, message: "Minimum deposit is 5 USDT." },
         { status: 400 }
       );
     }
 
-    // === 1. CHECK FOR DUPLICATE TRANSACTION ===
+    // === 1. CHECK DUPLICATE TX ===
     const existing = await Deposit.findOne({ txHash });
     if (existing) {
       return NextResponse.json({
@@ -46,7 +47,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // === 2. SAVE DEPOSIT (Unconfirmed initially) ===
+    // === 2. CREATE DEPOSIT (unconfirmed initially) ===
     const deposit = await Deposit.create({
       userId,
       wallet,
@@ -54,7 +55,7 @@ export async function POST(req: NextRequest) {
       token,
       txHash,
       chain,
-      confirmed: false, // Confirmation via /check-transaction or admin
+      confirmed: false,
     });
 
     // === 3. FIND USER ===
@@ -63,18 +64,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: "User not found." });
     }
 
-    // === 4. IMMEDIATE BALANCE UPDATE (optional, if auto-confirm system used) ===
+    // === 4. IMMEDIATE BALANCE UPDATE ===
     user.wallet = (user.wallet || 0) + amount;
     user.usdtBalance = (user.usdtBalance || 0) + amount;
     user.selfBusiness = (user.selfBusiness || 0) + amount;
 
-    // === Add investment record ===
     user.investments = user.investments || [];
     user.investments.push({ amount, date: new Date() });
 
     await user.save();
 
-    // === 5. REFERRAL COMMISSION SYSTEM (4-level deep) ===
+    // === 5. REFERRAL COMMISSION SYSTEM ===
     const commissionRates = [0.12, 0.05, 0.02, 0.02];
     let currentReferrerId = (user as any).referredBy;
 
@@ -86,50 +86,47 @@ export async function POST(req: NextRequest) {
       const referrer = await User.findById(currentReferrerId);
       if (!referrer) break;
 
-      // Initialize fields if missing
-      (referrer as any).commissionedUsers = (referrer as any).commissionedUsers || [];
+      (referrer as any).commissionedUsers =
+        (referrer as any).commissionedUsers || [];
       (referrer as any).teamMembers = (referrer as any).teamMembers || [];
 
       const commissionKey = `${user._id.toString()}_L${level + 1}`;
       const isFirstCommission =
         !(referrer as any).commissionedUsers.includes(commissionKey);
 
-      // === Calculate commission ===
       const commission = amount * commissionRates[level];
       referrer.wallet = (referrer.wallet || 0) + commission;
 
       if (isFirstCommission) {
         (referrer as any).commissionedUsers.push(commissionKey);
 
-        // Add to team on Level 1 only
         if (level === 0 && !(referrer as any).teamMembers.includes(user._id)) {
           (referrer as any).teamMembers.push(user._id);
         }
 
-        // Auto-upgrade level for direct referrals (max 4)
         if (level === 0 && (referrer as any).level < 4) {
           (referrer as any).level = ((referrer as any).level || 1) + 1;
         }
       }
 
-      // Recalculate team stats (only Level 1)
       if (level === 0) {
         (referrer as any).totalTeam = (referrer as any).teamMembers.length;
+
         const activeCount = await User.countDocuments({
           _id: { $in: (referrer as any).teamMembers },
-          "investments.amount": { $gte: 50 },
+          "investments.amount": { $gte: 5 },
         });
+
         (referrer as any).activeUsers = activeCount;
       }
 
       await referrer.save();
-
-      // Move to next upline
       currentReferrerId = (referrer as any).referredBy;
     }
 
-    // === 6. Emit live socket update (if socket server is available) ===
-    const socketServerUrl = process.env.SOCKET_SERVER_URL || "http://localhost:4004";
+    // === 6. SOCKET EMIT ===
+    const socketServerUrl =
+      process.env.SOCKET_SERVER_URL || "http://localhost:4004";
 
     try {
       await axios.post(`${socketServerUrl}/emit`, {
@@ -138,14 +135,15 @@ export async function POST(req: NextRequest) {
           wallet,
           newBalance: user.usdtBalance,
         },
-        wallet, // included so socket-server can emit to room
+        wallet,
       });
-      console.log(`📡 Socket Emit → balanceUpdated (${wallet}) = ${user.usdtBalance}`);
+      console.log(
+        `📡 Socket Emit → balanceUpdated (${wallet}) = ${user.usdtBalance}`
+      );
     } catch (emitErr: any) {
       console.warn("⚠️ Socket emit failed:", emitErr?.message || emitErr);
     }
 
-    // === RESPONSE ===
     return NextResponse.json({
       success: true,
       message: "Deposit saved successfully.",
@@ -165,7 +163,9 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// === GET: Fetch confirmed deposits ===
+/**
+ * ✅ GET: Fetch confirmed deposits safely
+ */
 export async function GET(req: NextRequest) {
   try {
     await connectDB();
@@ -178,18 +178,25 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const deposits = await Deposit.find({
-      userId,
-      confirmed: true,
-    })
-      .select("amount token txHash createdAt")
-      .sort({ createdAt: -1 });
+    const deposits =
+      (await Deposit.find({ userId, confirmed: true })
+        .select("amount token txHash createdAt")
+        .sort({ createdAt: -1 })) || [];
 
-    return NextResponse.json({ success: true, deposits });
+    // ✅ FIX: Prevent crash when deposits is null/undefined
+    const totalDeposit = Array.isArray(deposits)
+      ? deposits.reduce((sum, d) => sum + (d.amount || 0), 0)
+      : 0;
+
+    return NextResponse.json({
+      success: true,
+      deposits,
+      totalDeposit,
+    });
   } catch (err: any) {
     console.error("🚨 GET Deposits Error:", err);
     return NextResponse.json(
-      { success: false, message: "Failed to fetch deposits." },
+      { success: false, message: "Failed to fetch deposits.", error: err.message },
       { status: 500 }
     );
   }
