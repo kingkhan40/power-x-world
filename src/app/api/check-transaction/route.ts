@@ -9,6 +9,7 @@ import axios from "axios";
  * Verifies user's latest deposit via Alchemy,
  * updates balance, saves deposit, and triggers socket emit.
  */
+
 export async function POST(req: NextRequest) {
   try {
     await connectDB();
@@ -34,8 +35,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 📡 Alchemy API call (safer version)
-    const alchemyUrl = `https://bnb-mainnet.g.alchemy.com/v2/CLsc_8crKlQJL1wfRyVjQ`;
+    // 📡 Alchemy API call (use BSC mainnet Alchemy endpoint)
+    const alchemyUrl = `https://bnb-mainnet.g.alchemy.com/v2/${apiKey}`;
     const payload = {
       id: 1,
       jsonrpc: "2.0",
@@ -70,13 +71,43 @@ export async function POST(req: NextRequest) {
     // ✅ Get latest valid transfer
     const latest = transfers[0];
     const txHash = latest?.hash || null;
-    const amount = Number(latest?.value || 0);
 
+    // Try to parse amount from common fields
+    // Some Alchemy transfer objects include 'value' (string) for native transfers
+    // and 'erc20Token' or 'rawContract.value' for token transfers. We try a few fallbacks.
+    let amount = 0;
+
+    // prefer latest.value if present (string or numeric)
+    if (latest?.value) {
+      amount = Number(latest.value);
+    } else if (latest?.rawContract?.value) {
+      amount = Number(latest.rawContract.value);
+    } else if (latest?.erc20Token?.amount) {
+      // some alchemy responses give amount as string in erc20Token.amount
+      amount = Number(latest.erc20Token.amount);
+    } else if (latest?.delta) {
+      amount = Number(latest.delta);
+    }
+
+    // If amount is still zero, try parsing metadata (some token transfers include tokenDecimal)
+    // NOTE: This code assumes Alchemy returns token amounts in human-readable units in `value` or `erc20Token.amount`.
     if (!txHash || amount <= 0) {
-      console.warn("⚠️ Invalid transaction data from Alchemy:", latest);
+      console.warn("⚠️ Invalid or zero transaction value from Alchemy:", latest);
       return NextResponse.json({
         success: false,
         message: "Invalid transaction details.",
+      });
+    }
+
+    // === Minimum deposit check (changed to 5 USDT) ===
+    // If your Alchemy returned amount is in smallest units (like wei / token decimals),
+    // convert accordingly before this check. This implementation assumes `amount` is in human USDT units.
+    const MIN_DEPOSIT = 5; // USD (USDT) minimum
+    if (amount < MIN_DEPOSIT) {
+      console.log(`❗ Deposit below minimum: ${amount} < ${MIN_DEPOSIT}`);
+      return NextResponse.json({
+        success: false,
+        message: `Deposit must be at least ${MIN_DEPOSIT} USDT.`,
       });
     }
 
@@ -113,9 +144,10 @@ export async function POST(req: NextRequest) {
 
     // 💰 Update user balances safely
     user.usdtBalance = (user.usdtBalance || 0) + amount;
+    user.wallet = (user.wallet || 0) + amount;
     await user.save();
 
-    // 🔥 Emit socket event
+    // 🔥 Real-time socket emit (via server /emit endpoint)
     const socketServerUrl = process.env.SOCKET_SERVER_URL || "http://localhost:4004";
     try {
       await axios.post(`${socketServerUrl}/emit`, {
@@ -124,6 +156,8 @@ export async function POST(req: NextRequest) {
           wallet,
           newBalance: user.usdtBalance,
         },
+        // provide wallet too for room emit handling on server
+        wallet,
       });
       console.log(`📡 Socket emit success → balanceUpdated (${wallet}) = ${user.usdtBalance}`);
     } catch (emitErr: any) {

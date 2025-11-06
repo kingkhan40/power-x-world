@@ -15,8 +15,15 @@ import { bsc } from 'wagmi/chains';
 import { createWeb3Modal, defaultWagmiConfig } from '@web3modal/wagmi/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import { io } from 'socket.io-client'; // ✅ Added socket.io client
 
-const projectId = '4ed88d6c567e9799d509e8050f3f73c4'; 
+// ✅ Socket connection
+const socket = io('http://localhost:4004', {
+  transports: ['websocket'],
+  reconnection: true,
+});
+
+const projectId = '4ed88d6c567e9799d509e8050f3f73c4';
 const chains = [bsc] as const;
 
 const wagmiConfig = defaultWagmiConfig({
@@ -55,11 +62,14 @@ function DepositInner() {
 
   const adminWallet = '0x6E84f52A49F290833928e651a86FF64e5851f422';
 
+  // ✅ Detect wallet connect event
   useEffect(() => {
-    if (isConnected) {
+    if (isConnected && address) {
+      console.log('✅ Wallet connected:', address);
+      socket.emit('wallet_connected', address);
       setActiveTab('deposit');
     }
-  }, [isConnected]);
+  }, [isConnected, address]);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(adminWallet);
@@ -67,7 +77,6 @@ function DepositInner() {
     setTimeout(() => setCopied(false), 1500);
   };
 
-  // ✅ Added Confirm Transaction Handler
   const handleConfirm = async () => {
     if (!address) return alert('Please connect your wallet first');
     setIsLoading(true);
@@ -85,7 +94,7 @@ function DepositInner() {
         alert('✅ Transaction confirmed successfully!');
         setTxHash(data.txHash);
       } else {
-        alert(data.error || 'No valid deposit found yet.');
+        alert(data.message || 'No valid deposit found yet.');
       }
     } catch (err) {
       console.error(err);
@@ -131,6 +140,7 @@ function DepositInner() {
           </p>
         </div>
 
+        {/* 🔹 Main Deposit Box */}
         <div className="lg:p-5 p-0.5 rounded-2xl relative overflow-hidden bg-gray-900 border border-gray-800 shadow-2xl mb-8">
           <div
             className="absolute -inset-1 rounded-2xl animate-spin opacity-70"
@@ -197,7 +207,8 @@ function DepositInner() {
                         ✅ Wallet Connected Successfully!
                       </div>
                       <p className="text-green-300 text-sm mb-4">
-                        Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
+                        Connected: {address?.slice(0, 6)}...
+                        {address?.slice(-4)}
                       </p>
                       <button
                         onClick={() => setActiveTab('deposit')}
@@ -226,7 +237,6 @@ function DepositInner() {
                     </div>
                   ) : (
                     <>
-                      {/* Connected Wallet Info */}
                       <div className="bg-blue-500/20 border border-blue-500/30 rounded-2xl p-4 mb-6">
                         <div className="flex items-center justify-between">
                           <div>
@@ -246,22 +256,15 @@ function DepositInner() {
                         </div>
                       </div>
 
-                      {/* Security Alert */}
                       <div className="bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/30 rounded-2xl p-4 mb-6 backdrop-blur-sm">
-                        <div className="flex items-center gap-3 text-center">
-                          <div className="text-orange-200 text-sm leading-relaxed">
-                            <span className="font-bold">
-                              🚨<strong> CRITICAL NOTICE:</strong>{' '}
-                            </span>
-                            Please ensure you only send{' '}
-                            <strong>USDT (BEP-20)</strong> to this address.
-                            Sending other cryptocurrencies may cause
-                            irreversible loss.
-                          </div>
+                        <div className="text-orange-200 text-sm leading-relaxed text-center">
+                          🚨 <strong>CRITICAL NOTICE:</strong> Please ensure you
+                          only send <strong>USDT (BEP-20)</strong> to this
+                          address. Sending other cryptocurrencies may cause
+                          irreversible loss.
                         </div>
                       </div>
 
-                      {/* Wallet Address Section */}
                       <div className="space-y-4 mb-6">
                         <div className="flex items-center justify-between">
                           <label className="text-white text-lg font-bold flex items-center gap-2">
@@ -304,7 +307,6 @@ function DepositInner() {
                         )}
                       </div>
 
-                      {/* ✅ Confirm Transaction Button (newly added) */}
                       <button
                         onClick={handleConfirm}
                         className="mt-6 bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-xl font-bold transition-all"
@@ -312,7 +314,6 @@ function DepositInner() {
                         Confirm Transaction
                       </button>
 
-                      {/* Transaction Hash Display */}
                       {txHash && (
                         <div className="mt-6 bg-green-500/20 border border-green-500/30 rounded-2xl p-4">
                           <p className="text-green-400 text-center text-sm break-all">
@@ -328,6 +329,7 @@ function DepositInner() {
           </div>
         </div>
 
+        {/* ✅ Bottom Feature Boxes */}
         <div className="grid grid-cols-2 gap-3">
           <div className="p-1 rounded-md relative overflow-hidden bg-gray-900 border border-gray-800 shadow-2xl">
             <div
