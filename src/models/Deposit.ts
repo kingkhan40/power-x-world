@@ -1,4 +1,5 @@
-import mongoose, { Schema, models, model } from "mongoose";
+import mongoose, { Types } from "mongoose";
+const { Schema, model, models } = mongoose;
 
 const DepositSchema = new Schema(
   {
@@ -33,8 +34,7 @@ const DepositSchema = new Schema(
       type: String,
       required: true,
       unique: true,
-      index: true,
-      trim: true,
+      trim: true, // ✅ kept unique only (index auto created)
     },
 
     // Blockchain network
@@ -54,9 +54,8 @@ const DepositSchema = new Schema(
   }
 );
 
-// Index for faster queries
+// ✅ Only keep wallet index for faster lookup
 DepositSchema.index({ wallet: 1 });
-DepositSchema.index({ txHash: 1 });
 
 const Deposit = models.Deposit || model("Deposit", DepositSchema);
 export default Deposit;

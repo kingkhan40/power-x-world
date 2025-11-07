@@ -1,4 +1,6 @@
-import mongoose, { Schema, models, model } from "mongoose";
+import mongoose, { Types } from "mongoose";
+const { Schema, model, models } = mongoose;
+
 
 export interface IWithdraw {
   userId: string;

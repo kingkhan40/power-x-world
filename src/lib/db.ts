@@ -1,13 +1,31 @@
-// src/lib/db.ts
 import mongoose from "mongoose";
+import path from "path";
+import { config } from "dotenv";
 
-const MONGODB_URI = process.env.MONGODB_URI!;
+/* ---------------------------------------------
+ * 🌍 Load .env.local manually if not already loaded
+ * --------------------------------------------- */
+
+if (!process.env.MONGODB_URI) {
+  const envPath = path.resolve(process.cwd(), ".env.local");
+  console.log("📦 Loading environment from:", envPath);
+  config({ path: envPath });
+}
+
+/* ---------------------------------------------
+ * ⚙️ Validate MongoDB URI
+ * --------------------------------------------- */
+
+const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
   throw new Error("❌ Please define MONGODB_URI in your .env.local or Vercel environment");
 }
 
-// Cached connection
+/* ---------------------------------------------
+ * 🔄 Cached connection handler
+ * --------------------------------------------- */
+
 let cached: {
   conn: typeof mongoose | null;
   promise: Promise<typeof mongoose> | null;
@@ -15,6 +33,10 @@ let cached: {
   conn: null,
   promise: null,
 };
+
+/* ---------------------------------------------
+ * 🔗 MongoDB Connection Function
+ * --------------------------------------------- */
 
 export async function connectDB() {
   if (cached.conn) {
@@ -24,7 +46,8 @@ export async function connectDB() {
 
   if (!cached.promise) {
     console.log("⚡ Connecting to MongoDB...");
-    cached.promise = mongoose.connect(MONGODB_URI, {
+    // ✅ Fix: explicitly tell TS this is a string
+    cached.promise = mongoose.connect(MONGODB_URI as string, {
       bufferCommands: false,
     });
   }
@@ -39,4 +62,3 @@ export async function connectDB() {
     throw err;
   }
 }
-            
