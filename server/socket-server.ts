@@ -117,10 +117,11 @@ app.post("/emit", (req, res) => {
 cron.schedule("* * * * *", async () => {
   try {
     // 👇 Environment ke hisaab se API URL select karega
-    const targetUrl =
-      process.env.NODE_ENV === "production"
-        ? `https://powerxworld.uk/api/invest/reward`
-        : "https://powerxworld.uk/api/invest/reward";
+    const isProduction = process.env.NODE_ENV === "production";
+
+    const targetUrl = isProduction
+      ? "https://powerxworld.uk/api/invest/reward"
+      : "http://localhost:3000/api/invest/reward"; // ✅ Fixed for local dev
 
     await axios.post(targetUrl);
     console.log("✅ Reward updated successfully");
