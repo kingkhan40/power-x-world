@@ -25,6 +25,7 @@ interface User {
   accountType?: string;
   totalInvestment?: string;
   totalEarnings?: string;
+  totalWithdrawals?: string;
   activePlans?: string;
   referralCode?: string;
   wallet?: number;
@@ -149,7 +150,7 @@ interface AuthContextType {
 
   // Profile Functions
   fetchUserProfile: () => Promise<void>;
-  updateUserProfile: (name: string, profilePic?: string) => Promise<void>;
+  updateUserProfile: (name?: string, profilePic?: string) => Promise<void>;
 
   // Common States
   setLoading: (loading: boolean) => void;
@@ -594,6 +595,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         accountType: profileUser.role === 'Admin' ? 'Admin' : 'Premium',
         totalInvestment: `$${profileUser.selfBusiness?.toFixed(2) || '0.00'}`,
         totalEarnings: `$${profileUser.rewardBalance?.toFixed(2) || '0.00'}`,
+        totalWithdrawals: `$${profileUser.totalCommission?.toFixed(2) || '0.00'}`,
         activePlans: (profileUser.investments?.length || 0).toString(),
         referralCode: profileUser.referralCode || 'N/A',
         profilePic: profileUser.profilePic || user?.profilePic,
@@ -637,62 +639,52 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  // Update User Profile Function
-  const updateUserProfile = async (
-    name: string,
-    profilePic?: string
-  ): Promise<void> => {
+  // Updated Update User Profile Function (integrated the suggested code)
+  const updateUserProfile = async (name?: string, profilePic?: string): Promise<void> => {
+    if (!user?.userId) return;
     setLoading(true);
     setError('');
 
     try {
-      const token = localStorage.getItem('token');
-      const userId = localStorage.getItem('userId');
-
-      const headers: Record<string, string> = { 'x-user-id': userId || '' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const userId = user.userId;
 
       const formData = new FormData();
-      formData.append('name', name);
-      if (profilePic && profilePic.startsWith('data:')) {
-        const res = await fetch(profilePic);
-        const blob = await res.blob();
-        formData.append('profilePic', blob, 'profile.jpg');
+
+      // Append name if provided
+      if (name) formData.append("name", name);
+
+      // Convert data URL to actual file before upload
+      if (profilePic && profilePic.startsWith("data:image")) {
+        const blob = await fetch(profilePic).then((r) => r.blob());
+        formData.append("profilePic", blob, "profile.png");
       }
 
-      const response = await fetch('/api/user/profile', {
-        method: 'POST',
-        headers,
+      const res = await fetch("/api/user/profile", {
+        method: "POST",
+        headers: {
+          "x-user-id": userId,
+        },
         body: formData,
       });
 
-      const data = await response.json();
+      const data = await res.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || data.message || 'Profile update failed');
+      if (!res.ok) throw new Error(data.error || "Failed to update");
+
+      // Update local user state
+      setUser(data.user);
+      setProfileData((prev) => ({ ...prev, user: data.user }));
+
+      // Update localStorage
+      localStorage.setItem('userName', data.user.name);
+      if (data.user.profilePic) {
+        localStorage.setItem('profilePic', data.user.profilePic);
       }
 
-      // Update user state
-      if (data.user) {
-        const updatedUser = {
-          ...user!,
-          userName: data.user.name,
-          name: data.user.name,
-          profilePic: data.user.profilePic || user?.profilePic,
-        };
-
-        setUser(updatedUser);
-
-        // Update localStorage
-        localStorage.setItem('userName', data.user.name);
-        if (data.user.profilePic) {
-          localStorage.setItem('profilePic', data.user.profilePic);
-        }
-
-        setMessage(data.message || 'Profile updated successfully!');
-      }
+      setMessage(data.message || 'Profile updated successfully!');
     } catch (err: any) {
-      setError(err.message || 'Failed to update profile');
+      console.error("Profile update failed:", err);
+      setError(err.message || "Error updating profile");
       throw err;
     } finally {
       setLoading(false);
@@ -700,62 +692,61 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   // Logout Function
- const logout = async (): Promise<void> => {
-  try {
-    const token = localStorage.getItem("token");
+  const logout = async (): Promise<void> => {
+    try {
+      const token = localStorage.getItem("token");
 
-    // ✅ Call backend logout API
-    const res = await fetch("/api/logout", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: token ? `Bearer ${token}` : "",
-      },
-    });
+      // Call backend logout API
+      const res = await fetch("/api/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+      });
 
-    const data = await res.json();
-    console.log("Logout response:", data); // ✅ Dev terminal me dikhega
+      const data = await res.json();
+      console.log("Logout response:", data); // Dev terminal me dikhega
 
-    // Clear client-side state
-    setUser(null);
-    setIsAuthenticated(false);
-    setProfileData({
-      user: null,
-      referrerData: { name: "Admin", sponsorId: null, profile: null },
-      loading: false,
-      error: "",
-      message: "",
-      fetchProfile: async () => {},
-      updateProfile: async () => {},
-      updateProfilePicture: async () => {},
-    });
+      // Clear client-side state
+      setUser(null);
+      setIsAuthenticated(false);
+      setProfileData({
+        user: null,
+        referrerData: { name: "Admin", sponsorId: null, profile: null },
+        loading: false,
+        error: "",
+        message: "",
+        fetchProfile: async () => {},
+        updateProfile: async () => {},
+        updateProfilePicture: async () => {},
+      });
 
-    // Clear localStorage
-    localStorage.clear();
+      // Clear localStorage
+      localStorage.clear();
 
-    // Redirect to login page
-    router.push("/login");
-  } catch (err: any) {
-    console.error("Logout failed:", err.message || err);
+      // Redirect to login page
+      router.push("/login");
+    } catch (err: any) {
+      console.error("Logout failed:", err.message || err);
 
-    // Ensure local logout even if API fails
-    setUser(null);
-    setIsAuthenticated(false);
-    setProfileData({
-      user: null,
-      referrerData: { name: "Admin", sponsorId: null, profile: null },
-      loading: false,
-      error: "",
-      message: "",
-      fetchProfile: async () => {},
-      updateProfile: async () => {},
-      updateProfilePicture: async () => {},
-    });
-    localStorage.clear();
-    router.push("/login");
-  }
-};
-
+      // Ensure local logout even if API fails
+      setUser(null);
+      setIsAuthenticated(false);
+      setProfileData({
+        user: null,
+        referrerData: { name: "Admin", sponsorId: null, profile: null },
+        loading: false,
+        error: "",
+        message: "",
+        fetchProfile: async () => {},
+        updateProfile: async () => {},
+        updateProfilePicture: async () => {},
+      });
+      localStorage.clear();
+      router.push("/login");
+    }
+  };
 
   // Get Password Strength
   const getPasswordStrength = (): PasswordStrength => {
