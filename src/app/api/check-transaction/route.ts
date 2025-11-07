@@ -116,7 +116,7 @@ export async function POST(req: NextRequest) {
     user.wallet = (user.wallet || 0) + amount;
     await user.save();
 
-    const socketServerUrl = process.env.SOCKET_SERVER_URL || "https://powerxworld.uk";
+    const socketServerUrl = process.env.SOCKET_SERVER_URL || "https://socket.powerxworld.uk";
     try {
       await axios.post(`${socketServerUrl}/emit`, {
         event: "balanceUpdated",
