@@ -1,4 +1,5 @@
 'use client';
+
 import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import {
   FaUser,
@@ -13,7 +14,6 @@ import {
 } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext'; // ✅ Import context
 
-// === INTERFACES ===
 interface PersonalInfoItem {
   icon: JSX.Element;
   label: string;
@@ -24,7 +24,6 @@ interface AccountRecord {
   amount: string;
 }
 
-// === COMPONENT ===
 const ProfileRecords = () => {
   const {
     user,
@@ -34,11 +33,13 @@ const ProfileRecords = () => {
     error,
     setError,
     fetchUserProfile,
-  } = useAuth(); // ✅ Use context
+  } = useAuth();
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editName, setEditName] = useState(user?.userName || '');
-  const [profileImage, setProfileImage] = useState<string | null>(user?.profilePic || null);
+  const [profileImage, setProfileImage] = useState<string | null>(
+    user?.profilePic || null
+  );
 
   // === FETCH DATA ===
   useEffect(() => {
@@ -47,7 +48,7 @@ const ProfileRecords = () => {
     }
   }, [user?.userId, fetchUserProfile]);
 
-  // Update edit form when user data changes
+  // === UPDATE STATE WHEN USER CHANGES ===
   useEffect(() => {
     if (user) {
       setEditName(user.userName || '');
@@ -67,7 +68,7 @@ const ProfileRecords = () => {
     return `${masked}@${domain}`;
   };
 
-  // === PROFILE PIC ===
+  // === PROFILE PIC HANDLER ===
   const handleProfilePicChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -129,22 +130,18 @@ const ProfileRecords = () => {
     : [];
 
   const accountRecords: AccountRecord[] = [
-    {
-      title: 'My Total USDT Earning',
-      amount: '0.00$',
-    },
+    { title: 'My Total USDT Earning', amount: '0.00$' },
   ];
 
   // === RENDER ===
-  if (loading) {
+  if (loading)
     return (
       <div className="flex items-center justify-center min-h-screen text-white text-xl">
         Loading...
       </div>
     );
-  }
 
-  if (error || !user) {
+  if (error || !user)
     return (
       <div className="flex flex-col items-center justify-center min-h-screen text-white">
         <FaExclamationTriangle className="text-5xl text-red-500 mb-4" />
@@ -157,7 +154,6 @@ const ProfileRecords = () => {
         </button>
       </div>
     );
-  }
 
   return (
     <div
@@ -173,8 +169,9 @@ const ProfileRecords = () => {
     >
       {/* Background Overlay */}
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+
       <div className="container mx-auto max-w-6xl relative z-20">
-        {/* My Profile Header Card */}
+        {/* === PROFILE HEADER === */}
         <div className="relative mb-3">
           <div className="relative z-20 flex flex-col lg:flex-row items-center gap-2">
             {/* Profile Picture */}
@@ -206,6 +203,7 @@ const ProfileRecords = () => {
                 className="hidden"
               />
             </div>
+
             {/* Profile Info */}
             <div className="flex-1 text-center">
               <h2 className="text-base lg:text-2xl font-bold text-white">
@@ -215,7 +213,8 @@ const ProfileRecords = () => {
                 {maskEmail(user.userEmail)}
               </p>
             </div>
-            {/* Edit Button */}
+
+            {/* Edit Buttons */}
             <button
               onClick={() => setIsEditModalOpen(true)}
               className="bg-gradient-to-r lg:flex hidden from-blue-500 to-purple-500 hover:from-blue-400 hover:to-purple-400 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-2xl items-center gap-2"
@@ -231,34 +230,25 @@ const ProfileRecords = () => {
             </button>
           </div>
         </div>
-        {/* Referrer Information Card */}
+
+        {/* === REFERRER INFO === */}
         <div className="lg:p-6 p-3 rounded-2xl relative overflow-hidden bg-gray-900 border border-gray-800 shadow-2xl lg:mb-8 mb-3">
           <div
             className="absolute -top-8 -left-8 w-24 h-24 rounded-full z-10"
             style={{
-              background: "linear-gradient(45deg, #a855f7, #ec4899, #a855f7)",
-              filter: "blur(12px)",
-              opacity: "0.6",
+              background: 'linear-gradient(45deg, #a855f7, #ec4899, #a855f7)',
+              filter: 'blur(12px)',
+              opacity: '0.6',
             }}
           ></div>
           <div
             className="absolute -bottom-8 -right-8 w-20 h-20 rounded-full z-10"
             style={{
-              background: "linear-gradient(135deg, #3b82f6, #10b981, #3b82f6)",
-              filter: "blur(10px)",
-              opacity: "0.4",
+              background: 'linear-gradient(135deg, #3b82f6, #10b981, #3b82f6)',
+              filter: 'blur(10px)',
+              opacity: '0.4',
             }}
           ></div>
-          <div
-            className="absolute -inset-2 rounded-2xl animate-spin opacity-70"
-            style={{
-              background:
-                "conic-gradient(from 0deg, #3b82f6, #8b5cf6, #ec4899, #10b981, #f59e0b, #3b82f6)",
-              animationDuration: "10000ms",
-              zIndex: 0,
-            }}
-          ></div>
-          <div className="absolute inset-0.5 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 z-1"></div>
           <div className="relative z-20 text-center">
             {profileData?.referrerData?.profile ? (
               <img
@@ -284,78 +274,26 @@ const ProfileRecords = () => {
             </div>
           </div>
         </div>
-        {/* Account Records */}
+
+        {/* === ACCOUNT RECORDS === */}
         <div className="p-6 rounded-2xl relative mt-2 overflow-hidden bg-gray-900 border border-gray-800 shadow-2xl">
-          <div
-            className="absolute -top-8 -left-8 w-24 h-24 rounded-full z-10"
-            style={{
-              background: "linear-gradient(45deg, #a855f7, #ec4899, #a855f7)",
-              filter: "blur(12px)",
-              opacity: "0.6",
-            }}
-          ></div>
-          <div
-            className="absolute -bottom-8 -right-8 w-20 h-20 rounded-full z-10"
-            style={{
-              background: "linear-gradient(135deg, #3b82f6, #10b981, #3b82f6)",
-              filter: "blur(10px)",
-              opacity: "0.4",
-            }}
-          ></div>
-          <div
-            className="absolute -inset-2 rounded-2xl animate-spin opacity-50"
-            style={{
-              background:
-                "conic-gradient(from 0deg, #3b82f6, #8b5cf6, #ec4899, #10b981, #f59e0b, #3b82f6)",
-              animationDuration: "12000ms",
-              zIndex: 0,
-            }}
-          ></div>
-          <div className="absolute inset-0.5 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 z-1"></div>
-          <div className="relative z-20">
-            {accountRecords.map((record, index) => (
-              <div
-                key={index}
-                className="flex justify-between items-center lg:py-2 py-1 border-b border-gray-300 last:border-b-0"
-              >
-                <span className="text-gray-100 lg:text-lg text-sm">
-                  {record.title}
-                </span>
-                <span className="font-semibold text-gray-200 lg:text-base text-xs">
-                  {record.amount}
-                </span>
-              </div>
-            ))}
-          </div>
+          {accountRecords.map((record, index) => (
+            <div
+              key={index}
+              className="flex justify-between items-center lg:py-2 py-1 border-b border-gray-300 last:border-b-0"
+            >
+              <span className="text-gray-100 lg:text-lg text-sm">
+                {record.title}
+              </span>
+              <span className="font-semibold text-gray-200 lg:text-base text-xs">
+                {record.amount}
+              </span>
+            </div>
+          ))}
         </div>
-        {/* Personal Information */}
-        <div className="lg:p-6 p-3 rounded-2xl relative overflow-hidden bg-gray-900 border border-gray-800 shadow-2xl">
-          <div
-            className="absolute -top-8 -left-8 w-24 h-24 rounded-full z-10"
-            style={{
-              background: "linear-gradient(45deg, #a855f7, #ec4899, #a855f7)",
-              filter: "blur(12px)",
-              opacity: "0.6",
-            }}
-          ></div>
-          <div
-            className="absolute -bottom-8 -right-8 w-20 h-20 rounded-full z-10"
-            style={{
-              background: "linear-gradient(135deg, #3b82f6, #10b981, #3b82f6)",
-              filter: "blur(10px)",
-              opacity: "0.4",
-            }}
-          ></div>
-          <div
-            className="absolute -inset-2 rounded-2xl animate-spin opacity-50"
-            style={{
-              background:
-                "conic-gradient(from 0deg, #3b82f6, #8b5cf6, #ec4899, #10b981, #f59e0b, #3b82f6)",
-              animationDuration: "12000ms",
-              zIndex: 0,
-            }}
-          ></div>
-          <div className="absolute inset-0.5 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 z-1"></div>
+
+        {/* === PERSONAL INFO === */}
+        <div className="lg:p-6 p-3 rounded-2xl relative overflow-hidden bg-gray-900 border border-gray-800 shadow-2xl mt-3">
           <div className="relative z-20">
             <div className="grid grid-cols-2 gap-2">
               {personalInfo.map((info, index) => (
@@ -373,7 +311,8 @@ const ProfileRecords = () => {
           </div>
         </div>
       </div>
-      {/* Edit Profile Modal */}
+
+      {/* === EDIT MODAL === */}
       {isEditModalOpen && (
         <>
           <div
@@ -387,8 +326,8 @@ const ProfileRecords = () => {
                   className="w-full h-full animate-spin opacity-70"
                   style={{
                     background:
-                      "conic-gradient(from 0deg, #a855f7, #ec4899, #f59e0b, #10b981, #3b82f6, #a855f7)",
-                    animationDuration: "10000ms",
+                      'conic-gradient(from 0deg, #a855f7, #ec4899, #f59e0b, #10b981, #3b82f6, #a855f7)',
+                    animationDuration: '10000ms',
                   }}
                 ></div>
               </div>
@@ -415,6 +354,8 @@ const ProfileRecords = () => {
                     </button>
                   </div>
                 </div>
+
+                {/* === FORM === */}
                 <div className="p-6">
                   <form onSubmit={handleEditSubmit} className="space-y-6">
                     <div className="flex flex-col items-center justify-center space-y-4">
@@ -422,7 +363,7 @@ const ProfileRecords = () => {
                         <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center border-4 border-white/30 shadow-2xl overflow-hidden">
                           {profileImage || user.profilePic ? (
                             <img
-                              src={profileImage || user.profilePic || ""}
+                              src={profileImage || user.profilePic || ''}
                               alt="Profile Preview"
                               className="w-full h-full object-cover"
                             />
@@ -448,6 +389,7 @@ const ProfileRecords = () => {
                         Click on camera icon to change profile picture
                       </p>
                     </div>
+
                     <div className="space-y-3">
                       <label className="text-white font-semibold">
                         Full Name
@@ -459,11 +401,11 @@ const ProfileRecords = () => {
                         className="w-full p-3 bg-gradient-to-r from-gray-800/90 to-gray-900 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300 backdrop-blur-sm"
                       />
                     </div>
+
                     {error && (
-                      <p className="text-red-400 text-sm text-center">
-                        {error}
-                      </p>
+                      <p className="text-red-400 text-sm text-center">{error}</p>
                     )}
+
                     <div className="flex gap-4 pt-4">
                       <button
                         type="submit"
@@ -491,4 +433,4 @@ const ProfileRecords = () => {
   );
 };
 
-export default ProfileRecords; 
+export default ProfileRecords;
