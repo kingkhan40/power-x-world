@@ -11,7 +11,7 @@ import {
 } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { teamLevels as staticTeamLevels } from "@/data/teamLevel";
-import socket from "@/lib/socket";
+import { getSocket } from "@/lib/socket";
 
 interface StatsItem {
   id: number;
@@ -89,18 +89,22 @@ const Team = () => {
     };
 
     fetchDashboard();
+  }, []);
 
+  // ===== Socket for Level Updates =====
+  useEffect(() => {
     const userWallet = localStorage.getItem("userWallet");
+    const socket = getSocket();
+
     if (socket && userWallet) {
-      socket.on(`level_update_${userWallet}`, (data: any) => {
+      socket.on(`level_update_${userWallet}`, (data: { level: number }) => {
         setDashboard((prev) => ({ ...prev, level: data.level }));
       });
     }
 
     return () => {
-      if (socket && localStorage.getItem("userWallet")) {
-        const w = localStorage.getItem("userWallet");
-        socket.off(`level_update_${w}`);
+      if (socket && userWallet) {
+        socket.off(`level_update_${userWallet}`);
       }
     };
   }, []);
@@ -346,4 +350,4 @@ const Team = () => {
   );
 };
 
-export default Team;
+export default Team; 
