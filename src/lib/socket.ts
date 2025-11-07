@@ -11,7 +11,7 @@ export function initSocket(): Socket | null {
   if (typeof window === "undefined") return null; // SSR guard
   if (socket && socket.connected) return socket; // already connected
 
-  const url = process.env.NEXT_PUBLIC_SOCKET_URL || "https://powerxworld.uk";
+  const url = process.env.NEXT_PUBLIC_SOCKET_URL || "https://socket.powerxworld.uk";
 
   socket = io(url, {
     transports: ["websocket"],

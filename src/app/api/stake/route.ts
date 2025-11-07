@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import User from "@/models/User";
 import Stake from "@/models/Stake";
 import { getRewardPercent } from "@/utils/stakeHelper";
-import { connectDB } from "@/lib/db"; // ye tumhara DB connection helper hoga
+import { connectDB } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
   try {

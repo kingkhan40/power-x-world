@@ -17,11 +17,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { io } from 'socket.io-client';
 
-// ✅ Socket connection
-const socket = io('https://powerxworld.uk', {
+// ✅ Socket connection (frontend)
+const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'https://socket.powerxworld.uk', {
   transports: ['websocket'],
   reconnection: true,
 });
+
 
 const projectId = '4ed88d6c567e9799d509e8050f3f73c4';
 const chains = [bsc] as const;
@@ -37,6 +38,7 @@ const wagmiConfig = defaultWagmiConfig({
     icons: ['https://powerxworld.uk/icon.png'],
   },
 });
+
 
 if (typeof window !== 'undefined' && !(window as any).web3ModalInitialized) {
   createWeb3Modal({

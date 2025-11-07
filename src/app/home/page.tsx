@@ -1,5 +1,4 @@
 'use client';
-
 import { useEffect, useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { useBalance } from '@/context/BalanceContext';
