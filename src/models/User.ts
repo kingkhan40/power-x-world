@@ -1,6 +1,5 @@
-import mongoose, { Types } from "mongoose";
+import mongoose, { Types, Document } from "mongoose";
 const { Schema, model, models } = mongoose;
-
 
 /* -----------------------------------------
  * 🧩 Sub-Schemas & Interfaces
@@ -11,8 +10,6 @@ export interface IInvestment {
 }
 
 export interface IUserSettings {
-  usdtBalance?: number;
-  selfBusiness?: number;
   notifications: {
     push: boolean;
     email: boolean;
@@ -25,11 +22,14 @@ export interface IUserSettings {
  * 🧠 Main User Interface
  * ----------------------------------------- */
 export interface IUser extends Document {
-  name: string;
-  email: string;
+  // ---- Core fields (renamed to match the new snippet) ----
+  userName: string;
+  userEmail: string;
   password: string;
-  role: string;
+  role: "User" | "Admin";
   isActive: boolean;
+
+  // ---- Referral & Team ----
   referralCode: string;
   referredBy?: Types.ObjectId | null;
   team?: string;
@@ -38,24 +38,28 @@ export interface IUser extends Document {
   teamMembers?: Types.ObjectId[];
   totalTeam?: number;
   activeUsers?: number;
-  investments?: IInvestment[];
-  walletAddress?: string;
-  settings?: IUserSettings;
-  profilePic?: string | null;
 
-  // Business Fields
+  // ---- Investments ----
+  investments?: IInvestment[];
+
+  // ---- Wallet & Crypto ----
+  walletAddress?: string;
   usdtBalance?: number;
   selfBusiness?: number;
   directBusiness?: number;
   rewardBalance?: number;
   currentRewardLevel?: number;
 
-  // Payments
+  // ---- Payments ----
   rewardPayment?: number;
   totalCommission?: number;
   otherPayments?: number;
 
-  // Misc
+  // ---- Settings ----
+  settings?: IUserSettings;
+
+  // ---- Misc ----
+  profilePic?: string;   // default "" (as per the new snippet)
   isVerified?: boolean;
   phone?: string;
   address?: string;
@@ -67,12 +71,15 @@ export interface IUser extends Document {
  * ----------------------------------------- */
 const UserSchema = new Schema<IUser>(
   {
-    name: { type: String, required: true, trim: true },
-    email: { type: String, unique: true, required: true, lowercase: true },
+    // ---- Core fields (renamed) ----
+    userName: { type: String, required: true, trim: true },
+    userEmail: { type: String, unique: true, required: true, lowercase: true },
     password: { type: String, required: true },
+
     role: { type: String, enum: ["User", "Admin"], default: "User" },
     isActive: { type: Boolean, default: true },
 
+    // ---- Referral & Team ----
     referralCode: { type: String, unique: true, required: true },
     referredBy: { type: Schema.Types.ObjectId, ref: "User", default: null },
 
@@ -83,6 +90,7 @@ const UserSchema = new Schema<IUser>(
     totalTeam: { type: Number, default: 0 },
     activeUsers: { type: Number, default: 0 },
 
+    // ---- Investments ----
     investments: [
       {
         amount: { type: Number, required: true },
@@ -90,11 +98,21 @@ const UserSchema = new Schema<IUser>(
       },
     ],
 
+    // ---- Wallet & Crypto ----
     walletAddress: { type: String, default: "" },
+    usdtBalance: { type: Number, default: 0 },
+    selfBusiness: { type: Number, default: 0 },
+    directBusiness: { type: Number, default: 0 },
+    rewardBalance: { type: Number, default: 0 },
+    currentRewardLevel: { type: Number, default: 1 },
 
+    // ---- Payments ----
+    rewardPayment: { type: Number, default: 0 },
+    totalCommission: { type: Number, default: 0 },
+    otherPayments: { type: Number, default: 0 },
+
+    // ---- Settings (removed duplicated usdtBalance/selfBusiness) ----
     settings: {
-      usdtBalance: { type: Number, default: 0 },
-      selfBusiness: { type: Number, default: 0 },
       notifications: {
         push: { type: Boolean, default: true },
         email: { type: Boolean, default: false },
@@ -103,18 +121,8 @@ const UserSchema = new Schema<IUser>(
       twoFactorAuth: { type: Boolean, default: false },
     },
 
-    profilePic: { type: String, default: null },
-
-    usdtBalance: { type: Number, default: 0 },
-    selfBusiness: { type: Number, default: 0 },
-    directBusiness: { type: Number, default: 0 },
-    rewardBalance: { type: Number, default: 0 },
-    currentRewardLevel: { type: Number, default: 1 },
-
-    rewardPayment: { type: Number, default: 0 },
-    totalCommission: { type: Number, default: 0 },
-    otherPayments: { type: Number, default: 0 },
-
+    // ---- Misc ----
+    profilePic: { type: String, default: "" }, // <-- matches the new snippet
     isVerified: { type: Boolean, default: false },
     phone: { type: String, default: "" },
     address: { type: String, default: "" },
@@ -126,6 +134,6 @@ const UserSchema = new Schema<IUser>(
  * ✅ Safe Export for Hot Reload
  * ----------------------------------------- */
 export const User =
-  mongoose.models.User || mongoose.model<IUser>("User", UserSchema);
+  models.User || model<IUser>("User", UserSchema);
 
 export default User;

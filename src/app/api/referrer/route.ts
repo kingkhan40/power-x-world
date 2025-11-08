@@ -1,3 +1,4 @@
+// app/api/referrer/route.ts
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
@@ -6,7 +7,6 @@ export async function GET(req: Request) {
   try {
     await connectDB();
 
-    // Extract ?code= from URL
     const { searchParams } = new URL(req.url);
     const code = searchParams.get("code");
 
@@ -17,7 +17,6 @@ export async function GET(req: Request) {
       );
     }
 
-    // Find user by referral code (case-insensitive)
     const user = await User.findOne({
       referralCode: { $regex: new RegExp(`^${code}$`, "i") },
     }).select("name email referralCode");
@@ -36,7 +35,7 @@ export async function GET(req: Request) {
       referralCode: user.referralCode,
     });
   } catch (err) {
-    console.error("❌ Referrer Fetch Error:", err);
+    console.error("Referrer Fetch Error:", err);
     return NextResponse.json(
       { success: false, message: "Server error" },
       { status: 500 }

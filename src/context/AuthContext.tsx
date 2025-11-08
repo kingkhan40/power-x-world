@@ -38,6 +38,8 @@ interface User {
   totalTeam?: number;
   activeUsers?: number;
   investments?: Array<any>;
+  totalCommission?: number;
+  rewardPayment?: number;
 }
 
 interface AuthData {
@@ -133,7 +135,7 @@ interface AuthContextType {
   login: (formData: AuthData) => Promise<void>;
   register: (formData: AuthData) => Promise<void>;
   verifyEmail: (email: string, code: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 
   // Contact Functions
   sendContactMessage: (contactData: ContactData) => Promise<void>;
@@ -417,7 +419,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
     try {
       // Validation
-      if (!email || !/\S+@\S+\.\S+/.test(email)) {
+      if (!email || !/\S+@\S+\.\S+/.test(email) ) {
         throw new Error('Please enter a valid email address');
       }
 
@@ -569,11 +571,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         fetch('/api/user/referrer', { headers }),
       ]);
 
-      if (!profileRes.ok) throw new Error('Profile fetch failed');
+      const profileResData = await profileRes.json();
+      if (!profileRes.ok) {
+        throw new Error(profileResData.message || 'Profile fetch failed');
+      }
+      const profileUser = profileResData.user ?? {};
 
-      const { user: profileUser } = await profileRes.json();
-      const deposits = depositRes.ok ? await depositRes.json() : [];
-      const ref = refRes.ok ? await refRes.json() : {};
+      const depositResData = await depositRes.json();
+      const deposits = depositRes.ok ? depositResData : [];
+
+      const refResData = await refRes.json();
+      const ref = refRes.ok ? refResData : {};
 
       const totalDeposits = deposits.reduce(
         (sum: number, d: any) => sum + (d.amount || 0),
@@ -586,8 +594,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         name: profileUser.name || user?.userName || '',
         email: profileUser.email || user?.userEmail || '',
         userEmail: profileUser.email || user?.userEmail || '',
-        phone: profileUser.phone,
-        address: profileUser.address,
+        phone: profileUser.phone ?? undefined,
+        address: profileUser.address ?? undefined,
         joinDate: profileUser.createdAt
           ? new Date(profileUser.createdAt).toISOString().split('T')[0]
           : 'N/A',
@@ -609,6 +617,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         totalTeam: profileUser.totalTeam || 0,
         activeUsers: profileUser.activeUsers || 0,
         investments: profileUser.investments || [],
+        totalCommission: profileUser.totalCommission ?? 0,
+        rewardPayment: profileUser.rewardPayment ?? 0,
       };
 
       setUser(updatedUser);
@@ -669,16 +679,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data.error || "Failed to update");
+      if (!res.ok) {
+        throw new Error(data.message || data.error || "Failed to update");
+      }
+
+      const updatedUserData = data.user ?? {};
 
       // Update local user state
-      setUser(data.user);
-      setProfileData((prev) => ({ ...prev, user: data.user }));
+      setUser(updatedUserData);
+      setProfileData((prev) => ({ ...prev, user: updatedUserData }));
 
       // Update localStorage
-      localStorage.setItem('userName', data.user.name);
-      if (data.user.profilePic) {
-        localStorage.setItem('profilePic', data.user.profilePic);
+      localStorage.setItem('userName', updatedUserData.name || '');
+      if (updatedUserData.profilePic) {
+        localStorage.setItem('profilePic', updatedUserData.profilePic);
       }
 
       setMessage(data.message || 'Profile updated successfully!');

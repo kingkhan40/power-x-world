@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -15,42 +11,25 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    // ✅ React 18 JSX support
     "jsx": "preserve",
-    // ✅ Include React types
-    "types": [
-      "react",
-      "react-dom",
-      "node"
-    ],
+    "types": ["react", "react-dom", "node"],
     "incremental": true,
     "forceConsistentCasingInFileNames": true,
-    // ✅ Path aliases (for "@/assets" and others)
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "src/*"
-      ],
-      "@/assets/*": [
-        "src/assets/*"
-      ],
-      "@server/*": [
-        "server/*"
-      ]
+      "@/*": ["src/*"],
+      "@/assets/*": ["src/assets/*"],
+      "@server/*": ["server/*"],
+      "@types/*": ["types/*"]   // ← YEHI LINE ADD KARO!
     },
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ]
+    "plugins": [{ "name": "next" }]
   },
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "types/index.ts"          // ← YEHI LINE ADD KARO!
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }
