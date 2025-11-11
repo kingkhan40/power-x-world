@@ -1,4 +1,4 @@
-import { Deposit } from "@/models/Deposit";
+import Deposit from "@/models/Deposit";
 import { connectDB } from "@/lib/db";
 
 const ALCHEMY_URL = process.env.ALCHEMY_URL as string;

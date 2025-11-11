@@ -13,16 +13,19 @@ const { json } = expressPkg;
 
 let io: Server | null = null;
 
-// ✅ Initialize Express App
+/* ---------------------------------------------
+ * 🚀 Initialize Express App
+ * --------------------------------------------- */
 const app = express();
 
-// ✅ Define Allowed Origin (fallback system)
+/* ---------------------------------------------
+ * 🌐 Allowed Origin
+ * --------------------------------------------- */
 const allowedOrigin =
   process.env.CLIENT_URL ||
   process.env.NEXT_PUBLIC_CLIENT_URL ||
   "https://powerxworld.uk";
 
-// ✅ Setup CORS (local + live both supported)
 app.use(
   cors({
     origin: allowedOrigin,
@@ -33,12 +36,14 @@ app.use(
 
 app.use(json());
 
-// ✅ Create HTTP server
+/* ---------------------------------------------
+ * 🧩 Create HTTP server
+ * --------------------------------------------- */
 const server = http.createServer(app);
 
-/**
- * ✅ Initialize Socket.IO (sirf ek dafa)
- */
+/* ---------------------------------------------
+ * 🧠 Initialize Socket.IO
+ * --------------------------------------------- */
 export function initSocket(serverInstance?: http.Server): Server {
   if (!io) {
     io = new Server(serverInstance || server, {
@@ -52,19 +57,19 @@ export function initSocket(serverInstance?: http.Server): Server {
     io.on("connection", (socket) => {
       console.log("🟢 Socket connected:", socket.id);
 
-      // 🔹 Register wallet to a unique socket room
+      // 🔹 Register wallet room
       socket.on("register", (payload: { wallet?: string }) => {
         try {
           const wallet = payload?.wallet?.toLowerCase?.();
           if (!wallet) return;
-          socket.join(wallet); // each wallet gets its own room
+          socket.join(wallet);
           console.log(`[socket] socket ${socket.id} joined room ${wallet}`);
         } catch (err) {
           console.error("register error", err);
         }
       });
 
-      // 🔹 Test Event
+      // 🔹 Test event
       socket.on("testEvent", (data) => {
         console.log("📩 testEvent received:", data);
         socket.emit("serverResponse", {
@@ -83,19 +88,16 @@ export function initSocket(serverInstance?: http.Server): Server {
   return io;
 }
 
-/**
- * ✅ Manual emit endpoint (backend APIs socket event trigger kar sakti hain)
- */
+/* ---------------------------------------------
+ * 📡 Manual Emit Endpoint
+ * --------------------------------------------- */
 app.post("/emit", (req, res) => {
   try {
     const { event, payload, wallet } = req.body;
     console.log(`📡 Emitting event: ${event}`, payload);
 
-    if (!io) {
-      throw new Error("Socket.IO not initialized");
-    }
+    if (!io) throw new Error("Socket.IO not initialized");
 
-    // 🔹 If wallet provided → emit to that specific room
     if (wallet) {
       io.to(wallet.toLowerCase()).emit(event, payload);
       console.log(`🎯 Event sent to wallet room: ${wallet}`);
@@ -111,28 +113,40 @@ app.post("/emit", (req, res) => {
   }
 });
 
-/**
- * 🕒 Auto Reward Cron Job (Har Minute chalti hai)
- */
+/* ---------------------------------------------
+ * 🕒 Auto Reward Cron Job (Har Minute)
+ * --------------------------------------------- */
 cron.schedule("* * * * *", async () => {
   try {
-    // 👇 Environment ke hisaab se API URL select karega
     const isProduction = process.env.NODE_ENV === "production";
 
+    // VPS ke liye localhost use karo (same machine par Next.js run ho raha hai)
     const targetUrl = isProduction
-      ? "https://powerxworld.uk/api/invest/reward"
-      : "http://localhost:3000/api/invest/reward"; // ✅ Fixed for local dev
+      ? "http://localhost:3000/api/invest/reward"
+      : "http://localhost:3000/api/invest/reward";
 
-    await axios.post(targetUrl);
-    console.log("✅ Reward updated successfully");
+    console.log("⏰ Running reward cron →", targetUrl);
+
+    const response = await axios.post(targetUrl);
+    console.log("✅ Reward updated successfully:", response.status);
   } catch (err: any) {
-    console.error("❌ Error updating reward:", err.message);
+    if (err.response) {
+      console.error(
+        "❌ Reward API error:",
+        err.response.status,
+        err.response.data
+      );
+    } else if (err.request) {
+      console.error("❌ Reward API no response:", err.request);
+    } else {
+      console.error("❌ Reward cron error:", err.message);
+    }
   }
 });
 
-/**
- * ✅ Server start condition (har env me chal jayega)
- */
+/* ---------------------------------------------
+ * 🚀 Start Socket Server
+ * --------------------------------------------- */
 if (process.argv[1]?.includes("socket-server.ts")) {
   const PORT = Number(process.env.SOCKET_PORT) || 4004;
 

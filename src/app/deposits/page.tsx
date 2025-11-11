@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   FaCopy,
   FaCheck,
@@ -23,7 +23,6 @@ const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'https://socket.powerxwo
   reconnection: true,
 });
 
-
 const projectId = '4ed88d6c567e9799d509e8050f3f73c4';
 const chains = [bsc] as const;
 
@@ -38,7 +37,6 @@ const wagmiConfig = defaultWagmiConfig({
     icons: ['https://powerxworld.uk/icon.png'],
   },
 });
-
 
 if (typeof window !== 'undefined' && !(window as any).web3ModalInitialized) {
   createWeb3Modal({
@@ -58,6 +56,8 @@ function DepositInner() {
   const [txHash, setTxHash] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>('connectWallet');
   const [deposits, setDeposits] = useState<any[]>([]); // ✅ Added for totalDeposit logic
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const savedAddrRef = useRef<string | null>(null); // prevent duplicate saves
   const router = useRouter();
 
   const { address, isConnected } = useAccount();
@@ -67,7 +67,7 @@ function DepositInner() {
 
   // ✅ Added total deposit logic
   const totalDeposit = Array.isArray(deposits)
-    ? deposits.reduce((sum, d) => sum + d.amount, 0)
+    ? deposits.reduce((sum, d) => sum + (d.amount || 0), 0)
     : 0;
 
   // ✅ Detect wallet connect event
@@ -77,6 +77,63 @@ function DepositInner() {
       socket.emit('wallet_connected', address);
       setActiveTab('deposit');
     }
+  }, [isConnected, address]);
+
+  // --- Save wallet address to backend when a wallet connects ---
+  useEffect(() => {
+    // only run in browser and when connected
+    if (!isConnected || !address) return;
+
+    // If we've already saved this address in current session, skip
+    if (savedAddrRef.current === address) {
+      setSaveStatus('saved');
+      return;
+    }
+
+    let mounted = true;
+
+    const saveWalletToDB = async () => {
+      try {
+        setSaveStatus('saving');
+
+        // try to get userId from localStorage (adjust key if you store differently)
+        const userId =
+          typeof window !== 'undefined'
+            ? window.localStorage.getItem('userId') || window.localStorage.getItem('uid')
+            : null;
+
+        const payload: any = { walletAddress: address };
+        if (userId) payload.userId = userId;
+
+        const res = await fetch('/api/user/wallet', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+
+        if (!mounted) return;
+
+        if (res.ok && data.success) {
+          setSaveStatus('saved');
+          savedAddrRef.current = address;
+          console.log('✅ Wallet saved to DB:', data);
+        } else {
+          setSaveStatus('error');
+          console.warn('⚠️ Wallet save failed:', data);
+        }
+      } catch (err) {
+        console.error('❌ Error saving wallet:', err);
+        if (mounted) setSaveStatus('error');
+      }
+    };
+
+    saveWalletToDB();
+
+    return () => {
+      mounted = false;
+    };
   }, [isConnected, address]);
 
   // ✅ Fix copy-to-clipboard issue (works reliably in all browsers)
@@ -243,6 +300,27 @@ function DepositInner() {
                         Connected: {address?.slice(0, 6)}...
                         {address?.slice(-4)}
                       </p>
+
+                      {/* show small save-status */}
+                      <div className="flex items-center justify-center gap-3 mb-4">
+                        {saveStatus === 'saving' && (
+                          <div className="text-sm text-yellow-300">Saving wallet…</div>
+                        )}
+                        {saveStatus === 'saved' && (
+                          <div className="text-sm text-green-300 flex items-center gap-2">
+                            <FaCheck /> Wallet saved
+                          </div>
+                        )}
+                        {saveStatus === 'error' && (
+                          <div className="text-sm text-red-400">
+                            Failed to save wallet
+                          </div>
+                        )}
+                        {saveStatus === 'idle' && (
+                          <div className="text-sm text-gray-300">Not saved yet</div>
+                        )}
+                      </div>
+
                       <button
                         onClick={() => setActiveTab('deposit')}
                         className="bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-xl font-bold transition-colors"
@@ -282,7 +360,11 @@ function DepositInner() {
                             </p>
                           </div>
                           <button
-                            onClick={() => disconnect()}
+                            onClick={() => {
+                              // clear savedAddrRef so future reconnect can re-save
+                              savedAddrRef.current = null;
+                              disconnect();
+                            }}
                             className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg text-sm transition-colors"
                           >
                             Disconnect
