@@ -13,13 +13,13 @@ interface User {
   isActive: boolean;
 }
 
+// Simulated logged-in user (replace with real auth/context)
+const loggedInUser = { role: "Admin" }; // Example: "Admin" or "User"
+
 const Page = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
-  /* -----------------------------------------
-   * ✅ Fetch All Users
-   * ----------------------------------------- */
   const fetchUsers = async () => {
     try {
       const res = await fetch("/api/admin/users");
@@ -35,9 +35,6 @@ const Page = () => {
     fetchUsers();
   }, []);
 
-  /* -----------------------------------------
-   * 🔍 Safe Search Filter
-   * ----------------------------------------- */
   const normalizedSearch = (searchTerm || "").toLowerCase();
 
   const filteredUsers = users.filter(
@@ -46,9 +43,6 @@ const Page = () => {
       (user.email?.toLowerCase() || "").includes(normalizedSearch)
   );
 
-  /* -----------------------------------------
-   * ⚙️ Toggle User Active/Inactive (Instant UI Update)
-   * ----------------------------------------- */
   const toggleUserStatus = async (userId: string, newStatus: boolean) => {
     try {
       const res = await fetch(`/api/admin/users/${userId}`, {
@@ -62,7 +56,6 @@ const Page = () => {
           `User has been ${newStatus ? "activated" : "deactivated"} successfully`
         );
 
-        // ✅ Update local UI instantly without reloading or refetching
         setUsers((prevUsers) =>
           prevUsers.map((user) =>
             user._id === userId ? { ...user, isActive: newStatus } : user
@@ -77,9 +70,6 @@ const Page = () => {
     }
   };
 
-  /* -----------------------------------------
-   * 💻 UI
-   * ----------------------------------------- */
   return (
     <div className="min-h-screen p-4">
       <motion.div
@@ -88,7 +78,7 @@ const Page = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        {/* 🔎 Header & Search */}
+        {/* Header & Search */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
           <h2 className="text-2xl font-bold text-gray-100">Users Management</h2>
           <div className="relative w-full md:w-64">
@@ -103,26 +93,16 @@ const Page = () => {
           </div>
         </div>
 
-        {/* 🧾 Users Table */}
+        {/* Users Table */}
         <div className="overflow-x-auto rounded-lg border border-gray-700">
           <table className="min-w-full divide-y divide-gray-700">
             <thead className="bg-gray-900">
               <tr>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300 uppercase tracking-wider">
-                  User
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300 uppercase tracking-wider">
-                  Email
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300 uppercase tracking-wider">
-                  Role
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-300 uppercase tracking-wider">
-                  Actions
-                </th>
+                <th>User</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                {loggedInUser.role === "Admin" && <th>Actions</th>}
               </tr>
             </thead>
 
@@ -135,99 +115,43 @@ const Page = () => {
                   transition={{ duration: 0.3 }}
                   className="hover:bg-gray-700 transition-colors duration-200"
                 >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10">
-                        <div className="h-10 w-10 rounded-full bg-gradient-to-r from-purple-500 to-blue-600 flex items-center justify-center text-white font-semibold shadow-lg">
-                          {user.name?.charAt(0).toUpperCase() || "U"}
-                        </div>
+                  <td>{user.name || "Unnamed User"}</td>
+                  <td>{user.email || "-"}</td>
+                  <td>{user.role || "User"}</td>
+                  <td>{user.isActive ? "Active" : "Inactive"}</td>
+
+                  {/* ⚙️ Only show actions to Admin */}
+                  {loggedInUser.role === "Admin" && (
+                    <td>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => toggleUserStatus(user._id, false)}
+                          disabled={!user.isActive}
+                          className="text-red-400 hover:text-red-300 hover:bg-red-900 px-3 py-1 rounded-lg disabled:opacity-40"
+                        >
+                          Inactivate
+                        </button>
+                        <button
+                          onClick={() => toggleUserStatus(user._id, true)}
+                          disabled={user.isActive}
+                          className="text-green-400 hover:text-green-300 hover:bg-green-900 px-3 py-1 rounded-lg disabled:opacity-40"
+                        >
+                          Activate
+                        </button>
                       </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-100">
-                          {user.name || "Unnamed User"}
-                        </div>
-                        <div className="text-xs text-gray-400">
-                          ID: {user._id.slice(-6)}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-300">
-                    {user.email || "-"}
-                  </td>
-
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        user.role === "Admin"
-                          ? "bg-purple-800 text-purple-100"
-                          : "bg-blue-800 text-blue-100"
-                      }`}
-                    >
-                      {user.role || "User"}
-                    </span>
-                  </td>
-
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        user.isActive
-                          ? "bg-green-800 text-green-100"
-                          : "bg-red-800 text-red-100"
-                      }`}
-                    >
-                      {user.isActive ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-
-                  {/* ⚙️ Action Buttons */}
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => toggleUserStatus(user._id, false)}
-                        disabled={!user.isActive}
-                        className="text-red-400 hover:text-red-300 hover:bg-red-900 px-3 py-1 rounded-lg transition-colors duration-200 disabled:opacity-40"
-                      >
-                        Inactivate
-                      </button>
-                      <button
-                        onClick={() => toggleUserStatus(user._id, true)}
-                        disabled={user.isActive}
-                        className="text-green-400 hover:text-green-300 hover:bg-green-900 px-3 py-1 rounded-lg transition-colors duration-200 disabled:opacity-40"
-                      >
-                        Activate
-                      </button>
-                    </div>
-                  </td>
+                    </td>
+                  )}
                 </motion.tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        {/* 🚫 No Users Found */}
+        {/* No Users Found */}
         {filteredUsers.length === 0 && (
-          <motion.div
-            className="text-center py-12"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className="text-gray-400 text-lg">No users found</div>
-            <div className="text-gray-500 text-sm mt-2">
-              Try adjusting your search terms
-            </div>
-          </motion.div>
+          <div className="text-center py-12 text-gray-400">No users found</div>
         )}
 
-        {/* 📊 Footer Info */}
-        <div className="mt-6 flex justify-between items-center text-sm text-gray-400">
-          <div>Showing {filteredUsers.length} users</div>
-          <div className="text-xs bg-gray-700 px-3 py-1 rounded-full">
-            Total Users: {users.length}
-          </div>
-        </div>
       </motion.div>
     </div>
   );
