@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -7,9 +7,9 @@ import { toast } from "react-hot-toast";
 
 interface User {
   _id: string;
-  name: string;
-  email: string;
-  role: string;
+  name?: string;
+  email?: string;
+  role?: string;
   isActive: boolean;
 }
 
@@ -36,12 +36,14 @@ const Page = () => {
   }, []);
 
   /* -----------------------------------------
-   * 🔍 Search Filter
+   * 🔍 Safe Search Filter
    * ----------------------------------------- */
+  const normalizedSearch = (searchTerm || "").toLowerCase();
+
   const filteredUsers = users.filter(
     (user) =>
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase())
+      (user.name?.toLowerCase() || "").includes(normalizedSearch) ||
+      (user.email?.toLowerCase() || "").includes(normalizedSearch)
   );
 
   /* -----------------------------------------
@@ -137,12 +139,12 @@ const Page = () => {
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10">
                         <div className="h-10 w-10 rounded-full bg-gradient-to-r from-purple-500 to-blue-600 flex items-center justify-center text-white font-semibold shadow-lg">
-                          {user.name.charAt(0).toUpperCase()}
+                          {user.name?.charAt(0).toUpperCase() || "U"}
                         </div>
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-100">
-                          {user.name}
+                          {user.name || "Unnamed User"}
                         </div>
                         <div className="text-xs text-gray-400">
                           ID: {user._id.slice(-6)}
@@ -152,7 +154,7 @@ const Page = () => {
                   </td>
 
                   <td className="px-6 py-4 whitespace-nowrap text-gray-300">
-                    {user.email}
+                    {user.email || "-"}
                   </td>
 
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -163,7 +165,7 @@ const Page = () => {
                           : "bg-blue-800 text-blue-100"
                       }`}
                     >
-                      {user.role}
+                      {user.role || "User"}
                     </span>
                   </td>
 
