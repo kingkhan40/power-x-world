@@ -1,4 +1,5 @@
 'use client';
+
 import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import {
   FaUser,
@@ -10,15 +11,26 @@ import {
   FaTimes,
   FaCamera,
   FaExclamationTriangle,
+  FaChartLine,
+  FaDollarSign,
+  FaTrophy,
+  FaWallet,
+  FaUsers,
+  FaCoins,
+  FaHandHoldingUsd,
+  FaUserFriends,
 } from 'react-icons/fa';
-import { useAuth } from '@/context/AuthContext'; // ✅ Import context
+import { useAuth } from '@/context/AuthContext';
 
 // === INTERFACES ===
 interface PersonalInfoItem {
   icon: JSX.Element;
   label: string;
   value: string;
+  color: string;
+  gradient: string;
 }
+
 interface AccountRecord {
   title: string;
   amount: string;
@@ -34,7 +46,7 @@ const ProfileRecords = () => {
     error,
     setError,
     fetchUserProfile,
-  } = useAuth(); // ✅ Use context
+  } = useAuth();
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editName, setEditName] = useState(user?.userName || '');
@@ -47,7 +59,7 @@ const ProfileRecords = () => {
     }
   }, [user?.userId, fetchUserProfile]);
 
-  // Update edit form when user data changes
+  // Sync form with user changes
   useEffect(() => {
     if (user) {
       setEditName(user.userName || '');
@@ -67,7 +79,7 @@ const ProfileRecords = () => {
     return `${masked}@${domain}`;
   };
 
-  // === PROFILE PIC ===
+  // === PROFILE PIC HANDLER ===
   const handleProfilePicChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -93,37 +105,50 @@ const ProfileRecords = () => {
     }
   };
 
+  // === PERSONAL INFO CARDS ===
   const personalInfo: PersonalInfoItem[] = user
     ? [
         {
-          icon: <FaUser className="text-blue-400" />,
+          icon: <FaChartLine className="text-xl" />,
           label: 'My Self Invest',
           value: `$${user.selfBusiness?.toFixed(2) || '0.00'}`,
+          color: 'text-cyan-400',
+          gradient: 'from-cyan-500 to-blue-600',
         },
         {
-          icon: <FaEnvelope className="text-purple-400" />,
+          icon: <FaTrophy className="text-xl" />,
           label: 'Profit Record',
           value: `$${user.rewardBalance?.toFixed(2) || '0.00'}`,
+          color: 'text-amber-400',
+          gradient: 'from-amber-500 to-orange-600',
         },
         {
-          icon: <FaCalendar className="text-yellow-400" />,
+          icon: <FaWallet className="text-xl" />,
           label: 'My Total Deposit',
           value: `$${user.usdtBalance?.toFixed(2) || '0.00'}`,
+          color: 'text-emerald-400',
+          gradient: 'from-emerald-500 to-green-600',
         },
         {
-          icon: <FaIdCard className="text-indigo-400" />,
+          icon: <FaCoins className="text-xl" />,
           label: 'My Withdrawals',
           value: `$${(user as any).totalCommission?.toFixed(2) || '0.00'}`,
+          color: 'text-purple-400',
+          gradient: 'from-purple-500 to-indigo-600',
         },
         {
-          icon: <FaShieldAlt className="text-green-400" />,
+          icon: <FaUserFriends className="text-xl" />,
           label: 'Team Commission',
           value: `$${user.directBusiness?.toFixed(2) || '0.00'}`,
+          color: 'text-rose-400',
+          gradient: 'from-rose-500 to-pink-600',
         },
         {
-          icon: <FaUser className="text-blue-400" />,
+          icon: <FaHandHoldingUsd className="text-xl" />,
           label: 'Direct Commission',
           value: `$${(user as any).rewardPayment?.toFixed(2) || '0.00'}`,
+          color: 'text-violet-400',
+          gradient: 'from-violet-500 to-purple-600',
         },
       ]
     : [];
@@ -138,65 +163,51 @@ const ProfileRecords = () => {
   // === RENDER ===
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen text-white text-xl">
-        Loading...
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white text-lg font-medium">Loading your profile...</p>
+        </div>
       </div>
     );
   }
 
   if (error || !user) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen text-white">
-        <FaExclamationTriangle className="text-5xl text-red-500 mb-4" />
-        <p>{error || 'No data available'}</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex flex-col items-center justify-center text-white p-4">
+        <FaExclamationTriangle className="text-6xl text-red-400 mb-4" />
+        <p className="text-xl font-semibold mb-2 text-center">{error || 'No data available'}</p>
+        <p className="text-slate-300 mb-6 text-center">We couldn't load your profile information</p>
         <button
           onClick={fetchUserProfile}
-          className="mt-4 px-6 py-2 bg-red-600 rounded-lg"
+          className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-2xl"
         >
-          Retry
+          Try Again
         </button>
       </div>
     );
   }
 
   return (
-    <div
-      className="min-h-screen py-4 lg:px-4 px-2 relative"
-      style={{
-        backgroundImage:
-          "url('https://i.pinimg.com/1200x/18/9d/30/189d3007b4da750e7e65e1823954464e.jpg')",
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed',
-      }}
-    >
-      {/* Background Overlay */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
-      <div className="container mx-auto max-w-6xl relative z-20">
-        {/* My Profile Header Card */}
-        <div className="relative mb-3">
-          <div className="relative z-20 flex flex-col lg:flex-row items-center gap-2">
-            {/* Profile Picture */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 py-6 lg:py-8 px-4">
+      <div className="max-w-6xl mx-auto">
+        {/* Profile Header */}
+        <div className="bg-slate-800/50 backdrop-blur-xl rounded-3xl p-6 lg:p-8 border border-slate-700/50 shadow-2xl mb-8">
+          <div className="flex flex-col lg:flex-row items-center gap-6">
+            {/* Avatar */}
             <div className="relative">
-              <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center border-4 border-white/30 shadow-2xl overflow-hidden">
+              <div className="w-24 h-24 lg:w-28 lg:h-28 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border-4 border-white/20 shadow-2xl overflow-hidden">
                 {user.profilePic ? (
-                  <img
-                    src={user.profilePic}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={user.profilePic} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
-                  <FaUser className="text-white text-xl lg:text-2xl" />
+                  <FaUser className="text-white text-3xl lg:text-4xl" />
                 )}
               </div>
               <button
-                onClick={() =>
-                  document.getElementById('profilePicInput')?.click()
-                }
-                className="absolute -bottom-1 -right-1 p-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full border-2 border-white/30 shadow-lg hover:scale-110 transition-transform duration-300"
+                onClick={() => document.getElementById('profilePicInput')?.click()}
+                className="absolute -bottom-2 -right-2 p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl border-2 border-white/30 shadow-lg hover:scale-110 transition-all duration-300"
               >
-                <FaCamera className="text-white text-xs" />
+                <FaCamera className="text-white text-sm" />
               </button>
               <input
                 id="profilePicInput"
@@ -206,235 +217,180 @@ const ProfileRecords = () => {
                 className="hidden"
               />
             </div>
-            {/* Profile Info */}
-            <div className="flex-1 text-center">
-              <h2 className="text-base lg:text-2xl font-bold text-white">
-                {user.userName}
-              </h2>
-              <p className="text-blue-100 text-sm lg:text-base">
-                {maskEmail(user.userEmail)}
-              </p>
+
+            {/* Info */}
+            <div className="flex-1 text-center lg:text-left">
+              <h1 className="text-2xl lg:text-4xl font-bold text-white mb-2">{user.userName}</h1>
+              <p className="text-slate-300 text-lg lg:text-xl mb-4">{maskEmail(user.userEmail)}</p>
+              <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
+                <span className="px-4 py-2 bg-blue-500/20 text-blue-300 rounded-xl text-sm border border-blue-500/30 backdrop-blur-sm">
+                  User ID: {user.userId?.slice(-8)}
+                </span>
+                <span className="px-4 py-2 bg-purple-500/20 text-purple-300 rounded-xl text-sm border border-purple-500/30 backdrop-blur-sm">
+                  Active Investor
+                </span>
+              </div>
             </div>
+
             {/* Edit Button */}
             <button
               onClick={() => setIsEditModalOpen(true)}
-              className="bg-gradient-to-r lg:flex hidden from-blue-500 to-purple-500 hover:from-blue-400 hover:to-purple-400 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-2xl items-center gap-2"
+              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-2xl flex items-center gap-3"
             >
-              <FaEdit />
+              <FaEdit className="text-lg" />
               Edit Profile
             </button>
-            <button
-              onClick={() => setIsEditModalOpen(true)}
-              className="bg-gradient-to-r block lg:hidden from-blue-500 to-purple-500 hover:from-blue-400 hover:to-purple-400 text-white p-2 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-2xl items-center absolute top-2 right-2 gap-2"
-            >
-              <FaEdit className="text-sm" />
-            </button>
           </div>
         </div>
-        {/* Referrer Information Card */}
-        <div className="lg:p-6 p-3 rounded-2xl relative overflow-hidden bg-gray-900 border border-gray-800 shadow-2xl lg:mb-8 mb-3">
-          <div
-            className="absolute -top-8 -left-8 w-24 h-24 rounded-full z-10"
-            style={{
-              background: "linear-gradient(45deg, #a855f7, #ec4899, #a855f7)",
-              filter: "blur(12px)",
-              opacity: "0.6",
-            }}
-          ></div>
-          <div
-            className="absolute -bottom-8 -right-8 w-20 h-20 rounded-full z-10"
-            style={{
-              background: "linear-gradient(135deg, #3b82f6, #10b981, #3b82f6)",
-              filter: "blur(10px)",
-              opacity: "0.4",
-            }}
-          ></div>
-          <div
-            className="absolute -inset-2 rounded-2xl animate-spin opacity-70"
-            style={{
-              background:
-                "conic-gradient(from 0deg, #3b82f6, #8b5cf6, #ec4899, #10b981, #f59e0b, #3b82f6)",
-              animationDuration: "10000ms",
-              zIndex: 0,
-            }}
-          ></div>
-          <div className="absolute inset-0.5 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 z-1"></div>
-          <div className="relative z-20 text-center">
-            {profileData?.referrerData?.profile ? (
-              <img
-                src={profileData.referrerData.profile}
-                className="w-12 h-12 rounded-full mx-auto"
-                alt="Referrer Profile"
-              />
-            ) : (
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center mx-auto">
-                <FaUser className="text-white text-xl" />
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Referrer Info */}
+            <div className="bg-slate-800/50 backdrop-blur-xl rounded-3xl p-6 border border-slate-700/50 shadow-2xl">
+              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                <div className="p-2 bg-blue-500/20 rounded-lg">
+                  <FaUserFriends className="text-blue-400 text-lg" />
+                </div>
+                Referrer Information
+              </h3>
+              <div className="flex flex-col items-center text-center space-y-4">
+                {profileData?.referrerData?.profile ? (
+                  <img
+                    src={profileData.referrerData.profile}
+                    className="w-20 h-20 rounded-2xl border-2 border-slate-600 shadow-lg"
+                    alt="Referrer"
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border-2 border-slate-600 shadow-lg">
+                    <FaUser className="text-white text-2xl" />
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <div className="text-white font-bold text-lg">
+                    {profileData?.referrerData?.name || 'N/A'}
+                  </div>
+                  <div className="flex items-center justify-center gap-2 bg-slate-700/50 px-4 py-2 rounded-xl">
+                    <span className="text-slate-400 text-sm">Sponsor ID:</span>
+                    <span className="text-white font-semibold text-sm">
+                      {profileData?.referrerData?.sponsorId
+                        ? profileData.referrerData.sponsorId.slice(-6).toUpperCase()
+                        : 'N/A'}
+                    </span>
+                  </div>
+                </div>
               </div>
-            )}
-            <div className="text-white font-semibold text-sm mt-2">
-              {profileData?.referrerData?.name || 'N/A'}
             </div>
-            <div className="flex items-center justify-center gap-2 mt-1">
-              <span className="text-white/70 text-sm">Sp ID :</span>
-              <span className="text-white font-semibold text-xs">
-                {profileData?.referrerData?.sponsorId
-                  ? profileData.referrerData.sponsorId.slice(-6).toUpperCase()
-                  : 'N/A'}
-              </span>
-            </div>
-          </div>
-        </div>
-        {/* Account Records */}
-        <div className="p-6 rounded-2xl relative mt-2 overflow-hidden bg-gray-900 border border-gray-800 shadow-2xl">
-          <div
-            className="absolute -top-8 -left-8 w-24 h-24 rounded-full z-10"
-            style={{
-              background: "linear-gradient(45deg, #a855f7, #ec4899, #a855f7)",
-              filter: "blur(12px)",
-              opacity: "0.6",
-            }}
-          ></div>
-          <div
-            className="absolute -bottom-8 -right-8 w-20 h-20 rounded-full z-10"
-            style={{
-              background: "linear-gradient(135deg, #3b82f6, #10b981, #3b82f6)",
-              filter: "blur(10px)",
-              opacity: "0.4",
-            }}
-          ></div>
-          <div
-            className="absolute -inset-2 rounded-2xl animate-spin opacity-50"
-            style={{
-              background:
-                "conic-gradient(from 0deg, #3b82f6, #8b5cf6, #ec4899, #10b981, #f59e0b, #3b82f6)",
-              animationDuration: "12000ms",
-              zIndex: 0,
-            }}
-          ></div>
-          <div className="absolute inset-0.5 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 z-1"></div>
-          <div className="relative z-20">
-            {accountRecords.map((record, index) => (
-              <div
-                key={index}
-                className="flex justify-between items-center lg:py-2 py-1 border-b border-gray-300 last:border-b-0"
-              >
-                <span className="text-gray-100 lg:text-lg text-sm">
-                  {record.title}
-                </span>
-                <span className="font-semibold text-gray-200 lg:text-base text-xs">
-                  {record.amount}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-        {/* Personal Information */}
-        <div className="lg:p-6 p-3 rounded-2xl relative overflow-hidden bg-gray-900 border border-gray-800 shadow-2xl">
-          <div
-            className="absolute -top-8 -left-8 w-24 h-24 rounded-full z-10"
-            style={{
-              background: "linear-gradient(45deg, #a855f7, #ec4899, #a855f7)",
-              filter: "blur(12px)",
-              opacity: "0.6",
-            }}
-          ></div>
-          <div
-            className="absolute -bottom-8 -right-8 w-20 h-20 rounded-full z-10"
-            style={{
-              background: "linear-gradient(135deg, #3b82f6, #10b981, #3b82f6)",
-              filter: "blur(10px)",
-              opacity: "0.4",
-            }}
-          ></div>
-          <div
-            className="absolute -inset-2 rounded-2xl animate-spin opacity-50"
-            style={{
-              background:
-                "conic-gradient(from 0deg, #3b82f6, #8b5cf6, #ec4899, #10b981, #f59e0b, #3b82f6)",
-              animationDuration: "12000ms",
-              zIndex: 0,
-            }}
-          ></div>
-          <div className="absolute inset-0.5 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 z-1"></div>
-          <div className="relative z-20">
-            <div className="grid grid-cols-2 gap-2">
-              {personalInfo.map((info, index) => (
+
+            {/* Account Summary */}
+            <div className="bg-slate-800/50 backdrop-blur-xl rounded-3xl p-6 border border-slate-700/50 shadow-2xl">
+              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                <div className="p-2 bg-emerald-500/20 rounded-lg">
+                  <FaDollarSign className="text-emerald-400 text-lg" />
+                </div>
+                Account Summary
+              </h3>
+              {accountRecords.map((record, index) => (
                 <div
                   key={index}
-                  className="flex flex-col items-center gap-4 lg:p-3 p-2 rounded-md bg-gradient-to-r from-gray-800/50 to-gray-900/30 border border-white/20 backdrop-blur-sm"
+                  className="flex justify-between items-center p-4 bg-slate-700/30 rounded-xl border border-slate-600/50"
                 >
-                  <div className="text-white/70 text-sm">{info.label}</div>
-                  <div className="text-white text-xs flex flex-wrap font-semibold">
-                    {info.value}
-                  </div>
+                  <span className="text-slate-300 text-base font-medium">{record.title}</span>
+                  <span className="font-bold text-white text-lg bg-gradient-to-r from-emerald-400 to-green-500 bg-clip-text text-transparent">
+                    {record.amount}
+                  </span>
                 </div>
               ))}
             </div>
           </div>
+
+          {/* Right Column - Stats */}
+          <div className="lg:col-span-2">
+            <div className="bg-slate-800/50 backdrop-blur-xl rounded-3xl p-6 lg:p-8 border border-slate-700/50 shadow-2xl">
+              <h3 className="text-2xl font-bold text-white mb-8 flex items-center gap-3">
+                <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
+                  <FaChartLine className="text-white text-xl" />
+                </div>
+                Investment Statistics
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {personalInfo.map((info, index) => (
+                  <div
+                    key={index}
+                    className={`bg-gradient-to-br ${info.gradient} rounded-2xl p-5 shadow-2xl transform transition-all duration-300 hover:scale-105 hover:shadow-3xl`}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="text-white/90 text-sm font-semibold">{info.label}</div>
+                      <div className={`p-2 rounded-xl bg-white/20 ${info.color}`}>{info.icon}</div>
+                    </div>
+                    <div className="text-white text-2xl font-bold">{info.value}</div>
+                    <div className="w-full bg-white/20 h-1 rounded-full mt-3">
+                      <div
+                        className="bg-white h-1 rounded-full transition-all duration-1000"
+                        style={{ width: '75%' }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      {/* Edit Profile Modal */}
+
+      {/* Edit Modal */}
       {isEditModalOpen && (
         <>
           <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-lg z-40"
+            className="fixed inset-0 bg-black/70 backdrop-blur-lg z-40 transition-all duration-300"
             onClick={() => setIsEditModalOpen(false)}
           />
           <div className="fixed inset-0 flex items-center justify-center lg:p-4 p-2 z-50">
-            <div className="w-full max-w-2xl rounded-2xl relative overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto animate-slide-up">
-              <div className="absolute -inset-1 rounded-2xl overflow-hidden">
-                <div
-                  className="w-full h-full animate-spin opacity-70"
-                  style={{
-                    background:
-                      "conic-gradient(from 0deg, #a855f7, #ec4899, #f59e0b, #10b981, #3b82f6, #a855f7)",
-                    animationDuration: "10000ms",
-                  }}
-                ></div>
-              </div>
-              <div className="absolute inset-0.5 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-800 z-1"></div>
-              <div className="relative z-20 m-1">
-                <div className="bg-gradient-to-r from-blue-500 to-purple-500 py-6 px-6 rounded-t-2xl">
+            <div className="w-full max-w-2xl rounded-3xl relative overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto animate-scale-in">
+              <div className="bg-slate-800 border border-slate-700 rounded-3xl">
+                {/* Modal Header */}
+                <div className="bg-gradient-to-r from-blue-500 to-purple-600 py-6 px-8 rounded-t-3xl">
                   <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                      <FaEdit className="text-white text-xl" />
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-white/20 rounded-xl">
+                        <FaEdit className="text-white text-2xl" />
+                      </div>
                       <div>
-                        <div className="text-xl font-bold text-white">
-                          Edit Profile
-                        </div>
-                        <div className="text-blue-100 text-sm">
-                          Update your personal information
-                        </div>
+                        <div className="text-2xl font-bold text-white">Edit Profile</div>
+                        <div className="text-blue-100 text-sm">Update your personal information</div>
                       </div>
                     </div>
                     <button
                       onClick={() => setIsEditModalOpen(false)}
-                      className="text-white hover:text-gray-200 transition-colors p-2 rounded-lg hover:bg-white/10"
+                      className="text-white hover:text-gray-200 transition-colors p-3 rounded-xl hover:bg-white/10"
                     >
                       <FaTimes className="text-xl" />
                     </button>
                   </div>
                 </div>
-                <div className="p-6">
-                  <form onSubmit={handleEditSubmit} className="space-y-6">
+
+                {/* Modal Body */}
+                <div className="p-6 lg:p-8">
+                  <form onSubmit={handleEditSubmit} className="space-y-8">
+                    {/* Avatar */}
                     <div className="flex flex-col items-center justify-center space-y-4">
                       <div className="relative">
-                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center border-4 border-white/30 shadow-2xl overflow-hidden">
+                        <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border-4 border-white/30 shadow-2xl overflow-hidden">
                           {profileImage || user.profilePic ? (
                             <img
-                              src={profileImage || user.profilePic || ""}
-                              alt="Profile Preview"
+                              src={profileImage || user.profilePic || ''}
+                              alt="Preview"
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <FaUser className="text-white text-2xl" />
+                            <FaUser className="text-white text-4xl" />
                           )}
                         </div>
                         <label
                           htmlFor="modalProfilePic"
-                          className="absolute -bottom-2 -right-2 p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full border-2 border-white/30 shadow-lg hover:scale-110 transition-transform duration-300 cursor-pointer"
+                          className="absolute -bottom-2 -right-2 p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl border-2 border-white/30 shadow-lg hover:scale-110 transition-transform duration-300 cursor-pointer"
                         >
-                          <FaCamera className="text-white text-sm" />
+                          <FaCamera className="text-white text-base" />
                         </label>
                         <input
                           id="modalProfilePic"
@@ -444,38 +400,50 @@ const ProfileRecords = () => {
                           className="hidden"
                         />
                       </div>
-                      <p className="text-white/70 text-sm text-center">
+                      <p className="text-slate-400 text-sm text-center">
                         Click on camera icon to change profile picture
                       </p>
                     </div>
-                    <div className="space-y-3">
-                      <label className="text-white font-semibold">
-                        Full Name
-                      </label>
+
+                    {/* Name */}
+                    <div className="space-y-4">
+                      <label className="text-white font-semibold text-lg">Full Name</label>
                       <input
                         type="text"
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
-                        className="w-full p-3 bg-gradient-to-r from-gray-800/90 to-gray-900 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300 backdrop-blur-sm"
+                        className="w-full p-4 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 backdrop-blur-sm"
+                        placeholder="Enter your full name"
                       />
                     </div>
+
+                    {/* Error */}
                     {error && (
-                      <p className="text-red-400 text-sm text-center">
-                        {error}
-                      </p>
+                      <div className="p-4 bg-red-500/20 border border-red-500/30 rounded-xl">
+                        <p className="text-red-400 text-sm text-center font-medium">{error}</p>
+                      </div>
                     )}
+
+                    {/* Buttons */}
                     <div className="flex gap-4 pt-4">
                       <button
                         type="submit"
                         disabled={loading}
-                        className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 text-white py-3 lg:px-6 px-4 lg:text-lg text-sm rounded-xl font-bold transition-all duration-300 transform hover:scale-105 shadow-2xl disabled:opacity-50"
+                        className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-4 px-6 text-lg rounded-xl font-bold transition-all duration-300 transform hover:scale-105 shadow-2xl disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-2"
                       >
-                        {loading ? 'Saving...' : 'Save Changes'}
+                        {loading ? (
+                          <>
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            Saving...
+                          </>
+                        ) : (
+                          'Save Changes'
+                        )}
                       </button>
                       <button
                         type="button"
                         onClick={() => setIsEditModalOpen(false)}
-                        className="flex-1 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-500 hover:to-gray-600 text-white py-3 lg:px-6 px-4 lg:text-lg text-sm rounded-xl font-bold transition-all duration-300 border border-gray-500/50"
+                        className="flex-1 bg-slate-700 hover:bg-slate-600 text-white py-4 px-6 text-lg rounded-xl font-bold transition-all duration-300 border border-slate-600 hover:border-slate-500"
                       >
                         Cancel
                       </button>
@@ -491,4 +459,4 @@ const ProfileRecords = () => {
   );
 };
 
-export default ProfileRecords; 
+export default ProfileRecords;
