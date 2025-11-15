@@ -1,5 +1,4 @@
 'use client';
-
 import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import {
   FaUser,
@@ -37,17 +36,9 @@ const ProfileRecords: React.FC = () => {
 
   // Local UI state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-
-  // editable name is initialized from user when available
   const [editName, setEditName] = useState<string>(user?.userName || '');
-
-  // previewImage: used in header/profile picture immediate preview (and after upload)
   const [previewImage, setPreviewImage] = useState<string | null>(user?.profilePic || null);
-
-  // profileImage: used inside modal as the chosen new image to save on submit
   const [profileImage, setProfileImage] = useState<string | null>(null);
-
-  // errors
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [modalError, setModalError] = useState<string | null>(null);
 
@@ -87,16 +78,13 @@ const ProfileRecords: React.FC = () => {
     reader.onload = async (ev) => {
       const dataUrl = ev.target?.result as string;
       setPreviewImage(dataUrl);
-
       try {
-        // send current editName or fallback to existing user name
         await updateUserProfile(editName || user?.userName || '', dataUrl);
         await fetchUserProfile();
         setUpdateError(null);
       } catch (err) {
         console.error('Failed to update profile picture:', err);
         setUpdateError('Failed to update profile picture. Please try again.');
-        // revert preview if update failed
         setPreviewImage(user?.profilePic || null);
       }
     };
@@ -121,7 +109,6 @@ const ProfileRecords: React.FC = () => {
     try {
       await updateUserProfile(editName || user?.userName || '', profileImage || undefined);
       await fetchUserProfile();
-      // successful save: close modal and reset modal-specific preview
       setIsEditModalOpen(false);
       setProfileImage(null);
       setUpdateError(null);
@@ -214,7 +201,6 @@ const ProfileRecords: React.FC = () => {
     >
       {/* overlay */}
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
-
       <div className="container mx-auto max-w-6xl relative z-20">
         {/* Header */}
         <div className="relative mb-3">
@@ -231,14 +217,12 @@ const ProfileRecords: React.FC = () => {
                   <FaUser className="text-white text-xl lg:text-2xl" />
                 )}
               </div>
-
               <button
                 onClick={() => document.getElementById('profilePicInput')?.click()}
                 className="absolute -bottom-1 -right-1 p-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full border-2 border-white/30 shadow-lg hover:scale-110 transition-transform duration-300"
               >
                 <FaCamera className="text-white text-xs" />
               </button>
-
               <input
                 id="profilePicInput"
                 type="file"
@@ -247,12 +231,10 @@ const ProfileRecords: React.FC = () => {
                 className="hidden"
               />
             </div>
-
             <div className="flex-1 text-center">
               <h2 className="text-base lg:text-2xl font-bold text-white">{user.userName}</h2>
               <p className="text-blue-100 text-sm lg:text-base">{maskEmail(user.userEmail)}</p>
             </div>
-
             <button
               onClick={() => setIsEditModalOpen(true)}
               className="bg-gradient-to-r lg:flex hidden from-blue-500 to-purple-500 hover:from-blue-400 hover:to-purple-400 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-2xl items-center gap-2"
@@ -260,7 +242,6 @@ const ProfileRecords: React.FC = () => {
               <FaEdit />
               Edit Profile
             </button>
-
             <button
               onClick={() => setIsEditModalOpen(true)}
               className="bg-gradient-to-r block lg:hidden from-blue-500 to-purple-500 hover:from-blue-400 hover:to-purple-400 text-white p-2 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-2xl items-center absolute top-2 right-2 gap-2"
@@ -270,7 +251,7 @@ const ProfileRecords: React.FC = () => {
           </div>
         </div>
 
-        {/* Referrer */}
+        {/* My Team - Updated Section */}
         <div className="lg:p-6 p-3 rounded-2xl relative overflow-hidden bg-gray-900 border border-gray-800 shadow-2xl lg:mb-8 mb-3">
           <div
             className="absolute -top-8 -left-8 w-24 h-24 rounded-full z-10"
@@ -289,25 +270,30 @@ const ProfileRecords: React.FC = () => {
             }}
           />
           <div className="relative z-20 text-center">
-            {profileData?.referrerData?.profile ? (
+            {/* User's Own Profile Pic */}
+            {user.profilePic ? (
               <img
-                src={profileData.referrerData.profile}
-                className="w-12 h-12 rounded-full mx-auto"
-                alt="Referrer Profile"
+                src={user.profilePic}
+                className="w-12 h-12 rounded-full mx-auto border-2 border-white/30 object-cover"
+                alt="My Team"
               />
             ) : (
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center mx-auto">
                 <FaUser className="text-white text-xl" />
               </div>
             )}
+
+            {/* Team Name */}
             <div className="text-white font-semibold text-sm mt-2">
-              {profileData?.referrerData?.name || 'N/A'}
+              {user.team || 'No Team'}
             </div>
+
+            {/* Sp ID - Last 6 chars of referralCode */}
             <div className="flex items-center justify-center gap-2 mt-1">
               <span className="text-white/70 text-sm">Sp ID :</span>
               <span className="text-white font-semibold text-xs">
-                {profileData?.referrerData?.sponsorId
-                  ? profileData.referrerData.sponsorId.slice(-6).toUpperCase()
+                {user.referralCode
+                  ? user.referralCode.split('-').pop()?.slice(-6).toUpperCase()
                   : 'N/A'}
               </span>
             </div>
@@ -394,7 +380,6 @@ const ProfileRecords: React.FC = () => {
                     </button>
                   </div>
                 </div>
-
                 <div className="p-6">
                   <form onSubmit={handleEditSubmit} className="space-y-6">
                     <div className="flex flex-col items-center justify-center space-y-4">
@@ -410,7 +395,6 @@ const ProfileRecords: React.FC = () => {
                             <FaUser className="text-white text-2xl" />
                           )}
                         </div>
-
                         <label
                           htmlFor="modalProfilePic"
                           className="absolute -bottom-2 -right-2 p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full border-2 border-white/30 shadow-lg hover:scale-110 transition-transform duration-300 cursor-pointer"
@@ -427,7 +411,6 @@ const ProfileRecords: React.FC = () => {
                       </div>
                       <p className="text-white/70 text-sm text-center">Click camera icon to change profile picture</p>
                     </div>
-
                     <div className="space-y-3">
                       <label className="text-white font-semibold">Full Name</label>
                       <input
@@ -437,10 +420,8 @@ const ProfileRecords: React.FC = () => {
                         className="w-full p-3 bg-gradient-to-r from-gray-800/90 to-gray-900 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300 backdrop-blur-sm"
                       />
                     </div>
-
                     {error && <p className="text-red-400 text-sm text-center">{error}</p>}
                     {modalError && <p className="text-red-400 text-sm text-center">{modalError}</p>}
-
                     <div className="flex gap-4 pt-4">
                       <button
                         type="submit"
